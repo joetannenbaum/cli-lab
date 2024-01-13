@@ -11,23 +11,23 @@ trait Aligns
     {
         $lines = $this->toCollection($lines);
 
-        $lineLengths = $lines->map(fn ($line) => mb_strlen(Util::stripEscapeSequences($line)));
+        $lineLengths = $lines->map(fn ($line) => mb_strwidth(Util::stripEscapeSequences($line)));
 
         $maxLineLength = $lineLengths->max();
 
         $basePadding = floor(($width - $maxLineLength) / 2);
 
         $result = $lines->map(function ($line) use ($basePadding, $maxLineLength) {
-            $lineLength = mb_strlen(Util::stripEscapeSequences($line));
-            $padding = $basePadding + floor((($maxLineLength - $lineLength) / 2));
+            $lineLength = mb_strwidth(Util::stripEscapeSequences($line));
+            $padding = max($basePadding + floor((($maxLineLength - $lineLength) / 2)), 0);
 
             return str_repeat(' ', $padding) . $line . str_repeat(' ', $padding);
         });
 
-        $maxLine = $result->max(fn ($line) => mb_strlen(Util::stripEscapeSequences($line)));
+        $maxLine = $result->max(fn ($line) => mb_strwidth(Util::stripEscapeSequences($line)));
 
         return $result->map(function ($line) use ($maxLine) {
-            $lineLength = mb_strlen(Util::stripEscapeSequences($line));
+            $lineLength = mb_strwidth(Util::stripEscapeSequences($line));
 
             return $line . str_repeat(' ', $maxLine - $lineLength);
         });
@@ -35,7 +35,7 @@ trait Aligns
 
     protected function spaceBetween(int $width, string ...$items)
     {
-        $totalLength = collect($items)->map(fn ($item) => mb_strlen(Util::stripEscapeSequences($item)))->sum();
+        $totalLength = collect($items)->map(fn ($item) => mb_strwidth(Util::stripEscapeSequences($item)))->sum();
         $space = $width - $totalLength;
         $spacePerItem = floor($space / (count($items) - 1));
 

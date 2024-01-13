@@ -41,8 +41,8 @@ class Prong extends Prompt
 
         $this->loadGame();
 
-        $this->width = $this->terminal()->cols() - 3;
-        $this->height = $this->terminal()->lines() - 8;
+        $this->width = 100;
+        $this->height = 26;
 
         $this->state = 'title';
 
@@ -61,6 +61,12 @@ class Prong extends Prompt
 
     public function __destruct()
     {
+        if ($this->playerNumber === 1) {
+            $this->game->update(['player_one' => false]);
+        } elseif ($this->playerNumber === 2) {
+            $this->game->update(['player_two' => false]);
+        }
+
         $this->exitAltScreen();
     }
 
@@ -108,7 +114,6 @@ class Prong extends Prompt
     protected function setPlayers(): void
     {
         if (!$this->game->player_one) {
-            // TODO: Get this from the logged in player or prompt for it
             $this->game->update(['player_one' => true]);
             $this->playerNumber = 1;
         } elseif (!$this->game->player_two) {
@@ -237,6 +242,7 @@ class Prong extends Prompt
             Key::DOWN_ARROW => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveDown(),
             Key::UP   => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveUp(),
             Key::DOWN => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveDown(),
+            'q'         => static::terminal()->exit(),
             default         => null,
         };
     }

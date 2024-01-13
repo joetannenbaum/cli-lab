@@ -15,7 +15,10 @@ class Paddle implements Tickable
 
     public function __construct(protected Prong $prompt)
     {
-        $this->value = Animatable::fromValue((int) floor($prompt->height / 2))->lowerLimit(0)->upperLimit($this->prompt->height - 5);
+        $this->value = Animatable::fromValue((int) floor($prompt->height / 2))
+            ->lowerLimit(0)
+            // TODO: Why not 4?
+            ->upperLimit($this->prompt->height - 5);
     }
 
     public function onTick(): void

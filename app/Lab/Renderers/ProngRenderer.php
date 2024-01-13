@@ -8,15 +8,24 @@ use App\Lab\Output\Lines;
 use App\Lab\Prong;
 use App\Lab\Prong\Ball;
 use App\Lab\Prong\Title;
+use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Renderer;
+use Illuminate\Support\Str;
 
 class ProngRenderer extends Renderer
 {
     use Aligns;
     use DrawsHotkeys;
 
+    protected int $fullWidth;
+
+    protected int $fullHeight;
+
     public function __invoke(Prong $prompt): string
     {
+        $this->fullWidth = $prompt->terminal()->cols() - 2;
+        $this->fullHeight = $prompt->terminal()->lines() - 4;
+
         if ($prompt->state === 'title') {
             return $this->titleScreen($prompt);
         }
@@ -45,28 +54,38 @@ class ProngRenderer extends Renderer
 
         $cols = collect([$paddle1, $ball, $paddle2])->map(fn ($el) => explode(PHP_EOL, $el));
 
-        Lines::fromColumns($cols)->alignNone()->lines()->each(fn ($line) => $this->line($line));
+        $topBorder = $this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐');
+        $bottomBorder = $this->dim('└' . str_repeat('─', $prompt->width + 4) . '┘');
 
-        $this->hotkey('w', 'Move up');
-        $this->hotkey('s', 'Move down');
+        // $this->centerHorizontally($topBorder, $this->fullWidth)->each(fn ($line) => $this->line($line));
 
-        $player1Hotkeys = $this->hotkeys();
+        $cols = Lines::fromColumns($cols)
+            ->alignNone()
+            ->lines()
+            ->filter(fn ($line) => $line !== '')
+            ->map(fn ($line) => $this->dim('│ ') . $line . $this->dim(' │'))
+            ->push($bottomBorder)
+            ->prepend($topBorder);
 
-        $this->clearHotkeys();
+        $this->center($cols, $this->fullWidth, $this->fullHeight - 2)->each(
+            fn ($line) => $this->line($line)
+        );
 
-        $this->hotkey('i', 'Move up');
-        $this->hotkey('k', 'Move down');
+        // $this->centerHorizontally($bottomBorder, $this->fullWidth)->each(fn ($line) => $this->line($line));
 
-        $player2Hotkeys = $this->hotkeys();
+        $this->hotkey('↑', 'Move up');
+        $this->hotkey('↓', 'Move down');
+        $this->hotkey('q', 'Quit');
 
-        $this->line($this->spaceBetween(
-            $prompt->width,
-            $this->bold($prompt->playerNumber === 1 ? 'YOU' : ''),
-            $this->bold($prompt->playerNumber === 2 ? 'YOU' : '')
-        ));
+        $hotkeys = collect($this->hotkeys())->implode(PHP_EOL);
 
-        $this->line($this->spaceBetween($prompt->width, $this->bold('Player 1'), $this->bold('Player 2')));
-        $this->line($this->spaceBetween($prompt->width, $player1Hotkeys[0], $player2Hotkeys[0]));
+        if ($prompt->playerNumber === 1) {
+            $hotkeys = $this->bold('← You are Player 1    ') . $hotkeys;
+        } else {
+            $hotkeys = $hotkeys . $this->bold('    You are Player 2 →');
+        }
+
+        $this->centerHorizontally($hotkeys, $this->fullWidth)->each(fn ($line) => $this->line($line));
 
         return $this;
     }
@@ -79,7 +98,7 @@ class ProngRenderer extends Renderer
         $title->push('');
         $title->push('Press ' . $this->bold($this->cyan('q')) . ' to quit or ' . $this->bold($this->cyan('r')) . ' to restart');
 
-        $this->center($title, $prompt->width, $prompt->height)->each(fn ($line) => $this->line($line));
+        $this->center($title, $this->fullWidth, $this->fullHeight)->each(fn ($line) => $this->line($line));
 
         return $this;
     }
@@ -93,9 +112,10 @@ class ProngRenderer extends Renderer
         $title->push('');
         $title->push('Your Game ID is: ' . $this->bold($this->cyan($prompt->gameId)));
 
+        // - 1... why?
         $title = $title->map(fn ($line, $index) => $index - 1 > $prompt->loopable(Title::class)->value->current() ? '' : $line);
 
-        $this->center($title, $prompt->width, $prompt->height)->each(fn ($line) => $this->line($line));
+        $this->center($title, $this->fullWidth, $this->fullHeight)->each(fn ($line) => $this->line($line));
 
         return $this;
     }
@@ -109,7 +129,7 @@ class ProngRenderer extends Renderer
 
         // Draw the ball
         $output .= str_repeat(' ', $ball->x)
-            . $this->cyan('◼️')
+            . $this->cyan('●')
             . str_repeat(' ', max($prong->width - $ball->x - 1, 0))
             . PHP_EOL;
 
