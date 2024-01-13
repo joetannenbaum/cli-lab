@@ -54,24 +54,17 @@ class ProngRenderer extends Renderer
 
         $cols = collect([$paddle1, $ball, $paddle2])->map(fn ($el) => explode(PHP_EOL, $el));
 
-        $topBorder = $this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐');
-        $bottomBorder = $this->dim('└' . str_repeat('─', $prompt->width + 4) . '┘');
-
-        // $this->centerHorizontally($topBorder, $this->fullWidth)->each(fn ($line) => $this->line($line));
-
         $cols = Lines::fromColumns($cols)
             ->alignNone()
             ->lines()
             ->filter(fn ($line) => $line !== '')
             ->map(fn ($line) => $this->dim('│ ') . $line . $this->dim(' │'))
-            ->push($bottomBorder)
-            ->prepend($topBorder);
+            ->prepend($this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐'))
+            ->push($this->dim('└' . str_repeat('─', $prompt->width + 4) . '┘'));
 
         $this->center($cols, $this->fullWidth, $this->fullHeight - 2)->each(
             fn ($line) => $this->line($line)
         );
-
-        // $this->centerHorizontally($bottomBorder, $this->fullWidth)->each(fn ($line) => $this->line($line));
 
         $this->hotkey('↑', 'Move up');
         $this->hotkey('↓', 'Move down');
