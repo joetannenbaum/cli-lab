@@ -59,6 +59,12 @@ class ProngRenderer extends Renderer
 
         $player2Hotkeys = $this->hotkeys();
 
+        $this->line($this->spaceBetween(
+            $prompt->width,
+            $this->bold($prompt->playerNumber === 1 ? 'YOU' : ''),
+            $this->bold($prompt->playerNumber === 2 ? 'YOU' : '')
+        ));
+
         $this->line($this->spaceBetween($prompt->width, $this->bold('Player 1'), $this->bold('Player 2')));
         $this->line($this->spaceBetween($prompt->width, $player1Hotkeys[0], $player2Hotkeys[0]));
 
@@ -84,8 +90,10 @@ class ProngRenderer extends Renderer
 
         $title->push('');
         $title->push('Press ' . $this->bold($this->cyan('any key')) . ' to start');
+        $title->push('');
+        $title->push('Your Game ID is: ' . $this->bold($this->cyan($prompt->gameId)));
 
-        $title = $title->map(fn ($line, $index) => $index > $prompt->loopable(Title::class)->value->current() ? '' : $line);
+        $title = $title->map(fn ($line, $index) => $index - 1 > $prompt->loopable(Title::class)->value->current() ? '' : $line);
 
         $this->center($title, $prompt->width, $prompt->height)->each(fn ($line) => $this->line($line));
 

@@ -105,6 +105,11 @@ class Animatable
         return $this->value;
     }
 
+    public function update(int|float $value): void
+    {
+        $this->value = $value;
+    }
+
     public function next(): int|float
     {
         return $this->nextValue;

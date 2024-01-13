@@ -4,8 +4,8 @@ namespace App\Lab\Prong;
 
 use App\Lab\Concerns\Ticks;
 use App\Lab\Contracts\Tickable;
-use App\Lab\Support\Animatable;
 use App\Lab\Prong;
+use App\Lab\Support\Animatable;
 
 class Paddle implements Tickable
 {

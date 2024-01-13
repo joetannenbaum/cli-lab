@@ -20,12 +20,20 @@ class Ball implements Tickable
 
     public function __construct(protected Prong $prompt)
     {
+        if ($this->prompt->observer) {
+            return;
+        }
+
         // Pick a random side to start on
         $this->x = rand(0, 1) === 0 ? 0 : $this->prompt->width - 2;
     }
 
     public function onTick(): void
     {
+        if ($this->prompt->observer) {
+            return;
+        }
+
         if (count($this->steps) === 0) {
             $this->prompt->determineWinner();
             $this->start();
