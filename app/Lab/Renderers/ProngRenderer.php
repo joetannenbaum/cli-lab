@@ -61,7 +61,7 @@ class ProngRenderer extends Renderer
             ->map(fn ($line) => $this->dim('│ ') . $line . $this->dim(' │'))
             ->prepend($this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐'))
             ->prepend('')
-            ->prepend('To join this game: ' . $this->cyan('ssh cli.lab.joe.codes prong ' . $prompt->gameId))
+            ->prepend(($prompt->game->player_one_ready && $prompt->game->player_two_ready) ? '' : 'To join this game: ' . $this->cyan('ssh cli.lab.joe.codes prong ' . $prompt->gameId))
             ->push($this->dim('└' . str_repeat('─', $prompt->width + 4) . '┘'));
 
         $this->center($cols, $this->fullWidth, $this->fullHeight - 2)->each(
