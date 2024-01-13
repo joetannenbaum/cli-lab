@@ -60,7 +60,7 @@ class Resume extends Prompt
     {
         $this->registerTheme(ResumeRenderer::class);
 
-        // $this->createAltScreen();
+        $this->createAltScreen();
 
         KeyPressListener::for($this)
             ->on(['q', Key::CTRL_C], fn () => $this->terminal()->exit())
