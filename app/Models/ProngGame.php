@@ -19,14 +19,20 @@ class ProngGame extends Model
         'ball_y',
         'ball_direction',
         'ball_speed',
+        'winner',
+        'player_one_ready',
+        'player_two_ready',
     ];
 
     protected $casts = [
-        'player_one' => 'boolean',
-        'player_two' => 'boolean',
+        'player_one'          => 'boolean',
+        'player_two'          => 'boolean',
         'player_one_position' => 'integer',
         'player_two_position' => 'integer',
-        'ball_x' => 'integer',
-        'ball_y' => 'integer',
+        'ball_x'              => 'integer',
+        'ball_y'              => 'integer',
+        'winner'              => 'integer',
+        'player_one_ready'    => 'boolean',
+        'player_two_ready'    => 'boolean',
     ];
 }

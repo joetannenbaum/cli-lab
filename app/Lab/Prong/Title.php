@@ -15,7 +15,7 @@ class Title implements Tickable
 
     public function __construct(protected Prong $prompt)
     {
-        $this->value = Animatable::fromValue(9)->lowerLimit(0);
+        $this->value = Animatable::fromValue(11)->lowerLimit(0);
     }
 
     public function onTick(): void

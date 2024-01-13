@@ -35,6 +35,8 @@ class Prong extends Prompt
 
     public int $playerNumber = 0;
 
+    public $countdown = 3;
+
     public function __construct(public ?string $gameId = null)
     {
         $this->registerTheme(ProngRenderer::class);
@@ -72,6 +74,10 @@ class Prong extends Prompt
 
     public function determineWinner()
     {
+        if ($this->observer) {
+            return;
+        }
+
         /** @var Ball $ball */
         $ball = $this->loopable(Ball::class);
 
@@ -82,6 +88,10 @@ class Prong extends Prompt
         $player2 = $this->loopable('player2');
 
         $this->winner = $ball->x === 0 ? $this->getWinner($ball, $player1, 2) : $this->getWinner($ball, $player2, 1);
+
+        if ($this->winner !== null) {
+            $this->game->update(['winner' => $this->winner]);
+        }
     }
 
     protected function loadGame(): void
@@ -147,6 +157,8 @@ class Prong extends Prompt
                 $this->loopable(Ball::class)->y = $this->game->ball_y;
             }
         }
+
+        $this->winner = $this->game->winner;
     }
 
     protected function getWinner(Ball $ball, Paddle $player, int $winnerNumber)
@@ -180,12 +192,30 @@ class Prong extends Prompt
 
         $this->state = 'playing';
 
+        if ($this->playerNumber === 1) {
+            $this->game->update(['player_one_ready' => true]);
+        } elseif ($this->playerNumber === 2) {
+            $this->game->update(['player_two_ready' => true]);
+        }
+
         $this->playGame();
     }
 
     protected function restartGame()
     {
         $this->winner = null;
+        $fields = ['winner' => null];
+
+        if ($this->playerNumber === 1) {
+            $fields['player_one_ready'] = true;
+        } elseif ($this->playerNumber === 2) {
+            $fields['player_two_ready'] = true;
+        }
+
+        $this->countdown = 3;
+
+        $this->game->update($fields);
+
         $this->clearRegisteredLoopables();
         $this->playGame();
     }
@@ -197,6 +227,26 @@ class Prong extends Prompt
         $this->registerLoopable(Ball::class);
 
         $this->loopable(Ball::class)->start();
+
+        while (!$this->game->player_one_ready || !$this->game->player_two_ready) {
+            $this->refreshGame();
+
+            $this->render();
+
+            $this->handleKey(KeyPressListener::once());
+
+            usleep(50_000);
+        }
+
+        while ($this->countdown > 0) {
+            $this->render();
+
+            $this->handleKey(KeyPressListener::once());
+
+            $this->countdown--;
+
+            usleep(1_000_000);
+        }
 
         $this->loop(function () {
             if ($this->winner !== null) {
@@ -222,6 +272,8 @@ class Prong extends Prompt
             $this->render();
         }, 25_000);
 
+        $this->game->update(['player_one_ready' => false, 'player_two_ready' => false]);
+
         $this->render();
 
         while (($key = static::terminal()->read()) !== null) {
@@ -240,9 +292,9 @@ class Prong extends Prompt
             Key::CTRL_C     => static::terminal()->exit(),
             Key::UP_ARROW   => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveUp(),
             Key::DOWN_ARROW => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveDown(),
-            Key::UP   => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveUp(),
-            Key::DOWN => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveDown(),
-            'q'         => static::terminal()->exit(),
+            Key::UP         => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveUp(),
+            Key::DOWN       => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveDown(),
+            'q'             => static::terminal()->exit(),
             default         => null,
         };
     }

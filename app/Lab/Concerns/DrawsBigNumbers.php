@@ -43,6 +43,10 @@ trait DrawsBigNumbers
     {
         $numbers = collect(explode("\n", $this->bigNumbers))->chunk(3);
 
+        if ($number === 1) {
+            $numbers[1] = $numbers[1]->map(fn ($line) => $line . ' ');
+        }
+
         $number = str_split($number);
 
         $bigNumbers = collect($number)->map(fn ($digit) => $numbers[$digit]);

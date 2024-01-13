@@ -8,7 +8,6 @@ use App\Lab\Concerns\RegistersThemes;
 use App\Lab\Concerns\SetsUpAndResets;
 use App\Lab\Input\KeyPressListener;
 use App\Lab\Renderers\BrowseRenderer;
-use Illuminate\Support\Facades\Artisan;
 use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
@@ -29,14 +28,14 @@ class Browse extends Prompt
     {
         $this->items = [
             [
-                'title' => 'Resume',
+                'title'       => 'Resume',
                 'description' => 'View my resume',
-                'run' => fn () => (new Resume)->run(),
+                'run'         => fn () => (new Resume)->run(),
             ],
             [
-                'title' => 'Prong',
+                'title'       => 'Prong',
                 'description' => 'Play a game of Prompts Pong with a friend',
-                'run' => fn () => (new Prong)->play(),
+                'run'         => fn () => (new Prong)->play(),
             ],
         ];
 

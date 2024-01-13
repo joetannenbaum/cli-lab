@@ -3,18 +3,18 @@
 namespace App\Lab\Renderers;
 
 use App\Lab\Concerns\Aligns;
+use App\Lab\Concerns\DrawsBigNumbers;
 use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Output\Lines;
 use App\Lab\Prong;
 use App\Lab\Prong\Ball;
 use App\Lab\Prong\Title;
-use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Renderer;
-use Illuminate\Support\Str;
 
 class ProngRenderer extends Renderer
 {
     use Aligns;
+    use DrawsBigNumbers;
     use DrawsHotkeys;
 
     protected int $fullWidth;
@@ -60,6 +60,8 @@ class ProngRenderer extends Renderer
             ->filter(fn ($line) => $line !== '')
             ->map(fn ($line) => $this->dim('│ ') . $line . $this->dim(' │'))
             ->prepend($this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐'))
+            ->prepend('')
+            ->prepend('To join this game: ' . $this->cyan('ssh cli.lab.joe.codes prong ' . $prompt->gameId))
             ->push($this->dim('└' . str_repeat('─', $prompt->width + 4) . '┘'));
 
         $this->center($cols, $this->fullWidth, $this->fullHeight - 2)->each(
@@ -103,10 +105,10 @@ class ProngRenderer extends Renderer
         $title->push('');
         $title->push('Press ' . $this->bold($this->cyan('any key')) . ' to start');
         $title->push('');
-        $title->push('Your Game ID is: ' . $this->bold($this->cyan($prompt->gameId)));
+        $title->push('Play with a friend:');
+        $title->push($this->bold($this->cyan('ssh cli.lab.joe.codes prong ' . $prompt->gameId)));
 
-        // - 1... why?
-        $title = $title->map(fn ($line, $index) => $index - 1 > $prompt->loopable(Title::class)->value->current() ? '' : $line);
+        $title = $title->map(fn ($line, $index) => $index > $prompt->loopable(Title::class)->value->current() ? '' : $line);
 
         $this->center($title, $this->fullWidth, $this->fullHeight)->each(fn ($line) => $this->line($line));
 
@@ -115,6 +117,22 @@ class ProngRenderer extends Renderer
 
     protected function ball(Prong $prong, Ball $ball): string
     {
+        if (!$prong->game->player_one_ready || !$prong->game->player_two_ready) {
+            return $this->center(
+                'Waiting for other player...',
+                $prong->width,
+                $prong->height,
+            )->map(fn ($line) => str_pad($line, $prong->width))->implode(PHP_EOL);
+        }
+
+        if ($prong->countdown > 0) {
+            return $this->center(
+                $this->bigNumber($prong->countdown)->map(fn ($line) => $this->bold($this->cyan($line))),
+                $prong->width,
+                $prong->height,
+            )->map(fn ($line) => $line === '' ? str_pad($line, $prong->width) : $line)->implode(PHP_EOL);
+        }
+
         $emptyLine = str_repeat(' ', $prong->width) . PHP_EOL;
 
         // Pad the top
@@ -158,7 +176,7 @@ class ProngRenderer extends Renderer
          |    \| |     /    ||  |  |  /  _]|    \      /   \ |    \   /  _]    |  |__|  | /   \ |    \ |  |
          |  o  ) |    |  o  ||  |  | /  [_ |  D  )    |     ||  _  | /  [_     |  |  |  ||     ||  _  ||  |
          |   _/| |___ |     ||  ~  ||    _]|    /     |  O  ||  |  ||    _]    |  |  |  ||  O  ||  |  ||__|
-        |  |  |     ||  _  ||___, ||   [_ |    \     |     ||  |  ||   [_     |  `  '  ||     ||  |  | __
+         |  |  |     ||  _  ||___, ||   [_ |    \     |     ||  |  ||   [_     |  `  '  ||     ||  |  | __
          |  |  |     ||  |  ||     ||     ||  .  \    |     ||  |  ||     |     \      / |     ||  |  ||  |
          |__|  |_____||__|__||____/ |_____||__|\_|     \___/ |__|__||_____|      \_/\_/   \___/ |__|__||__|
         TEXT;
@@ -171,7 +189,7 @@ class ProngRenderer extends Renderer
          |    \| |     /    ||  |  |  /  _]|    \     |      ||  |__|  | /   \     |  |__|  | /   \ |    \ |  |
          |  o  ) |    |  o  ||  |  | /  [_ |  D  )    |      ||  |  |  ||     |    |  |  |  ||     ||  _  ||  |
          |   _/| |___ |     ||  ~  ||    _]|    /     |_|  |_||  |  |  ||  O  |    |  |  |  ||  O  ||  |  ||__|
-        |  |  |     ||  _  ||___, ||   [_ |    \       |  |  |  `  '  ||     |    |  `  '  ||     ||  |  | __
+         |  |  |     ||  _  ||___, ||   [_ |    \       |  |  |  `  '  ||     |    |  `  '  ||     ||  |  | __
          |  |  |     ||  |  ||     ||     ||  .  \      |  |   \      / |     |     \      / |     ||  |  ||  |
          |__|  |_____||__|__||____/ |_____||__|\_|      |__|    \_/\_/   \___/       \_/\_/   \___/ |__|__||__|
         TEXT;
