@@ -185,4 +185,6 @@ return [
         // 'Example' => App\Facades\Example::class,
     ])->toArray(),
 
+    'ssh_address' => env('SSH_ADDRESS'),
+
 ];

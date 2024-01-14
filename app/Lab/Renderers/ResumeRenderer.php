@@ -6,6 +6,7 @@ use App\Lab\Concerns\Aligns;
 use App\Lab\Concerns\DrawsAscii;
 use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Concerns\DrawsTables;
+use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Resume;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
@@ -19,6 +20,7 @@ class ResumeRenderer extends Renderer
     use DrawsHotkeys;
     use DrawsScrollbars;
     use DrawsTables;
+    use HasMinimumDimensions;
 
     protected $resumeMinWidth = 80;
 
@@ -31,14 +33,15 @@ class ResumeRenderer extends Renderer
         $prompt->width = min($idealTextWidth, $prompt->terminal()->cols() - 6);
         $prompt->maxTextWidth = min($prompt->width - 8, $idealTextWidth);
 
-        if ($prompt->terminal()->cols() < $this->resumeMinWidth) {
-            return $this->renderTooNarrow($prompt);
-        }
+        return $this->minDimensions(
+            width: $this->resumeMinWidth,
+            height: $this->resumeMinHeight,
+            render: fn () => $this->render($prompt)
+        );
+    }
 
-        if ($prompt->terminal()->lines() < $this->resumeMinHeight) {
-            return $this->renderTooShort($prompt);
-        }
-
+    protected function render(Resume $prompt): static
+    {
         $table = $this->table([
             [
                 $this->renderContent($prompt),
@@ -130,46 +133,6 @@ class ResumeRenderer extends Renderer
             width: $width,
             color: $prompt->color,
         )->implode(PHP_EOL);
-    }
-
-    protected function renderTooNarrow(Resume $prompt): string
-    {
-        $this->center(
-            [
-                $this->cyan('┏┳ ┏┳┓'),
-                $this->cyan(' ┃  ┃ '),
-                $this->cyan('┗┛  ┻ '),
-                '',
-                $this->bold('Your terminal is too narrow to display the resume.'),
-                'Make your terminal wider and try again.',
-                '',
-                $this->dim('Press ') . 'q' . $this->dim(' to quit.'),
-            ],
-            $prompt->terminal()->cols() - 2,
-            $prompt->terminal()->lines() - 2
-        )->each(fn ($line) => $this->line($line));
-
-        return $this;
-    }
-
-    protected function renderTooShort(Resume $prompt): string
-    {
-        $this->center(
-            [
-                $this->cyan('┏┳ ┏┳┓'),
-                $this->cyan(' ┃  ┃ '),
-                $this->cyan('┗┛  ┻ '),
-                '',
-                $this->bold('Your terminal is too short to display the resume.'),
-                'Make your terminal taller and try again.',
-                '',
-                $this->dim('Press ') . 'q' . $this->dim(' to quit.'),
-            ],
-            $prompt->terminal()->cols() - 2,
-            $prompt->terminal()->lines() - 2
-        )->each(fn ($line) => $this->line($line));
-
-        return $this;
     }
 
     protected function renderSummary(Resume $prompt): array

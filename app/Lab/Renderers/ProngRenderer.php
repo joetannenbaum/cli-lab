@@ -3,12 +3,15 @@
 namespace App\Lab\Renderers;
 
 use App\Lab\Concerns\Aligns;
+use App\Lab\Concerns\DrawsAscii;
 use App\Lab\Concerns\DrawsBigNumbers;
 use App\Lab\Concerns\DrawsHotkeys;
+use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Output\Lines;
 use App\Lab\Prong;
 use App\Lab\Prong\Ball;
 use App\Lab\Prong\Title;
+use App\Lab\Support\SSH;
 use Laravel\Prompts\Themes\Default\Renderer;
 
 class ProngRenderer extends Renderer
@@ -16,12 +19,23 @@ class ProngRenderer extends Renderer
     use Aligns;
     use DrawsBigNumbers;
     use DrawsHotkeys;
+    use HasMinimumDimensions;
+    use DrawsAscii;
 
     protected int $fullWidth;
 
     protected int $fullHeight;
 
     public function __invoke(Prong $prompt): string
+    {
+        return $this->minDimensions(
+            width: $prompt->width,
+            height: $prompt->height + 16,
+            render: fn () => $this->render($prompt)
+        );
+    }
+
+    protected function render(Prong $prompt): static
     {
         $this->fullWidth = $prompt->terminal()->cols() - 2;
         $this->fullHeight = $prompt->terminal()->lines() - 4;
@@ -61,7 +75,7 @@ class ProngRenderer extends Renderer
             ->map(fn ($line) => $this->dim('│ ') . $line . $this->dim(' │'))
             ->prepend($this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐'))
             ->prepend('')
-            ->prepend(($prompt->game->player_one_ready && $prompt->game->player_two_ready) ? '' : 'To join this game: ' . $this->cyan('ssh cli.lab.joe.codes prong ' . $prompt->gameId))
+            ->prepend(($prompt->game->player_one_ready && $prompt->game->player_two_ready) ? '' : 'To join this game: ' . $this->cyan(SSH::command('prong ' . $prompt->gameId)))
             ->push($this->dim('└' . str_repeat('─', $prompt->width + 4) . '┘'));
 
         $this->center($cols, $this->fullWidth, $this->fullHeight - 2)->each(
@@ -87,8 +101,7 @@ class ProngRenderer extends Renderer
 
     protected function winnerScreen(Prong $prompt): static
     {
-        $title = $prompt->winner === 1 ? $this->player1Won() : $this->player2Won();
-        $title = collect(explode(PHP_EOL, $title));
+        $title = $prompt->winner === 1 ? $this->asciiLines('player-one-won') : $this->asciiLines('player-two-won');
 
         $title->push('');
         $title->push('Press ' . $this->bold($this->cyan('q')) . ' to quit or ' . $this->bold($this->cyan('r')) . ' to restart');
@@ -100,13 +113,13 @@ class ProngRenderer extends Renderer
 
     protected function titleScreen(Prong $prompt): static
     {
-        $title = collect(explode(PHP_EOL, $this->title()));
+        $title = $this->asciiLines('prong');
 
         $title->push('');
         $title->push('Press ' . $this->bold($this->cyan('any key')) . ' to start');
         $title->push('');
         $title->push('Play with a friend:');
-        $title->push($this->bold($this->cyan('ssh cli.lab.joe.codes prong ' . $prompt->gameId)));
+        $title->push($this->bold($this->cyan(SSH::command('prong ' . $prompt->gameId))));
 
         $title = $title->map(fn ($line, $index) => $index > $prompt->loopable(Title::class)->value->current() ? '' : $line);
 
@@ -167,44 +180,5 @@ class ProngRenderer extends Renderer
         }
 
         return $output;
-    }
-
-    protected function player1Won()
-    {
-        return <<<TEXT
-         ____  _       ____  __ __    ___  ____        ___   ____     ___      __    __   ___   ____   __
-         |    \| |     /    ||  |  |  /  _]|    \      /   \ |    \   /  _]    |  |__|  | /   \ |    \ |  |
-         |  o  ) |    |  o  ||  |  | /  [_ |  D  )    |     ||  _  | /  [_     |  |  |  ||     ||  _  ||  |
-         |   _/| |___ |     ||  ~  ||    _]|    /     |  O  ||  |  ||    _]    |  |  |  ||  O  ||  |  ||__|
-         |  |  |     ||  _  ||___, ||   [_ |    \     |     ||  |  ||   [_     |  `  '  ||     ||  |  | __
-         |  |  |     ||  |  ||     ||     ||  .  \    |     ||  |  ||     |     \      / |     ||  |  ||  |
-         |__|  |_____||__|__||____/ |_____||__|\_|     \___/ |__|__||_____|      \_/\_/   \___/ |__|__||__|
-        TEXT;
-    }
-
-    protected function player2Won()
-    {
-        return <<<TEXT
-         ____  _       ____  __ __    ___  ____       ______  __    __   ___       __    __   ___   ____   __
-         |    \| |     /    ||  |  |  /  _]|    \     |      ||  |__|  | /   \     |  |__|  | /   \ |    \ |  |
-         |  o  ) |    |  o  ||  |  | /  [_ |  D  )    |      ||  |  |  ||     |    |  |  |  ||     ||  _  ||  |
-         |   _/| |___ |     ||  ~  ||    _]|    /     |_|  |_||  |  |  ||  O  |    |  |  |  ||  O  ||  |  ||__|
-         |  |  |     ||  _  ||___, ||   [_ |    \       |  |  |  `  '  ||     |    |  `  '  ||     ||  |  | __
-         |  |  |     ||  |  ||     ||     ||  .  \      |  |   \      / |     |     \      / |     ||  |  ||  |
-         |__|  |_____||__|__||____/ |_____||__|\_|      |__|    \_/\_/   \___/       \_/\_/   \___/ |__|__||__|
-        TEXT;
-    }
-
-    protected function title()
-    {
-        return <<<TEXT
-         ____  ____   ___   ____    ____
-        |    \|    \ /   \ |    \  /    |
-        |  o  )  D  )     ||  _  ||   __|
-        |   _/|    /|  O  ||  |  ||  |  |
-        |  |  |    \|     ||  |  ||  |_ |
-        |  |  |  .  \     ||  |  ||     |
-        |__|  |__|\_|\___/ |__|__||___,_|
-        TEXT;
     }
 }

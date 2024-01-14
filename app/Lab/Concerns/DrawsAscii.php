@@ -8,6 +8,10 @@ trait DrawsAscii
 {
     protected function asciiLines(string $path): Collection
     {
-        return collect(explode(PHP_EOL, file_get_contents(storage_path('ascii/' . $path . '.txt'))));
+        $lines = collect(explode(PHP_EOL, file_get_contents(storage_path('ascii/' . $path . '.txt'))));
+
+        $longest = $lines->map(fn ($line) => mb_strwidth($line))->max();
+
+        return $lines->map(fn ($line) => mb_str_pad($line, $longest));
     }
 }
