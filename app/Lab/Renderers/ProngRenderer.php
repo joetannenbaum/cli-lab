@@ -18,10 +18,11 @@ use Laravel\Prompts\Themes\Default\Renderer;
 class ProngRenderer extends Renderer
 {
     use Aligns;
+    // Crawford2
+    use DrawsAscii;
     use DrawsBigNumbers;
     use DrawsHotkeys;
     use HasMinimumDimensions;
-    use DrawsAscii;
 
     protected int $fullWidth;
 
@@ -76,7 +77,7 @@ class ProngRenderer extends Renderer
             ->map(fn ($line) => $this->dim('│ ') . $line . $this->dim(' │'))
             ->prepend($this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐'))
             ->prepend('')
-            ->prepend(($prompt->game->player_one_ready && $prompt->game->player_two_ready) ? '' : 'To join this game: ' . $this->cyan(SSH::command('prong ' . $prompt->gameId)))
+            ->prepend(($prompt->everyoneReady) ? '' : 'To join this game: ' . $this->cyan(SSH::command('prong ' . $prompt->gameId)))
             ->push($this->dim('└' . str_repeat('─', $prompt->width + 4) . '┘'));
 
         $this->center($cols, $this->fullWidth, $this->fullHeight - 2)->each(
@@ -90,9 +91,9 @@ class ProngRenderer extends Renderer
         $hotkeys = collect($this->hotkeys())->implode(PHP_EOL);
 
         if ($prompt->playerNumber === 1) {
-            $hotkeys = $this->bold('← You are Player 1    ') . $hotkeys;
+            $hotkeys = $this->bold($this->red('← You are Player 1    ')) . $hotkeys;
         } else {
-            $hotkeys = $hotkeys . $this->bold('    You are Player 2 →');
+            $hotkeys = $hotkeys . $this->bold($this->green('    You are Player 2 →'));
         }
 
         $this->centerHorizontally($hotkeys, $this->fullWidth)->each(fn ($line) => $this->line($line));
@@ -102,7 +103,13 @@ class ProngRenderer extends Renderer
 
     protected function winnerScreen(Prong $prompt): static
     {
-        $title = $prompt->winner === 1 ? $this->asciiLines('player-one-won') : $this->asciiLines('player-two-won');
+        if ($prompt->winner === 1) {
+            $title = $this->asciiLines('player-one-won');
+        } else if ($prompt->againstComputer) {
+            $title = $this->asciiLines('computer-won');
+        } else {
+            $title = $this->asciiLines('player-two-won');
+        }
 
         $title->push('');
         $title->push('Press ' . $this->bold($this->cyan('q')) . ' to quit or ' . $this->bold($this->cyan('r')) . ' to restart');
@@ -117,10 +124,7 @@ class ProngRenderer extends Renderer
         $title = $this->asciiLines('prong');
 
         $title->push('');
-        $title->push('Press ' . $this->bold($this->cyan('any key')) . ' to start');
-        $title->push('');
-        $title->push('Play with a friend:');
-        $title->push($this->bold($this->cyan(SSH::command('prong ' . $prompt->gameId))));
+        $title->push('Press ' . $this->bold($this->cyan('ENTER')) . ' to start');
 
         $title = $title->map(
             fn ($line, $index) => $index > $prompt->loopable(Title::class)->value->current()
@@ -136,9 +140,13 @@ class ProngRenderer extends Renderer
 
     protected function ball(Prong $prong, Ball $ball): string
     {
-        if (!$prong->game->player_one_ready || !$prong->game->player_two_ready) {
+        if (!$prong->everyoneReady) {
             return $this->center(
-                'Waiting for other player...',
+                [
+                    'Waiting for other player...',
+                    '',
+                    'Press ' . $this->bold($this->cyan('c')) . ' to play against the computer',
+                ],
                 $prong->width,
                 $prong->height,
             )->map(fn ($line) => str_pad($line, $prong->width))->implode(PHP_EOL);

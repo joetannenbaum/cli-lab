@@ -12,6 +12,7 @@ use App\Lab\Prong\Paddle;
 use App\Lab\Prong\Title;
 use App\Lab\Renderers\ProngRenderer;
 use App\Models\ProngGame;
+use Illuminate\Support\Lottery;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
@@ -32,6 +33,10 @@ class Prong extends Prompt
     public ProngGame $game;
 
     public bool $observer = false;
+
+    public bool $againstComputer = false;
+
+    public bool $everyoneReady = false;
 
     public int $playerNumber = 0;
 
@@ -123,6 +128,8 @@ class Prong extends Prompt
 
     protected function setPlayers(): void
     {
+        // TODO indicate that this is against the computer or not so no one can join and mess up the game
+
         if (!$this->game->player_one) {
             $this->game->update(['player_one' => true]);
             $this->playerNumber = 1;
@@ -174,20 +181,27 @@ class Prong extends Prompt
 
         $this->render();
 
-        while (static::terminal()->read() !== null) {
-            $this->loopable(Title::class)->hide();
+        while (($key = static::terminal()->read()) !== null) {
+            match ($key) {
+                'q', Key::CTRL_C => static::terminal()->exit(),
+                default     => null,
+            };
 
-            $this->loop(function () {
-                $this->render();
+            if ($key === Key::ENTER) {
+                $this->loopable(Title::class)->hide();
 
-                if ($this->loopable(Title::class)->value->current() === 0) {
-                    return false;
-                }
-            }, 50_000);
+                $this->loop(function () {
+                    $this->render();
 
-            $this->clearRegisteredLoopables();
+                    if ($this->loopable(Title::class)->value->current() === 0) {
+                        return false;
+                    }
+                }, 50_000);
 
-            break;
+                $this->clearRegisteredLoopables();
+
+                break;
+            }
         }
 
         $this->state = 'playing';
@@ -220,6 +234,22 @@ class Prong extends Prompt
         $this->playGame();
     }
 
+    protected function onBallDirectionChange(Ball $ball, int $nextY)
+    {
+        if (!$this->againstComputer) {
+            return;
+        }
+
+        if ($ball->direction === 1) {
+            if (Lottery::odds(4, 5)->choose()) {
+                $this->loopable('player2')->value->to($nextY);
+            } else {
+                $offset = Lottery::odds(1, 2)->choose() ? 1 : -1;
+                $this->loopable('player2')->value->to($nextY - (6 * $offset));
+            }
+        }
+    }
+
     protected function playGame()
     {
         $this->registerLoopable(Paddle::class, 'player1');
@@ -227,16 +257,27 @@ class Prong extends Prompt
         $this->registerLoopable(Ball::class);
 
         $this->loopable(Ball::class)->start();
+        $this->loopable(Ball::class)->onDirectionChange($this->onBallDirectionChange(...));
 
         while (!$this->game->player_one_ready || !$this->game->player_two_ready) {
             $this->refreshGame();
 
             $this->render();
 
-            $this->handleKey(KeyPressListener::once());
+            match (KeyPressListener::once()) {
+                'q', Key::CTRL_C  => static::terminal()->exit(),
+                'c'               => $this->againstComputer = true,
+                default           => null,
+            };
+
+            if ($this->againstComputer) {
+                break;
+            }
 
             usleep(50_000);
         }
+
+        $this->everyoneReady = true;
 
         while ($this->countdown > 0) {
             $this->render();
@@ -278,10 +319,9 @@ class Prong extends Prompt
 
         while (($key = static::terminal()->read()) !== null) {
             match ($key) {
-                'q'         => static::terminal()->exit(),
-                Key::CTRL_C => static::terminal()->exit(),
-                'r'         => $this->restartGame(),
-                default     => null,
+                'q', Key::CTRL_C => static::terminal()->exit(),
+                'r'              => $this->restartGame(),
+                default          => null,
             };
         }
     }
@@ -289,13 +329,12 @@ class Prong extends Prompt
     protected function handleKey($key)
     {
         match ($key) {
-            Key::CTRL_C     => static::terminal()->exit(),
-            Key::UP_ARROW   => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveUp(),
-            Key::DOWN_ARROW => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveDown(),
-            Key::UP         => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveUp(),
-            Key::DOWN       => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveDown(),
-            'q'             => static::terminal()->exit(),
-            default         => null,
+            'q', Key::CTRL_C => static::terminal()->exit(),
+            Key::UP_ARROW    => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveUp(),
+            Key::DOWN_ARROW  => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveDown(),
+            Key::UP          => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveUp(),
+            Key::DOWN        => $this->loopable($this->playerNumber === 1 ? 'player1' : 'player2')->moveDown(),
+            default          => null,
         };
     }
 }

@@ -16,6 +16,8 @@ class Ball implements Tickable
 
     public int $direction;
 
+    protected $onDirectionChangeCb;
+
     protected array $steps = [];
 
     public function __construct(protected Prong $prompt)
@@ -43,6 +45,11 @@ class Ball implements Tickable
         $this->x += $this->direction;
     }
 
+    public function onDirectionChange(callable $cb)
+    {
+        $this->onDirectionChangeCb = $cb;
+    }
+
     public function start()
     {
         $this->y ??= rand(0, $this->prompt->height);
@@ -67,5 +74,9 @@ class Ball implements Tickable
         $this->steps = $steps;
 
         $this->direction = $this->x === 0 ? 1 : -1;
+
+        if (isset($this->onDirectionChangeCb)) {
+            ($this->onDirectionChangeCb)($this, $nextY);
+        }
     }
 }
