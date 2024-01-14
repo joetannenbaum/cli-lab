@@ -18,8 +18,6 @@ use Laravel\Prompts\Themes\Default\Renderer;
 class ProngRenderer extends Renderer
 {
     use Aligns;
-
-    // Crawford2
     use DrawsAscii;
     use DrawsBigNumbers;
     use DrawsHotkeys;
@@ -74,7 +72,6 @@ class ProngRenderer extends Renderer
         $cols = Lines::fromColumns($cols)
             ->alignNone()
             ->lines()
-            ->filter(fn ($line) => $line !== '')
             ->map(fn ($line) => $this->dim('│ ') . $line . $this->dim(' │'))
             ->prepend($this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐'))
             ->prepend('')
@@ -124,6 +121,7 @@ class ProngRenderer extends Renderer
     protected function winnerScreen(Prong $prompt): static
     {
         if ($prompt->winner === 1) {
+            // Font: Crawford2
             $title = $this->asciiLines('player-one-won');
         } elseif ($prompt->againstComputer) {
             $title = $this->asciiLines('computer-won');
@@ -191,28 +189,29 @@ class ProngRenderer extends Renderer
             . str_repeat(' ', max($prong->width - $ball->x - 1, 0))
             . PHP_EOL;
 
-        $bottomPadding = $prong->height - $ball->y;
+        $bottomPadding = $prong->height - $ball->y - 1;
 
         if ($bottomPadding > 0) {
             $output .= str_repeat($emptyLine, $bottomPadding);
         }
 
-        return $output;
+        return rtrim($output, PHP_EOL);
     }
 
-    protected function paddle(Prong $prong, $y, $color): string
+    protected function paddle(Prong $prompt, $y, $color): string
     {
-        $paddleHeight = 5;
+        $paddleHeight = $prompt->loopable('player1')->height;
+
         $output = str_repeat(' ' . PHP_EOL, $y);
 
-        $output .= str_repeat($this->{$color}('█') . PHP_EOL, $paddleHeight) . ' ' . PHP_EOL;
+        $output .= str_repeat($this->{$color}('█') . PHP_EOL, $paddleHeight);
 
-        $extraLines = $prong->height - $y - $paddleHeight;
+        $extraLines = $prompt->height - $y - $paddleHeight;
 
         if ($extraLines > 0) {
             $output .= str_repeat(' ' . PHP_EOL, $extraLines);
         }
 
-        return $output;
+        return rtrim($output, PHP_EOL);
     }
 }

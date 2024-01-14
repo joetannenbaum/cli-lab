@@ -59,7 +59,7 @@ class Lines
         return $this;
     }
 
-    public function lines()
+    public function lines(): Collection
     {
         if ($this->lines->count() === 1) {
             return $this->lines->first();

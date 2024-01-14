@@ -62,6 +62,11 @@ trait Aligns
             $lines->push('');
         }
 
+        // In case we overflowed a bit, trim the bottom
+        while ($lines->count() > $height) {
+            $lines->pop();
+        }
+
         return $lines;
     }
 
