@@ -8,6 +8,7 @@ use App\Lab\Concerns\DrawsBigNumbers;
 use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Output\Lines;
+use App\Lab\Output\Util;
 use App\Lab\Prong;
 use App\Lab\Prong\Ball;
 use App\Lab\Prong\Title;
@@ -121,7 +122,12 @@ class ProngRenderer extends Renderer
         $title->push('Play with a friend:');
         $title->push($this->bold($this->cyan(SSH::command('prong ' . $prompt->gameId))));
 
-        $title = $title->map(fn ($line, $index) => $index > $prompt->loopable(Title::class)->value->current() ? '' : $line);
+        $title = $title->map(
+            fn ($line, $index) => $index > $prompt->loopable(Title::class)->value->current()
+                // Keep the line length so that nothing shifts if this is the longest line
+                ? str_repeat(' ', mb_strwidth(Util::stripEscapeSequences($line)))
+                : $line
+        );
 
         $this->center($title, $this->fullWidth, $this->fullHeight)->each(fn ($line) => $this->line($line));
 
