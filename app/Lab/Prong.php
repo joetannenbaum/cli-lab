@@ -42,9 +42,15 @@ class Prong extends Prompt
 
     public $countdown = 3;
 
+    public int $ballSpeed;
+
+    public int $defaultBallSpeed = 25_000;
+
     public function __construct(public ?string $gameId = null)
     {
         $this->registerTheme(ProngRenderer::class);
+
+        $this->ballSpeed = $this->defaultBallSpeed;
 
         $this->loadGame();
 
@@ -226,6 +232,8 @@ class Prong extends Prompt
             $fields['player_two_ready'] = true;
         }
 
+        $this->ballSpeed = $this->defaultBallSpeed;
+
         $this->countdown = 3;
 
         $this->game->update($fields);
@@ -240,13 +248,17 @@ class Prong extends Prompt
             return;
         }
 
-        if ($ball->direction === 1) {
-            if (Lottery::odds(4, 5)->choose()) {
-                $this->loopable('player2')->value->to($nextY);
-            } else {
-                $offset = Lottery::odds(1, 2)->choose() ? 1 : -1;
-                $this->loopable('player2')->value->to($nextY - (6 * $offset));
-            }
+        if ($ball->direction !== 1) {
+            // We only care about the ball going in the computer's direction
+            return;
+        }
+
+        // Make sure the computer gets at least 4 hits before it starts to possibly miss
+        if ($ball->directionChangeCount <= 4 || Lottery::odds(9, 10)->choose()) {
+            $this->loopable('player2')->value->to($nextY);
+        } else {
+            $offset = Lottery::odds(1, 2)->choose() ? 1 : -1;
+            $this->loopable('player2')->value->to($nextY - (6 * $offset));
         }
     }
 
@@ -255,9 +267,6 @@ class Prong extends Prompt
         $this->registerLoopable(Paddle::class, 'player1');
         $this->registerLoopable(Paddle::class, 'player2');
         $this->registerLoopable(Ball::class);
-
-        $this->loopable(Ball::class)->start();
-        $this->loopable(Ball::class)->onDirectionChange($this->onBallDirectionChange(...));
 
         while (!$this->game->player_one_ready || !$this->game->player_two_ready) {
             $this->refreshGame();
@@ -277,6 +286,9 @@ class Prong extends Prompt
             usleep(50_000);
         }
 
+        $this->loopable(Ball::class)->onDirectionChange($this->onBallDirectionChange(...));
+        $this->loopable(Ball::class)->start();
+
         $this->everyoneReady = true;
 
         while ($this->countdown > 0) {
@@ -289,10 +301,12 @@ class Prong extends Prompt
             usleep(1_000_000);
         }
 
-        $this->loop(function () {
+        $this->loop(function ($loopable) {
             if ($this->winner !== null) {
                 return false;
             }
+
+            $loopable->sleepFor($this->ballSpeed);
 
             $ball = $this->loopable(Ball::class);
 
@@ -311,7 +325,7 @@ class Prong extends Prompt
             $this->handleKey(KeyPressListener::once());
 
             $this->render();
-        }, 25_000);
+        }, $this->ballSpeed);
 
         $this->game->update(['player_one_ready' => false, 'player_two_ready' => false]);
 

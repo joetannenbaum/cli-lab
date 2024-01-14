@@ -13,6 +13,13 @@ trait Loops
         return $this->loopables[$component];
     }
 
+    public function sleepFor(int $microseconds): static
+    {
+        $this->sleepBetweenLoops = $microseconds;
+
+        return $this;
+    }
+
     protected function registerLoopable(string $component, ?string $key = null): void
     {
         $this->loopables[$key ?? $component] = new $component($this);
@@ -28,7 +35,7 @@ trait Loops
         $this->sleepBetweenLoops = $sleepFor;
 
         while (true) {
-            $continue = $cb();
+            $continue = $cb($this);
 
             if ($continue === false) {
                 break;

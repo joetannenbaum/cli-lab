@@ -18,6 +18,7 @@ use Laravel\Prompts\Themes\Default\Renderer;
 class ProngRenderer extends Renderer
 {
     use Aligns;
+
     // Crawford2
     use DrawsAscii;
     use DrawsBigNumbers;
@@ -77,7 +78,7 @@ class ProngRenderer extends Renderer
             ->map(fn ($line) => $this->dim('│ ') . $line . $this->dim(' │'))
             ->prepend($this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐'))
             ->prepend('')
-            ->prepend(($prompt->everyoneReady) ? '' : 'To join this game: ' . $this->cyan(SSH::command('prong ' . $prompt->gameId)))
+            ->prepend($this->gameHeader($prompt))
             ->push($this->dim('└' . str_repeat('─', $prompt->width + 4) . '┘'));
 
         $this->center($cols, $this->fullWidth, $this->fullHeight - 2)->each(
@@ -101,11 +102,30 @@ class ProngRenderer extends Renderer
         return $this;
     }
 
+    protected function gameHeader(Prong $prompt): string
+    {
+        if ($prompt->everyoneReady) {
+            $speed = $prompt->loopable(Ball::class)->speed;
+            $maxSpeed = $prompt->loopable(Ball::class)->maxSpeed;
+            $color = match ($speed) {
+                1       => 'green',
+                2       => 'green',
+                3       => 'yellow',
+                4       => 'yellow',
+                default => 'red',
+            };
+
+            return 'Speed ' . rtrim($this->{$color}(str_repeat('█ ', $speed)) . $this->dim(str_repeat('█ ', $maxSpeed - $speed)));
+        }
+
+        return 'To join this game: ' . $this->cyan(SSH::command('prong ' . $prompt->gameId));
+    }
+
     protected function winnerScreen(Prong $prompt): static
     {
         if ($prompt->winner === 1) {
             $title = $this->asciiLines('player-one-won');
-        } else if ($prompt->againstComputer) {
+        } elseif ($prompt->againstComputer) {
             $title = $this->asciiLines('computer-won');
         } else {
             $title = $this->asciiLines('player-two-won');

@@ -16,6 +16,16 @@ class Ball implements Tickable
 
     public int $direction;
 
+    public int $directionChangeCount = 0;
+
+    public int $speed = 1;
+
+    public int $maxSpeed = 5;
+
+    public int $nextSpeed = 1;
+
+    public int $changeSpeedEvery = 6;
+
     protected $onDirectionChangeCb;
 
     protected array $steps = [];
@@ -32,6 +42,8 @@ class Ball implements Tickable
 
     public function onTick(): void
     {
+        $this->speed = $this->nextSpeed;
+
         if ($this->prompt->observer) {
             return;
         }
@@ -74,6 +86,15 @@ class Ball implements Tickable
         $this->steps = $steps;
 
         $this->direction = $this->x === 0 ? 1 : -1;
+
+        if ($this->speed < $this->maxSpeed && $this->directionChangeCount > 0) {
+            if ($this->directionChangeCount % $this->changeSpeedEvery === 0) {
+                $this->nextSpeed++;
+                $this->prompt->ballSpeed -= 4000;
+            }
+        }
+
+        $this->directionChangeCount++;
 
         if (isset($this->onDirectionChangeCb)) {
             ($this->onDirectionChangeCb)($this, $nextY);

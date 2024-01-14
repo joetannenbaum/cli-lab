@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Lab\Support;
 
-use Illuminate\Support\Number;
-
 class Animatable
 {
     protected int|float $nextValue;
