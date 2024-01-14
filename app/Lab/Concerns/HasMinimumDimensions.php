@@ -7,7 +7,7 @@ trait HasMinimumDimensions
     use Aligns;
     use DrawsAscii;
 
-    protected function minDimensions(int $width = 0, int $height = 0, callable $render): string
+    protected function minDimensions(callable $render, int $width = 0, int $height = 0): string
     {
         $termWidth = $this->prompt->terminal()->cols();
         $termHeight = $this->prompt->terminal()->lines();
