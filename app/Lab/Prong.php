@@ -12,6 +12,7 @@ use App\Lab\Prong\Paddle;
 use App\Lab\Prong\Title;
 use App\Lab\Renderers\ProngRenderer;
 use App\Models\ProngGame;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Lottery;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Key;
@@ -99,6 +100,11 @@ class Prong extends Prompt
 
         if ($this->winner !== null) {
             $this->game->update(['winner' => $this->winner]);
+
+            Log::info('Game complete', [
+                'winner' => $this->winner,
+                'game'   => $this->game->toArray(),
+            ]);
         }
     }
 
@@ -151,8 +157,8 @@ class Prong extends Prompt
         $this->game = $this->game->fresh();
 
         $refreshPlayers = match ($this->playerNumber) {
-            1 => $this->updatePlayerTwoPosition(...),
-            2 => $this->updatePlayerOnePosition(...),
+            1       => $this->updatePlayerTwoPosition(...),
+            2       => $this->updatePlayerOnePosition(...),
             default => function () {
                 $this->updatePlayerOnePosition();
                 $this->updatePlayerTwoPosition();
@@ -164,6 +170,7 @@ class Prong extends Prompt
         if ($this->playerNumber !== 1 && $this->game->ball_x !== null && $this->game->ball_y !== null) {
             $this->loopable(Ball::class)->x = $this->game->ball_x;
             $this->loopable(Ball::class)->y = $this->game->ball_y;
+            $this->loopable(Ball::class)->speed = $this->game->ball_speed ?? 1;
         }
 
         $this->winner = $this->game->winner;

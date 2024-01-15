@@ -95,7 +95,7 @@ class ProngRenderer extends Renderer
 
         if ($prompt->playerNumber === 1) {
             $hotkeys = $this->bold($this->red('← You are Player 1    ')) . $hotkeys;
-        } else if ($prompt->playerNumber === 2) {
+        } elseif ($prompt->playerNumber === 2) {
             $hotkeys = $hotkeys . $this->bold($this->green('    You are Player 2 →'));
         } else {
             $hotkeys = $this->bold('You are watching    ') . $hotkeys;

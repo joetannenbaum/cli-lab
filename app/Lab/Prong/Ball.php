@@ -94,7 +94,8 @@ class Ball implements Tickable
             if ($this->speed < $this->maxSpeed) {
                 $this->nextSpeed++;
                 $this->prompt->ballSpeed -= 4000;
-            } else if ($this->prompt->loopable('player1')->height > 2) {
+                $this->prompt->game->update(['ball_speed' => $this->nextSpeed]);
+            } elseif ($this->prompt->loopable('player1')->height > 2) {
                 $this->prompt->loopable('player1')->height--;
                 $this->prompt->loopable('player2')->height--;
             }
