@@ -47,6 +47,7 @@
         }
     </style>
 
+    @include('partials.fathom_analytics')
 </head>
 
 <body class="antialiased bg-slate-950 text-white font-mono">
