@@ -90,10 +90,13 @@ class Ball implements Tickable
 
         $this->direction = $this->x === 0 ? 1 : -1;
 
-        if ($this->speed < $this->maxSpeed && $this->directionChangeCount > 0) {
-            if ($this->directionChangeCount % $this->changeSpeedEvery === 0) {
+        if ($this->directionChangeCount > 0 && $this->directionChangeCount % $this->changeSpeedEvery === 0) {
+            if ($this->speed < $this->maxSpeed) {
                 $this->nextSpeed++;
                 $this->prompt->ballSpeed -= 4000;
+            } else if ($this->prompt->loopable('player1')->height > 2) {
+                $this->prompt->loopable('player1')->height--;
+                $this->prompt->loopable('player2')->height--;
             }
         }
 
