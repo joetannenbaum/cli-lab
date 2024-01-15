@@ -32,7 +32,7 @@ class Ball implements Tickable
 
     public function __construct(protected Prong $prompt)
     {
-        if ($this->prompt->observer) {
+        if ($this->prompt->playerNumber !== 1) {
             return;
         }
 
@@ -42,11 +42,11 @@ class Ball implements Tickable
 
     public function onTick(): void
     {
-        $this->speed = $this->nextSpeed;
-
-        if ($this->prompt->observer) {
+        if ($this->prompt->playerNumber !== 1) {
             return;
         }
+
+        $this->speed = $this->nextSpeed;
 
         if (count($this->steps) === 0) {
             $this->prompt->determineWinner();
