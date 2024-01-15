@@ -8,6 +8,6 @@ class SSH
 {
     public static function command(string $args)
     {
-        return 'ssh cli.lab.joe.codes ' . $args;
+        return trim('ssh cli.lab.joe.codes ' . $args);
     }
 }
