@@ -11,7 +11,7 @@ use App\Lab\Prong\Ball;
 use App\Lab\Prong\Paddle;
 use App\Lab\Prong\Title;
 use App\Lab\Renderers\ProngRenderer;
-use App\Models\ProngGame;
+use App\Lab\State\ProngGame;
 use Illuminate\Support\Lottery;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Key;
@@ -75,9 +75,9 @@ class Prong extends Prompt
     public function __destruct()
     {
         if ($this->playerNumber === 1) {
-            $this->game->update(['player_one' => false]);
+            $this->game->update('playerOne', false);
         } elseif ($this->playerNumber === 2) {
-            $this->game->update(['player_two' => false]);
+            $this->game->update('playerTwo', false);
         }
 
         $this->exitAltScreen();
@@ -101,7 +101,7 @@ class Prong extends Prompt
         $this->winner = $ball->x === 0 ? $this->getWinner($ball, $player1, 2) : $this->getWinner($ball, $player2, 1);
 
         if ($this->winner !== null) {
-            $this->game->update(['winner' => $this->winner]);
+            $this->game->update('winner', $this->winner);
         }
     }
 
@@ -110,16 +110,16 @@ class Prong extends Prompt
         if ($this->gameId === null) {
             do {
                 $this->gameId = strtoupper(Str::random(12));
-            } while (ProngGame::where('game_id', $this->gameId)->exists());
+            } while (ProngGame::exists($this->gameId));
 
-            $this->game = ProngGame::create(['game_id' => $this->gameId]);
+            $this->game = ProngGame::create($this->gameId);
 
             $this->setPlayers();
 
             return;
         }
 
-        $this->game = ProngGame::where('game_id', ($this->gameId))->first();
+        $this->game = ProngGame::get($this->gameId);
 
         if ($this->game === null) {
             $this->gameId = null;
@@ -136,11 +136,11 @@ class Prong extends Prompt
     {
         // TODO indicate that this is against the computer or not so no one can join and mess up the game
 
-        if (!$this->game->player_one) {
-            $this->game->update(['player_one' => true]);
+        if (!$this->game->playerOne) {
+            $this->game->update('playerOne', true);
             $this->playerNumber = 1;
-        } elseif (!$this->game->player_two) {
-            $this->game->update(['player_two' => true]);
+        } elseif (!$this->game->playerTwo) {
+            $this->game->update('playerTwo', true);
             $this->playerNumber = 2;
             $this->observer = true;
         } else {
@@ -152,22 +152,22 @@ class Prong extends Prompt
 
     protected function refreshGame(): void
     {
-        $this->game = $this->game->fresh();
+        $this->game->fresh();
 
         if ($this->playerNumber === 1) {
-            if ($this->game->player_two_position !== null) {
-                $this->loopable('player2')->value->update($this->game->player_two_position);
+            if ($this->game->playerTwoPosition !== null) {
+                $this->loopable('player2')->value->update($this->game->playerTwoPosition);
             }
         } else {
-            if ($this->game->player_one_position !== null) {
-                $this->loopable('player1')->value->update($this->game->player_one_position);
+            if ($this->game->playerOnePosition !== null) {
+                $this->loopable('player1')->value->update($this->game->playerOnePosition);
             }
         }
 
         if ($this->observer) {
-            if ($this->game->ball_x !== null && $this->game->ball_y !== null) {
-                $this->loopable(Ball::class)->x = $this->game->ball_x;
-                $this->loopable(Ball::class)->y = $this->game->ball_y;
+            if ($this->game->ballPositionX !== null && $this->game->ballPositionY !== null) {
+                $this->loopable(Ball::class)->x = $this->game->ballPositionX;
+                $this->loopable(Ball::class)->y = $this->game->ballPositionY;
             }
         }
 
@@ -213,9 +213,9 @@ class Prong extends Prompt
         $this->state = 'playing';
 
         if ($this->playerNumber === 1) {
-            $this->game->update(['player_one_ready' => true]);
+            $this->game->update('playerOneReady', true);
         } elseif ($this->playerNumber === 2) {
-            $this->game->update(['player_two_ready' => true]);
+            $this->game->update('playerTwoReady', true);
         }
 
         $this->playGame();
@@ -224,19 +224,18 @@ class Prong extends Prompt
     protected function restartGame()
     {
         $this->winner = null;
-        $fields = ['winner' => null];
+
+        $this->game = $this->game->reset();
 
         if ($this->playerNumber === 1) {
-            $fields['player_one_ready'] = true;
+            $this->game->update('playerOneReady', true);
         } elseif ($this->playerNumber === 2) {
-            $fields['player_two_ready'] = true;
+            $this->game->update('playerTwoReady', true);
         }
 
         $this->ballSpeed = $this->defaultBallSpeed;
 
         $this->countdown = 3;
-
-        $this->game->update($fields);
 
         $this->clearRegisteredLoopables();
         $this->playGame();
@@ -268,7 +267,7 @@ class Prong extends Prompt
         $this->registerLoopable(Paddle::class, 'player2');
         $this->registerLoopable(Ball::class);
 
-        while (!$this->game->player_one_ready || !$this->game->player_two_ready) {
+        while (!$this->game->playerOneReady || !$this->game->playerTwoReady) {
             $this->refreshGame();
 
             $this->render();
@@ -310,15 +309,17 @@ class Prong extends Prompt
 
             $ball = $this->loopable(Ball::class);
 
-            $fields = ['ball_y' => $ball->y, 'ball_x' => $ball->x, 'ball_direction' => $ball->direction];
+            $this->game->updateMany([
+                'ballPositionX' => $ball->x,
+                'ballPositionY' => $ball->y,
+                'ballDirection' => $ball->direction,
+            ]);
 
             if ($this->playerNumber === 1) {
-                $fields['player_one_position'] = $this->loopable('player1')->value->current();
+                $this->game->update('playerOnePosition', $this->loopable('player1')->value->current());
             } else {
-                $fields['player_two_position'] = $this->loopable('player2')->value->current();
+                $this->game->update('playerTwoPosition', $this->loopable('player2')->value->current());
             }
-
-            $this->game->update($fields);
 
             $this->refreshGame();
 
@@ -327,7 +328,8 @@ class Prong extends Prompt
             $this->render();
         }, $this->ballSpeed);
 
-        $this->game->update(['player_one_ready' => false, 'player_two_ready' => false]);
+        $this->game->update('playerOneReady', false);
+        $this->game->update('playerTwoReady', false);
 
         $this->render();
 
