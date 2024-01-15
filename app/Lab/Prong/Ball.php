@@ -64,9 +64,12 @@ class Ball implements Tickable
 
     public function start()
     {
-        $this->y ??= rand(0, $this->prompt->height);
+        // Account for the size of the ball
+        $maxY = $this->prompt->height - 1;
 
-        $nextY = rand(0, $this->prompt->height);
+        $this->y ??= rand(0, $maxY);
+
+        $nextY = rand(0, $maxY);
 
         $steps = range($this->y, $nextY);
 

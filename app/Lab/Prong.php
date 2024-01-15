@@ -24,9 +24,9 @@ class Prong extends Prompt
     use RegistersThemes;
     use SetsUpAndResets;
 
-    public int $height;
+    public int $height = 26;
 
-    public int $width;
+    public int $width = 100;
 
     public ?int $winner = null;
 
@@ -53,9 +53,6 @@ class Prong extends Prompt
         $this->ballSpeed = $this->defaultBallSpeed;
 
         $this->loadGame();
-
-        $this->width = 100;
-        $this->height = 26;
 
         $this->state = 'title';
 
