@@ -66,10 +66,10 @@
                 Tannenbaum</a>
         </div>
 
-        <div x-data="{ input: '{{ \App\Lab\Support\SSH::command('') }}' }">
+        <div x-data="{ input: '{{ \App\Lab\Support\SSH::command() }}' }">
             <div class="text-3xl mt-12 relative cursor-pointer hover:text-sky-300 transition-colors" x-clipboard="input"
                 title="Copy to Clipboard">
-                <span>{{ \App\Lab\Support\SSH::command('') }}</span>
+                <span>{{ \App\Lab\Support\SSH::command() }}</span>
                 <span class="w-1.5 h-8 inline-block animate-blink bg-sky-300 absolute left-full top-1 ml-3"></span>
             </div>
         </div>
