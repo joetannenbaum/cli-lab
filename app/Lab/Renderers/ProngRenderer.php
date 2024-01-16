@@ -82,16 +82,23 @@ class ProngRenderer extends Renderer
             fn ($line) => $this->line($line)
         );
 
-        $this->hotkey('↑', 'Move up');
-        $this->hotkey('↓', 'Move down');
+        if ($prompt->observer) {
+            // $this->hotkey('n', 'Start your own game');
+        } else {
+            $this->hotkey('↑', 'Move up');
+            $this->hotkey('↓', 'Move down');
+        }
+
         $this->hotkey('q', 'Quit');
 
         $hotkeys = collect($this->hotkeys())->implode(PHP_EOL);
 
         if ($prompt->playerNumber === 1) {
             $hotkeys = $this->bold($this->red('← You are Player 1    ')) . $hotkeys;
-        } else {
+        } elseif ($prompt->playerNumber === 2) {
             $hotkeys = $hotkeys . $this->bold($this->green('    You are Player 2 →'));
+        } else {
+            $hotkeys = $this->bold('You are watching    ') . $hotkeys;
         }
 
         $this->centerHorizontally($hotkeys, $this->fullWidth)->each(fn ($line) => $this->line($line));

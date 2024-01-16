@@ -22,6 +22,16 @@ class BrowseRenderer extends Renderer
 
     public function __invoke(Browse $prompt): string
     {
+        $this->centerHorizontally(
+            $this->asciiLines('cli-lab')->map(fn ($line) => $this->cyan($line))
+                ->push('')
+                ->push('by ' . $this->bold($this->cyan('Joe Tannenbaum')))
+                ->push($this->dim('https://twitter.com/joetannenbaum')),
+            $prompt->terminal()->cols(),
+        )->each(fn ($line) => $this->line($line));
+
+        $this->newLine(2);
+
         collect($prompt->items)->each(function ($item, $index) use ($prompt) {
             if ($prompt->index === $index) {
                 $this->line($this->cyan($this->bold($item['title'])));
@@ -31,17 +41,18 @@ class BrowseRenderer extends Renderer
                 return;
             }
 
-            $this->line($this->bold($item['title']));
+            $this->line($this->dim($this->bold($item['title'])));
             $this->line($this->dim($item['description']));
             $this->newLine();
         });
 
         $this->hotkey('↑ ↓', 'Change selection');
+        $this->hotkey('Enter', 'Select');
         $this->hotkey('q', 'Quit');
 
         $this->newLine();
 
-        collect($this->hotkeys())->each(fn ($line) => $this->line(' ' . $line));
+        collect($this->hotkeys())->each(fn ($line) => $this->line($line));
 
         return $this;
     }

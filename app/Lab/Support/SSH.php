@@ -6,8 +6,14 @@ namespace App\Lab\Support;
 
 class SSH
 {
-    public static function command(string $args)
+    public static function command(string $args = null)
     {
-        return 'ssh cli.lab.joe.codes ' . $args;
+        $base = 'ssh cli.lab.joe.codes';
+
+        if ($args === null) {
+            return $base;
+        }
+
+        return $base . ' -t ' . $args;
     }
 }

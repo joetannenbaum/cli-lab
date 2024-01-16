@@ -34,7 +34,7 @@ class Browse extends Prompt
             ],
             [
                 'title'       => 'Prong',
-                'description' => 'Play a game of Prompts Pong with a friend',
+                'description' => "Play a game of Prompts Pong with a friend\n(or against the computer)",
                 'run'         => fn () => (new Prong)->play(),
             ],
         ];

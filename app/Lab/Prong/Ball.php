@@ -32,7 +32,7 @@ class Ball implements Tickable
 
     public function __construct(protected Prong $prompt)
     {
-        if ($this->prompt->observer) {
+        if ($this->prompt->playerNumber !== 1) {
             return;
         }
 
@@ -42,11 +42,11 @@ class Ball implements Tickable
 
     public function onTick(): void
     {
-        $this->speed = $this->nextSpeed;
-
-        if ($this->prompt->observer) {
+        if ($this->prompt->playerNumber !== 1) {
             return;
         }
+
+        $this->speed = $this->nextSpeed;
 
         if (count($this->steps) === 0) {
             $this->prompt->determineWinner();
@@ -64,9 +64,12 @@ class Ball implements Tickable
 
     public function start()
     {
-        $this->y ??= rand(0, $this->prompt->height);
+        // Account for the size of the ball
+        $maxY = $this->prompt->height - 1;
 
-        $nextY = rand(0, $this->prompt->height);
+        $this->y ??= rand(0, $maxY);
+
+        $nextY = rand(0, $maxY);
 
         $steps = range($this->y, $nextY);
 
@@ -87,10 +90,14 @@ class Ball implements Tickable
 
         $this->direction = $this->x === 0 ? 1 : -1;
 
-        if ($this->speed < $this->maxSpeed && $this->directionChangeCount > 0) {
-            if ($this->directionChangeCount % $this->changeSpeedEvery === 0) {
+        if ($this->directionChangeCount > 0 && $this->directionChangeCount % $this->changeSpeedEvery === 0) {
+            if ($this->speed < $this->maxSpeed) {
                 $this->nextSpeed++;
                 $this->prompt->ballSpeed -= 4000;
+                $this->prompt->game->update(['ball_speed' => $this->nextSpeed]);
+            } elseif ($this->prompt->loopable('player1')->height > 2) {
+                $this->prompt->loopable('player1')->height--;
+                $this->prompt->loopable('player2')->height--;
             }
         }
 
