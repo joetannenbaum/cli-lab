@@ -8,6 +8,7 @@ use App\Models\ProngGame as ModelsProngGame;
 use Exception;
 use Illuminate\Support\Collection;
 use SysvSharedMemory;
+use Illuminate\Support\Str;
 
 class ProngGame
 {
@@ -31,7 +32,7 @@ class ProngGame
 
     public int $ballSpeedLevel = 1;
 
-    public ?int $ballSpeed = 25_000;
+    public int $ballSpeed = 25_000;
 
     public ?int $winner = null;
 
@@ -47,7 +48,7 @@ class ProngGame
 
     public function __construct(public ModelsProngGame $model)
     {
-        $this->shm = shm_attach($this->model->shared_id, 30000, 0600);
+        // $this->shm = shm_attach($this->model->shared_id, 30000, 0600);
     }
 
     public static function exists(string $id): bool
@@ -60,7 +61,6 @@ class ProngGame
         return new static(
             ModelsProngGame::create([
                 'game_id'   => $id,
-                'shared_id' => str_replace('.', '', (string) microtime(true)) . rand(0, 1000),
             ]),
         );
     }
@@ -80,70 +80,102 @@ class ProngGame
 
     public function update($key, $value, $log = false): void
     {
-        if ($value === $this->{$key}) {
-            if ($log) {
-                ray('skipped', $key, $value);
-            }
-
-            // No need to update this it's already in the state
-            return;
-        }
-
-        if ($log) {
-            ray('updated', $key, $value);
-            ray('playerOneReady', $this->playerOneReady);
-        }
-
-        shm_put_var($this->shm, $this->getMemoryKey($key), $value);
-
-        $this->{$key} = $value;
+        $this->updateMany([
+            $key => $value,
+        ], $log);
     }
 
-    public function updateMany(array $values): void
+    public function updateMany(array $values, $log = false): void
     {
+        $toUpdate = [];
+
         foreach ($values as $key => $value) {
-            $this->update($key, $value);
+            if ($value === $this->{$key}) {
+                if ($log) {
+                    ray('skipped', $key, $value);
+                }
+
+                // No need to update this it's already in the state
+                continue;
+            }
+
+            if ($log) {
+                ray('updated', $key, $value);
+            }
+
+            $modelKey = Str::snake($key);
+
+            $toUpdate[$modelKey] = $value;
+
+            $this->{$key} = $value;
+        }
+
+        if (count($toUpdate) > 0) {
+            $this->model->update($toUpdate);
         }
     }
 
     public function fresh(): void
     {
-        $this->keys()->each(function ($key) {
-            $memKey = $this->getMemoryKey($key);
+        $this->model = $this->model->fresh();
 
-            if (!shm_has_var($this->shm, $memKey)) {
+        collect([
+            'playerOne' => 'player_one',
+            'playerTwo' => 'player_two',
+            'playerOnePosition' => 'player_one_position',
+            'playerTwoPosition' => 'player_two_position',
+            'ballPositionX' => 'ball_position_x',
+            'ballPositionY' => 'ball_position_y',
+            'ballDirection' => 'ball_direction',
+            'ballSpeed' => 'ball_speed',
+            'ballSpeedLevel' => 'ball_speed_level',
+            'winner' => 'winner',
+            'playerOneReady' => 'player_one_ready',
+            'playerTwoReady' => 'player_two_ready',
+        ])->each(function ($modelKey, $key) {
+            if ($this->model->{$modelKey} === null) {
                 return;
             }
 
-            $value = shm_get_var($this->shm, $memKey);
-
-            if (is_bool($this->{$key})) {
-                $this->{$key} = (bool) $value;
-            } else {
-                $this->{$key} = (int) $value;
-            }
+            $this->{$key} = $this->model->{$modelKey};
         });
+
+        // $this->keys()->each(function ($key) {
+        //     $memKey = $this->getMemoryKey($key);
+
+        //     if (!shm_has_var($this->shm, $memKey)) {
+        //         return;
+        //     }
+
+        //     $value = shm_get_var($this->shm, $memKey);
+
+        //     if (is_bool($this->{$key})) {
+        //         $this->{$key} = (bool) $value;
+        //     } else {
+        //         $this->{$key} = (int) $value;
+        //     }
+        // });
     }
 
     public function reset(): void
     {
-        $this->keys()->each(function ($key) {
-            $memKey = $this->getMemoryKey($key);
+        // $this->keys()->each(function ($key) {
+        //     $memKey = $this->getMemoryKey($key);
 
-            if (in_array($key, ['playerOneReady', 'playerTwoReady'])) {
-                return;
-            }
+        //     if (in_array($key, ['playerOneReady', 'playerTwoReady'])) {
+        //         return;
+        //     }
 
-            if (shm_has_var($this->shm, $memKey)) {
-                shm_remove_var($this->shm, $memKey);
-            }
+        //     if (shm_has_var($this->shm, $memKey)) {
+        //         shm_remove_var($this->shm, $memKey);
+        //     }
 
-            if (is_bool($this->{$key})) {
-                $this->{$key} = false;
-            } else {
-                $this->{$key} = null;
-            }
-        });
+        //     if (is_bool($this->{$key})) {
+        //         $this->{$key} = false;
+        //     } else {
+        //         $this->{$key} = null;
+        //     }
+        // });
 
         // if ($playerNumber === 1) {
         //     $this->update('playerOneReady', false);
@@ -154,23 +186,23 @@ class ProngGame
 
     public function flush()
     {
-        $this->keys()
-            ->map(fn ($key) => $this->getMemoryKey($key))
-            ->filter(fn ($key) => shm_has_var($this->shm, $key))
-            ->each(fn ($key) => shm_remove_var($this->shm, $key));
+        // $this->keys()
+        //     ->map(fn ($key) => $this->getMemoryKey($key))
+        //     ->filter(fn ($key) => shm_has_var($this->shm, $key))
+        //     ->each(fn ($key) => shm_remove_var($this->shm, $key));
     }
 
     public function __destruct()
     {
-        $this->flush();
+        // $this->flush();
 
-        try {
-            shm_remove($this->shm);
-        } catch (Exception) {
-            //throw $th;
-        }
+        // try {
+        //     shm_remove($this->shm);
+        // } catch (Exception) {
+        //     //throw $th;
+        // }
 
-        shm_detach($this->shm);
+        // shm_detach($this->shm);
     }
 
     protected function keys(): Collection
