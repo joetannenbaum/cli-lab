@@ -47,7 +47,7 @@ class ProngGame
 
     public function __construct(public ModelsProngGame $model)
     {
-        $this->shm = shm_attach($this->model->shared_id, 10000, 0600);
+        $this->shm = shm_attach($this->model->shared_id, 30000, 0600);
     }
 
     public static function exists(string $id): bool

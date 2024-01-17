@@ -113,7 +113,7 @@ class ProngRenderer extends Renderer
     protected function gameHeader(Prong $prompt): string
     {
         if ($prompt->game->everyoneReady) {
-            $speed = $prompt->loopable(Ball::class)->speed;
+            $speed = $prompt->game->ballSpeedLevel;
             $maxSpeed = $prompt->loopable(Ball::class)->maxSpeed;
 
             $color = match ($speed) {
