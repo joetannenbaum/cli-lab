@@ -115,18 +115,7 @@ class Prong extends Prompt
     protected function setPlayers(): void
     {
         // TODO indicate that this is against the computer or not so no one can join and mess up the game
-
-        if (!$this->game->playerOne) {
-            $this->game->update('playerOne', true);
-            $this->game->playerNumber = 1;
-        } elseif (!$this->game->playerTwo) {
-            $this->game->update('playerTwo', true);
-            $this->game->playerNumber = 2;
-        } else {
-            // You just want to observe this game I guess
-            $this->game->observer = true;
-            $this->game->playerNumber = 3;
-        }
+        $this->game->setPlayer();
     }
 
     protected function refreshGame(): void
@@ -301,17 +290,19 @@ class Prong extends Prompt
 
             $ball = $this->loopable(Ball::class);
 
-            $this->game->updateMany([
+            $fields = [
                 'ballPositionX' => $ball->x,
                 'ballPositionY' => $ball->y,
                 'ballDirection' => $ball->direction,
-            ]);
+            ];
 
             match ($this->game->playerNumber) {
-                1       => $this->game->update('playerOnePosition', $this->loopable('player1')->value->current()),
-                2       => $this->game->update('playerTwoPosition', $this->loopable('player2')->value->current()),
+                1       => $fields['playerOnePosition'] = $this->loopable('player1')->value->current(),
+                2       => $fields['playerTwoPosition'] = $this->loopable('player2')->value->current(),
                 default => null,
             };
+
+            $this->game->updateMany($fields);
 
             $this->refreshGame();
 
