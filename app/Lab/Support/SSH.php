@@ -6,7 +6,7 @@ namespace App\Lab\Support;
 
 class SSH
 {
-    public static function command(string $args = null)
+    public static function command(?string $args = null)
     {
         $base = 'ssh cli.lab.joe.codes';
 

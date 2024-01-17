@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Lab\State;
 
-use Carbon\CarbonInterval;
+use App\Models\ProngGame as ModelsProngGame;
+use Exception;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
+use SysvSharedMemory;
 
 class ProngGame
 {
@@ -28,25 +29,40 @@ class ProngGame
 
     public ?int $ballDirection = null;
 
-    public ?int $ballSpeed = null;
+    public int $ballSpeedLevel = 1;
+
+    public ?int $ballSpeed = 25_000;
 
     public ?int $winner = null;
 
-    public function __construct(public string $id)
+    public bool $observer = false;
+
+    public bool $againstComputer = false;
+
+    public bool $everyoneReady = false;
+
+    public int $playerNumber = 0;
+
+    protected SysvSharedMemory $shm;
+
+    public function __construct(public ModelsProngGame $model)
     {
-        //
+        $this->shm = shm_attach($this->model->shared_id, 1000, 0600);
     }
 
     public static function exists(string $id): bool
     {
-        return Cache::has("prong:{$id}");
+        return ModelsProngGame::where('game_id', $id)->exists();
     }
 
     public static function create(string $id): static
     {
-        Cache::put("prong:{$id}", true);
-
-        return new static($id);
+        return new static(
+            ModelsProngGame::create([
+                'game_id'   => $id,
+                'shared_id' => str_replace('.', '', (string) microtime(true)) . rand(0, 1000),
+            ]),
+        );
     }
 
     public static function get(string $id): ?static
@@ -55,16 +71,32 @@ class ProngGame
             return null;
         }
 
-        $self = new static($id);
+        $self = new static(ModelsProngGame::where('game_id', $id)->first());
 
         $self->fresh();
 
         return $self;
     }
 
-    public function update($key, $value): void
+    public function update($key, $value, $log = false): void
     {
-        Cache::put("prong:{$this->id}:{$key}", $value, CarbonInterval::day());
+        if ($value === $this->{$key}) {
+            if ($log) {
+                ray('skipped', $key, $value);
+            }
+
+            // No need to update this it's already in the state
+            return;
+        }
+
+        if ($log) {
+            ray('updated', $key, $value);
+            ray('playerOneReady', $this->playerOneReady);
+        }
+
+        $index = $this->keys()->search($key);
+
+        self::acquireLock($this->model->shared_id, fn ($shm) => shm_put_var($shm, (int) ($this->model->shared_id . $index), $value));
 
         $this->{$key} = $value;
     }
@@ -74,6 +106,97 @@ class ProngGame
         foreach ($values as $key => $value) {
             $this->update($key, $value);
         }
+    }
+
+    public function fresh(): void
+    {
+        self::acquireLock($this->model->shared_id, function ($shm) {
+            $this->keys()->each(function ($key) use ($shm) {
+                $memKey = $this->getMemoryKey($key);
+
+                if (!shm_has_var($shm, $memKey)) {
+                    return;
+                }
+
+                $value = shm_get_var($shm, $memKey);
+
+                if (is_bool($this->{$key})) {
+                    $this->{$key} = (bool) $value;
+                } else {
+                    $this->{$key} = (int) $value;
+                }
+            });
+        });
+    }
+
+    public function reset(): void
+    {
+        self::acquireLock($this->model->shared_id, function ($shm) {
+            $this->keys()->each(function ($key) use ($shm) {
+                $memKey = $this->getMemoryKey($key);
+
+                if (in_array($key, ['playerOneReady', 'playerTwoReady'])) {
+                    return;
+                }
+
+                if (shm_has_var($shm, $memKey)) {
+                    shm_remove_var($shm, $memKey);
+                }
+
+                if (is_bool($this->{$key})) {
+                    $this->{$key} = false;
+                } else {
+                    $this->{$key} = null;
+                }
+            });
+
+            // if ($playerNumber === 1) {
+            //     $this->update('playerOneReady', false);
+            // } else if ($playerNumber === 2) {
+            //     $this->update('playerTwoReady', false);
+            // }
+        });
+    }
+
+    public function flush()
+    {
+        self::acquireLock($this->model->shared_id, function ($shm) {
+            $this->keys()
+                ->map(fn ($key) => $this->getMemoryKey($key))
+                ->filter(fn ($key) => shm_has_var($shm, $key))
+                ->each(fn ($key) => shm_remove_var($shm, $key));
+        });
+    }
+
+    public function __destruct()
+    {
+        $this->flush();
+
+        try {
+            shm_remove($this->shm);
+        } catch (Exception) {
+            //throw $th;
+        }
+
+        shm_detach($this->shm);
+    }
+
+    protected function acquireLock(int $id, callable $callback): mixed
+    {
+        // $semaphore_id = $id;
+
+        // $sem = sem_get($semaphore_id, 1, 0600);
+
+        // sem_acquire($sem) or die("Can't acquire semaphore");
+
+        // $shm = shm_attach($id, 10000, 0600);
+
+        $result = $callback($this->shm);
+
+        // shm_detach($shm);
+        // sem_release($sem);
+
+        return $result;
     }
 
     protected function keys(): Collection
@@ -93,33 +216,8 @@ class ProngGame
         ]);
     }
 
-    public function fresh(): void
+    protected function getMemoryKey(string $property): int
     {
-        $this->keys()->each(function ($key) {
-            $value = Cache::get("prong:{$this->id}:{$key}");
-
-            if ($value === null) {
-                return;
-            }
-
-            if (is_bool($this->{$key})) {
-                $this->{$key} = (bool) $value;
-            } else {
-                $this->{$key} = (int) $value;
-            }
-        });
-    }
-
-    public function reset(): void
-    {
-        $this->keys()->each(function ($key) {
-            Cache::forget("prong:{$this->id}:{$key}");
-
-            if (is_bool($this->{$key})) {
-                $this->{$key} = false;
-            } else {
-                $this->{$key} = null;
-            }
-        });
+        return (int) ($this->model->shared_id . $this->keys()->search($property));
     }
 }

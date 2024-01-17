@@ -22,6 +22,7 @@ class ProngGame extends Model
         'winner',
         'player_one_ready',
         'player_two_ready',
+        'shared_id',
     ];
 
     protected $casts = [
@@ -34,5 +35,6 @@ class ProngGame extends Model
         'winner'              => 'integer',
         'player_one_ready'    => 'boolean',
         'player_two_ready'    => 'boolean',
+        'shared_id'           => 'integer',
     ];
 }

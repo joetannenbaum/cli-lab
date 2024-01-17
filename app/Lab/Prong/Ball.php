@@ -32,7 +32,7 @@ class Ball implements Tickable
 
     public function __construct(protected Prong $prompt)
     {
-        if ($this->prompt->playerNumber !== 1) {
+        if ($this->prompt->game->playerNumber !== 1) {
             return;
         }
 
@@ -42,7 +42,7 @@ class Ball implements Tickable
 
     public function onTick(): void
     {
-        if ($this->prompt->playerNumber !== 1) {
+        if ($this->prompt->game->playerNumber !== 1) {
             return;
         }
 
@@ -93,8 +93,8 @@ class Ball implements Tickable
         if ($this->directionChangeCount > 0 && $this->directionChangeCount % $this->changeSpeedEvery === 0) {
             if ($this->speed < $this->maxSpeed) {
                 $this->nextSpeed++;
-                $this->prompt->ballSpeed -= 4000;
-                $this->prompt->game->update(['ball_speed' => $this->nextSpeed]);
+                $this->prompt->game->ballSpeed -= 4000;
+                $this->prompt->game->update('ballSpeedLevel', $this->nextSpeed);
             } elseif ($this->prompt->loopable('player1')->height > 2) {
                 $this->prompt->loopable('player1')->height--;
                 $this->prompt->loopable('player2')->height--;

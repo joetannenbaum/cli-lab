@@ -23,6 +23,10 @@ class ProngRenderer extends Renderer
     use DrawsHotkeys;
     use HasMinimumDimensions;
 
+    public int $height = 26;
+
+    public int $width = 100;
+
     protected int $fullWidth;
 
     protected int $fullHeight;
@@ -30,8 +34,8 @@ class ProngRenderer extends Renderer
     public function __invoke(Prong $prompt): string
     {
         return $this->minDimensions(
-            width: $prompt->width,
-            height: $prompt->height + 16,
+            width: $this->width,
+            height: $this->height + 16,
             render: fn () => $this->render($prompt)
         );
     }
@@ -45,7 +49,7 @@ class ProngRenderer extends Renderer
             return $this->titleScreen($prompt);
         }
 
-        if ($prompt->winner !== null) {
+        if ($prompt->game->winner !== null) {
             return $this->winnerScreen($prompt);
         }
 
@@ -73,16 +77,16 @@ class ProngRenderer extends Renderer
             ->alignNone()
             ->lines()
             ->map(fn ($line) => $this->dim('│ ') . $line . $this->dim(' │'))
-            ->prepend($this->dim('┌' . str_repeat('─', $prompt->width + 4) . '┐'))
+            ->prepend($this->dim('┌' . str_repeat('─', $this->width + 4) . '┐'))
             ->prepend('')
             ->prepend($this->gameHeader($prompt))
-            ->push($this->dim('└' . str_repeat('─', $prompt->width + 4) . '┘'));
+            ->push($this->dim('└' . str_repeat('─', $this->width + 4) . '┘'));
 
         $this->center($cols, $this->fullWidth, $this->fullHeight - 2)->each(
             fn ($line) => $this->line($line)
         );
 
-        if ($prompt->observer) {
+        if ($prompt->game->observer) {
             // $this->hotkey('n', 'Start your own game');
         } else {
             $this->hotkey('↑', 'Move up');
@@ -93,9 +97,9 @@ class ProngRenderer extends Renderer
 
         $hotkeys = collect($this->hotkeys())->implode(PHP_EOL);
 
-        if ($prompt->playerNumber === 1) {
+        if ($prompt->game->playerNumber === 1) {
             $hotkeys = $this->bold($this->red('← You are Player 1    ')) . $hotkeys;
-        } elseif ($prompt->playerNumber === 2) {
+        } elseif ($prompt->game->playerNumber === 2) {
             $hotkeys = $hotkeys . $this->bold($this->green('    You are Player 2 →'));
         } else {
             $hotkeys = $this->bold('You are watching    ') . $hotkeys;
@@ -108,9 +112,10 @@ class ProngRenderer extends Renderer
 
     protected function gameHeader(Prong $prompt): string
     {
-        if ($prompt->everyoneReady) {
+        if ($prompt->game->everyoneReady) {
             $speed = $prompt->loopable(Ball::class)->speed;
             $maxSpeed = $prompt->loopable(Ball::class)->maxSpeed;
+
             $color = match ($speed) {
                 1       => 'green',
                 2       => 'green',
@@ -127,10 +132,10 @@ class ProngRenderer extends Renderer
 
     protected function winnerScreen(Prong $prompt): static
     {
-        if ($prompt->winner === 1) {
+        if ($prompt->game->winner === 1) {
             // Font: Crawford2
             $title = $this->asciiLines('player-one-won');
-        } elseif ($prompt->againstComputer) {
+        } elseif ($prompt->game->againstComputer) {
             $title = $this->asciiLines('computer-won');
         } else {
             $title = $this->asciiLines('player-two-won');
@@ -165,27 +170,27 @@ class ProngRenderer extends Renderer
 
     protected function ball(Prong $prong, Ball $ball): string
     {
-        if (!$prong->everyoneReady) {
+        if (!$prong->game->everyoneReady) {
             return $this->center(
                 [
                     'Waiting for other player...',
                     '',
                     'Press ' . $this->bold($this->cyan('c')) . ' to play against the computer',
                 ],
-                $prong->width,
-                $prong->height,
-            )->map(fn ($line) => str_pad($line, $prong->width))->implode(PHP_EOL);
+                $this->width,
+                $this->height,
+            )->map(fn ($line) => str_pad($line, $this->width))->implode(PHP_EOL);
         }
 
         if ($prong->countdown > 0) {
             return $this->center(
                 $this->bigNumber($prong->countdown)->map(fn ($line) => $this->bold($this->cyan($line))),
-                $prong->width,
-                $prong->height,
-            )->map(fn ($line) => $line === '' ? str_pad($line, $prong->width) : $line)->implode(PHP_EOL);
+                $this->width,
+                $this->height,
+            )->map(fn ($line) => $line === '' ? str_pad($line, $this->width) : $line)->implode(PHP_EOL);
         }
 
-        $emptyLine = str_repeat(' ', $prong->width) . PHP_EOL;
+        $emptyLine = str_repeat(' ', $this->width) . PHP_EOL;
 
         // Pad the top
         $output = str_repeat($emptyLine, $ball->y);
@@ -193,10 +198,10 @@ class ProngRenderer extends Renderer
         // Draw the ball
         $output .= str_repeat(' ', $ball->x)
             . $this->cyan('●')
-            . str_repeat(' ', max($prong->width - $ball->x - 1, 0))
+            . str_repeat(' ', max($this->width - $ball->x - 1, 0))
             . PHP_EOL;
 
-        $bottomPadding = $prong->height - $ball->y - 1;
+        $bottomPadding = $this->height - $ball->y - 1;
 
         if ($bottomPadding > 0) {
             $output .= str_repeat($emptyLine, $bottomPadding);
@@ -213,7 +218,7 @@ class ProngRenderer extends Renderer
 
         $output .= str_repeat($this->{$color}('█') . PHP_EOL, $paddleHeight);
 
-        $extraLines = $prompt->height - $y - $paddleHeight;
+        $extraLines = $this->height - $y - $paddleHeight;
 
         if ($extraLines > 0) {
             $output .= str_repeat(' ' . PHP_EOL, $extraLines);
