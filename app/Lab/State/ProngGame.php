@@ -53,7 +53,7 @@ class ProngGame
 
     public static function exists(string $id): bool
     {
-        return ModelsProngGame::where('game_id', $id)->exists();
+        return ModelsProngGame::where('game_id', $id)->first() !== null;
     }
 
     public static function create(string $id): static

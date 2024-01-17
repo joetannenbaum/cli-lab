@@ -12,6 +12,7 @@ use App\Lab\Prong\Paddle;
 use App\Lab\Prong\Title;
 use App\Lab\Renderers\ProngRenderer;
 use App\Lab\State\ProngGame;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Lottery;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Key;
@@ -40,7 +41,7 @@ class Prong extends Prompt
 
         $this->state = 'title';
 
-        // $this->createAltScreen();
+        $this->createAltScreen();
     }
 
     public function play(): void
@@ -78,10 +79,10 @@ class Prong extends Prompt
         if ($winner !== null) {
             $this->game->update('winner', $winner);
 
-            // Log::info('Game complete', [
-            //     'winner' => $this->winner,
-            //     'game'   => $this->game->toArray(),
-            // ]);
+            Log::info('Game complete', [
+                'winner' => $this->game->winner,
+                'game'   => $this->game->model->toArray(),
+            ]);
         }
     }
 
@@ -99,9 +100,11 @@ class Prong extends Prompt
             return;
         }
 
-        $this->game = ProngGame::get($this->gameId);
+        $game = ProngGame::get($this->gameId);
 
-        if ($this->game === null) {
+        if ($game !== null) {
+            $this->game = $game;
+        } else {
             $this->gameId = null;
 
             $this->loadGame();
