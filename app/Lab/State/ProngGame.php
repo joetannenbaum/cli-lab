@@ -7,6 +7,7 @@ namespace App\Lab\State;
 use App\Models\ProngGame as ModelsProngGame;
 use Exception;
 use Illuminate\Support\Collection;
+use SysvMessageQueue;
 use SysvSharedMemory;
 
 class ProngGame
@@ -43,11 +44,11 @@ class ProngGame
 
     public int $playerNumber = 0;
 
-    protected SysvSharedMemory $shm;
+    protected SysvMessageQueue $messages;
 
     public function __construct(public ModelsProngGame $model)
     {
-        $this->shm = shm_attach($this->model->shared_id, 1000, 0600);
+        $this->messages = msg_get_queue($this->model->shared_id, 0600);
     }
 
     public static function exists(string $id): bool
@@ -94,9 +95,16 @@ class ProngGame
             ray('playerOneReady', $this->playerOneReady);
         }
 
-        $index = $this->keys()->search($key);
+        try {
 
-        self::acquireLock($this->model->shared_id, fn ($shm) => shm_put_var($shm, (int) ($this->model->shared_id . $index), $value));
+            $result = msg_send($this->messages, $this->playerNumber, [$key => $value], true, false, $msgError);
+        } catch (Exception $e) {
+            dd($e->getMessage(), $this->messages, $this->playerNumber, [$key => $value]);
+        }
+
+        // $index = $this->keys()->search($key);
+
+        // self::acquireLock($this->model->shared_id, fn ($shm) => shm_put_var($shm, (int) ($this->model->shared_id . $index), $value));
 
         $this->{$key} = $value;
     }
@@ -110,75 +118,75 @@ class ProngGame
 
     public function fresh(): void
     {
-        self::acquireLock($this->model->shared_id, function ($shm) {
-            $this->keys()->each(function ($key) use ($shm) {
-                $memKey = $this->getMemoryKey($key);
+        $messageType = match ($this->playerNumber) {
+            1 => 2,
+            2 => 1,
+            default => 0,
+        };
 
-                if (!shm_has_var($shm, $memKey)) {
-                    return;
-                }
+        msg_receive($this->messages, $messageType, $receivedMsgType, 1024, $message, true, MSG_IPC_NOWAIT, $msgError);
 
-                $value = shm_get_var($shm, $memKey);
+        if ($message === false) {
+            return;
+        }
 
-                if (is_bool($this->{$key})) {
-                    $this->{$key} = (bool) $value;
-                } else {
-                    $this->{$key} = (int) $value;
-                }
-            });
-        });
+        foreach ($message as $key => $value) {
+            $this->{$key} = $value;
+        }
     }
 
     public function reset(): void
     {
-        self::acquireLock($this->model->shared_id, function ($shm) {
-            $this->keys()->each(function ($key) use ($shm) {
-                $memKey = $this->getMemoryKey($key);
+        // self::acquireLock($this->model->shared_id, function ($shm) {
+        //     $this->keys()->each(function ($key) use ($shm) {
+        //         $memKey = $this->getMemoryKey($key);
 
-                if (in_array($key, ['playerOneReady', 'playerTwoReady'])) {
-                    return;
-                }
+        //         if (in_array($key, ['playerOneReady', 'playerTwoReady'])) {
+        //             return;
+        //         }
 
-                if (shm_has_var($shm, $memKey)) {
-                    shm_remove_var($shm, $memKey);
-                }
+        //         if (shm_has_var($shm, $memKey)) {
+        //             shm_remove_var($shm, $memKey);
+        //         }
 
-                if (is_bool($this->{$key})) {
-                    $this->{$key} = false;
-                } else {
-                    $this->{$key} = null;
-                }
-            });
+        //         if (is_bool($this->{$key})) {
+        //             $this->{$key} = false;
+        //         } else {
+        //             $this->{$key} = null;
+        //         }
+        //     });
 
-            // if ($playerNumber === 1) {
-            //     $this->update('playerOneReady', false);
-            // } else if ($playerNumber === 2) {
-            //     $this->update('playerTwoReady', false);
-            // }
-        });
+        //     // if ($playerNumber === 1) {
+        //     //     $this->update('playerOneReady', false);
+        //     // } else if ($playerNumber === 2) {
+        //     //     $this->update('playerTwoReady', false);
+        //     // }
+        // });
     }
 
     public function flush()
     {
-        self::acquireLock($this->model->shared_id, function ($shm) {
-            $this->keys()
-                ->map(fn ($key) => $this->getMemoryKey($key))
-                ->filter(fn ($key) => shm_has_var($shm, $key))
-                ->each(fn ($key) => shm_remove_var($shm, $key));
-        });
+        // self::acquireLock($this->model->shared_id, function ($shm) {
+        //     $this->keys()
+        //         ->map(fn ($key) => $this->getMemoryKey($key))
+        //         ->filter(fn ($key) => shm_has_var($shm, $key))
+        //         ->each(fn ($key) => shm_remove_var($shm, $key));
+        // });
     }
 
     public function __destruct()
     {
-        $this->flush();
+        // ray('REMOVING QUEUE');
+        // msg_remove_queue($this->messages);
+        // $this->flush();
 
-        try {
-            shm_remove($this->shm);
-        } catch (Exception) {
-            //throw $th;
-        }
+        // try {
+        //     shm_remove($this->shm);
+        // } catch (Exception) {
+        //     //throw $th;
+        // }
 
-        shm_detach($this->shm);
+        // shm_detach($this->shm);
     }
 
     protected function acquireLock(int $id, callable $callback): mixed

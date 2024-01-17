@@ -117,15 +117,15 @@ class Prong extends Prompt
         // TODO indicate that this is against the computer or not so no one can join and mess up the game
 
         if (!$this->game->playerOne) {
-            $this->game->update('playerOne', true);
             $this->game->playerNumber = 1;
+            $this->game->update('playerOne', true);
         } elseif (!$this->game->playerTwo) {
-            $this->game->update('playerTwo', true);
             $this->game->playerNumber = 2;
+            $this->game->update('playerTwo', true);
         } else {
             // You just want to observe this game I guess
-            $this->game->observer = true;
             $this->game->playerNumber = 3;
+            $this->game->observer = true;
         }
     }
 
