@@ -219,15 +219,11 @@ class Prong extends Prompt
     {
         $this->game->reset();
 
-        // $this->game = ProngGame::get($this->gameId);
-
         match ($this->game->playerNumber) {
             1       => $this->game->update('playerOneReady', true),
             2       => $this->game->update('playerTwoReady', true),
             default => null,
         };
-
-        ray($this->game);
 
         $this->countdown = 3;
 
