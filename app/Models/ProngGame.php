@@ -24,6 +24,7 @@ class ProngGame extends Model
         'player_two_ready',
         'shared_id',
         'ball_speed_level',
+        'paddle_height',
     ];
 
     protected $casts = [
@@ -40,5 +41,6 @@ class ProngGame extends Model
         'ball_speed_level'    => 'integer',
         'ball_position_x'     => 'integer',
         'ball_position_y'     => 'integer',
+        'paddle_height'       => 'integer',
     ];
 }

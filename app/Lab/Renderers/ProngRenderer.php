@@ -212,7 +212,7 @@ class ProngRenderer extends Renderer
 
     protected function paddle(Prong $prompt, $y, $color): string
     {
-        $paddleHeight = $prompt->loopable('player1')->height;
+        $paddleHeight = $prompt->game->paddleHeight;
 
         $output = str_repeat(' ' . PHP_EOL, $y);
 

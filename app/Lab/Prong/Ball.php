@@ -98,6 +98,7 @@ class Ball implements Tickable
             } elseif ($this->prompt->loopable('player1')->height > 2) {
                 $this->prompt->loopable('player1')->height--;
                 $this->prompt->loopable('player2')->height--;
+                $this->prompt->game->update('paddleHeight', $this->prompt->loopable('player2')->height);
             }
         }
 

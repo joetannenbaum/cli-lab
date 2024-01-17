@@ -34,6 +34,8 @@ class ProngGame
 
     public int $ballSpeedLevel = 1;
 
+    public int $paddleHeight = 5;
+
     public int $ballSpeed = 25_000;
 
     public ?int $winner = null;
@@ -161,6 +163,7 @@ class ProngGame
             'winner' => 'winner',
             'playerOneReady' => 'player_one_ready',
             'playerTwoReady' => 'player_two_ready',
+            'paddleHeight' => 'paddle_height',
         ]);
     }
 }

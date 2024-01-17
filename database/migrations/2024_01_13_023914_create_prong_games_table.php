@@ -20,9 +20,10 @@ return new class extends Migration
             $table->smallInteger('ball_position_x')->nullable();
             $table->smallInteger('ball_position_y')->nullable();
             $table->string('ball_direction')->nullable();
-            $table->string('ball_speed')->nullable();
+            $table->string('ball_speed')->nullable(25_000);
             $table->unsignedTinyInteger('ball_speed_level')->default(1);
-            $table->smallInteger('winner')->nullable();
+            $table->unsignedTinyInteger('winner')->nullable();
+            $table->unsignedTinyInteger('paddle_height')->nullable()->default(5);
             $table->timestamps();
         });
     }
