@@ -34,8 +34,13 @@ class Browse extends Prompt
             ],
             [
                 'title'       => 'Prong',
-                'description' => "Play a game of Prompts Pong with a friend\n(or against the computer)",
+                'description' => "Play a game of Prompts Pong with a friend (or against the computer)",
                 'run'         => fn () => (new Prong)->play(),
+            ],
+            [
+                'title'       => 'Nissan Dashboard',
+                'description' => 'A terminal recreation of the dashboard of the Nissan 300 ZX (1984)',
+                'run'         => fn () => (new Nissan)->run(),
             ],
         ];
 
