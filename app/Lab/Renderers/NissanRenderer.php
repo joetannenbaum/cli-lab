@@ -63,7 +63,7 @@ class NissanRenderer extends Renderer
             $this->spaceBetween($contentWidth, collect($this->hotkeys)->implode('    '), $this->dim('Original Inspiration') . ' https://twitter.com/RetroTechDreams/status/1718761638042402973'),
         ]);
 
-        $this->center($lines, $prompt->terminal()->cols() - 6, $prompt->terminal()->lines() - 6)->each(fn ($line) => $this->line($line));
+        $this->center($lines, $prompt->terminal()->cols() - 2, $prompt->terminal()->lines() - 6)->each(fn ($line) => $this->line($line));
 
         return $this;
     }
