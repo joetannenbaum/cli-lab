@@ -42,6 +42,11 @@ class Browse extends Prompt
                 'description' => 'A terminal recreation of the dashboard of the Nissan 300 ZX (1984)',
                 'run'         => fn () => (new Nissan)->run(),
             ],
+            [
+                'title'       => 'Data Table',
+                'description' => 'Paginated! Searchable! Jump to Page-able!',
+                'run'         => fn () => (new DataTable)->prompt(),
+            ],
         ];
 
         $this->registerTheme(BrowseRenderer::class);
