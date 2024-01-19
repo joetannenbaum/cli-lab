@@ -43,5 +43,5 @@ Route::get('spotify/callback', function (Request $request, Spotify $spotify) {
 
     (new IntegrationsSpotify($authKey))->storeAuthenticator($authenticator);
 
-    return dd('done!');
+    return view('spotify-authed');
 })->name('spotify.callback');
