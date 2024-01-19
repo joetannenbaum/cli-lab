@@ -31,21 +31,25 @@ class Browse extends Prompt
                 'title'       => 'Resume',
                 'description' => 'View my resume',
                 'run'         => fn () => (new Resume)->run(),
+                'command'     => 'resume',
             ],
             [
                 'title'       => 'Prong',
                 'description' => "Play a game of Prompts Pong with a friend (or against the computer)",
                 'run'         => fn () => (new Prong)->play(),
+                'command'     => 'prong',
             ],
             [
                 'title'       => 'Nissan Dashboard',
                 'description' => 'A terminal recreation of the dashboard of the Nissan 300 ZX (1984)',
                 'run'         => fn () => (new Nissan)->run(),
+                'command'     => 'nissan',
             ],
             [
                 'title'       => 'Data Table',
                 'description' => 'Paginated! Searchable! Jump to Page-able!',
                 'run'         => fn () => (new DataTable)->prompt(),
+                'command'     => 'datatable',
             ],
         ];
 
