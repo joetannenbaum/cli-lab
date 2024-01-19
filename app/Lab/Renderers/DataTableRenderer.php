@@ -19,7 +19,7 @@ class DataTableRenderer extends Renderer
 
     public function __invoke(DataTable $table): string
     {
-        return $this->minDimensions(fn () => $this->renderDataTable($table), 135, 20);
+        return $this->minDimensions(fn () => $this->renderDataTable($table), 80, 20);
     }
 
     protected function renderDataTable(DataTable $table): string
