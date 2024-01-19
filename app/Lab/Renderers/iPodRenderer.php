@@ -121,8 +121,6 @@ class iPodRenderer extends Renderer
             ->map(fn ($line, $index) => $nextScreen->items->count() > 0 && $index - $nextScreenMenuStartIndex === $nextScreen->index ? $this->inverse($line) : $line)
             ->map(fn ($line, $index) => $nextBoldLines->contains($index) ? $this->bold($line) : $line);
 
-        ray($currentScreenLines, $nextScreenLines);
-
         $screenLines = $goingForward ? $currentScreenLines->zip($nextScreenLines) : $nextScreenLines->zip($currentScreenLines);
 
         $screenLines->map(fn ($lines) => $lines->implode(''))
