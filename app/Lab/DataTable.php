@@ -70,7 +70,19 @@ class DataTable extends Prompt
 
             $this->totalPages = (int) ceil(count($filtered) / $this->perPage);
 
-            return array_slice($filtered, 0, $this->perPage);
+            $result = array_slice($filtered, 0, $this->perPage);
+
+            if (count($result) === 0) {
+                return [
+                    [
+                        'name' => 'No results',
+                        'email' => '',
+                        'address' => '',
+                    ]
+                ];
+            }
+
+            return $result;
         }
 
         $this->totalPages = (int) ceil(count($this->rows) / $this->perPage);
