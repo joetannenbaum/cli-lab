@@ -2,13 +2,13 @@
 
 namespace App\Lab;
 
-use App\Http\Integrations\Spotify\Spotify;
 use App\Http\Integrations\SpotifyApi\Requests\PauseTrack;
 use App\Http\Integrations\SpotifyApi\SpotifyApi;
 use App\Lab\Concerns\CreatesAnAltScreen;
 use App\Lab\Concerns\RegistersThemes;
 use App\Lab\Input\KeyPressListener;
 use App\Lab\Integrations\Spotify as IntegrationsSpotify;
+use App\Lab\iPod\DeviceScreen;
 use App\Lab\iPod\ImportedPhotos;
 use App\Lab\iPod\ImportingPhotos;
 use App\Lab\iPod\ImportPhotosInfo;
@@ -16,9 +16,7 @@ use App\Lab\iPod\ListPlaylistsScreen;
 use App\Lab\iPod\iPodScreen;
 use App\Lab\iPod\PlayerScreen;
 use App\Lab\Renderers\iPodRenderer;
-use Carbon\CarbonInterval;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Laravel\Prompts\Prompt;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Key;
@@ -46,6 +44,8 @@ class iPod extends Prompt
 
     public SpotifyApi $spotify;
 
+    public $deviceId = null;
+
     public function __construct()
     {
         $this->registerTheme(iPodRenderer::class);
@@ -55,20 +55,11 @@ class iPod extends Prompt
         $this->spotifyHelper = new IntegrationsSpotify($this->authKey);
 
         $this->screens = collect([
-            new iPodScreen(
+            new DeviceScreen(
                 $this,
-                'iPod',
-                collect([
-                    'Playlists',
-                ]),
-                collect([
-                    'Playlists' => new ListPlaylistsScreen(
-                        $this,
-                        'Playlists',
-                        collect([]),
-                        collect([]),
-                    ),
-                ])
+                'Select Device',
+                collect([]),
+                collect([])
             ),
         ]);
 
@@ -106,6 +97,8 @@ class iPod extends Prompt
 
                 $this->spotify = new SpotifyApi();
                 $this->spotify->authenticate($this->spotifyHelper->authenticator());
+
+                $this->screens->first()->fetch();
 
                 $this->authed = true;
                 break;

@@ -45,6 +45,7 @@ class PlayerScreen
         $this->ipod->spotify->send(new PlayTrack(
             $this->playlistId,
             $this->offset,
+            $this->ipod->deviceId,
         ));
     }
 

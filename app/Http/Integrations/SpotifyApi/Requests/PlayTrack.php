@@ -16,6 +16,7 @@ class PlayTrack extends Request implements HasBody
     public function __construct(
         public string $contextUri,
         public int $offset,
+        public ?string $deviceId = null,
     ) {
         //
     }
@@ -33,6 +34,7 @@ class PlayTrack extends Request implements HasBody
             'offset' => [
                 'position' => $this->offset,
             ],
+            'device_id' => $this->deviceId,
         ];
     }
 }
