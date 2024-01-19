@@ -121,6 +121,8 @@ class iPodRenderer extends Renderer
             ->map(fn ($line, $index) => $nextScreen->items->count() > 0 && $index - $nextScreenMenuStartIndex === $nextScreen->index ? $this->inverse($line) : $line)
             ->map(fn ($line, $index) => $nextBoldLines->contains($index) ? $this->bold($line) : $line);
 
+        ray($currentScreenLines, $nextScreenLines);
+
         $screenLines = $goingForward ? $currentScreenLines->zip($nextScreenLines) : $nextScreenLines->zip($currentScreenLines);
 
         $screenLines->map(fn ($lines) => $lines->implode(''))
@@ -221,9 +223,9 @@ class iPodRenderer extends Renderer
 
         $lines = $this->centerHorizontally(collect([
             '',
-            $this->bold($this->truncate($track['name'], $width - 4)),
-            $this->bold($this->truncate(collect($track['artists'])->pluck('name')->implode(', '), $width - 4)),
-            $this->bold($this->truncate($track['album']['name'], $width - 4)),
+            $this->truncate($track['name'], $width - 4),
+            $this->truncate(collect($track['artists'])->pluck('name')->implode(', '), $width - 4),
+            $this->truncate($track['album']['name'], $width - 4),
             '',
             $bar,
             $times,
