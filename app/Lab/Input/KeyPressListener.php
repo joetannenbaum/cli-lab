@@ -125,8 +125,19 @@ class KeyPressListener
         return $this;
     }
 
+    public function listenForQuit()
+    {
+        $this->on(['q', Key::CTRL_C], function () {
+            $this->prompt->terminal()->exit();
+        });
+
+        return $this;
+    }
+
     public function listen()
     {
+        $this->listenForQuit();
+
         $this->prompt->on('key', function ($key) {
             if ($this->isEscape($key)) {
                 foreach ($this->escape as $escape => $callback) {

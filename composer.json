@@ -15,6 +15,8 @@
         "laravel/pulse": "^1.0@beta",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
+        "saloonphp/laravel-plugin": "^3.0",
+        "saloonphp/saloon": "^3.0",
         "sentry/sentry-laravel": "^4.1",
         "spiral/roadrunner-cli": "^2.5.0",
         "fakerphp/faker": "^1.9.1",
