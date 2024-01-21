@@ -35,7 +35,7 @@ class Blog extends Prompt
 
     public string $state = 'browse';
 
-    public function __construct()
+    public function __construct(string $slug = null)
     {
         $this->registerTheme(BlogRenderer::class);
 
@@ -47,7 +47,11 @@ class Blog extends Prompt
 
         $this->posts = collect($posts)->chunk((int) floor($height / 3))->map(fn ($p) => $p->values())->toArray();
 
-        $this->listenForBrowseKeys();
+        if ($slug) {
+            $this->enterReadingMode($slug);
+        } else {
+            $this->enterBrowsingMode();
+        }
     }
 
     public function scrollDown(): void
@@ -71,10 +75,7 @@ class Blog extends Prompt
             ->on([Key::DOWN_ARROW, Key::DOWN],  $this->scrollDown(...))
             ->on([Key::UP_ARROW, Key::UP],  $this->scrollUp(...))
             ->listenForQuit()
-            ->on('b', function () {
-                $this->state = 'browse';
-                $this->listenForBrowseKeys();
-            })
+            ->on('b', $this->enterBrowsingMode(...))
             ->listen();
     }
 
@@ -94,17 +95,30 @@ class Blog extends Prompt
                 $this->browseSelected = 0;
             })
             ->on(Key::ENTER,  function () {
-                $this->state = 'reading';
-                $slug = $this->posts[$this->browsePage][$this->browseSelected]['slug'];
-                $this->post = Cache::remember(
-                    "blog:post:{$slug}",
-                    CarbonInterval::day(),
-                    fn () =>
-                    Http::get('http://127.0.0.1:8000/api/cli-lab/posts/' . $slug)->json()
-                );
-                $this->listenForReadingKeys();
+                $this->enterReadingMode($this->posts[$this->browsePage][$this->browseSelected]['slug']);
             })
             ->listen();
+    }
+
+    protected function enterReadingMode($slug): void
+    {
+        $this->state = 'reading';
+
+        $this->post = Cache::remember(
+            "blog:post:{$slug}",
+            CarbonInterval::day(),
+            fn () =>
+            Http::get('http://127.0.0.1:8000/api/cli-lab/posts/' . $slug)->json()
+        );
+
+        $this->listenForReadingKeys();
+    }
+
+    protected function enterBrowsingMode(): void
+    {
+        $this->state = 'browse';
+
+        $this->listenForBrowseKeys();
     }
 
     public function __destruct()

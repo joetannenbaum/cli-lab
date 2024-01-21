@@ -13,6 +13,6 @@ class Blog extends Command
 
     public function handle()
     {
-        (new LabBlog)->prompt();
+        (new LabBlog($this->argument('slug')))->prompt();
     }
 }
