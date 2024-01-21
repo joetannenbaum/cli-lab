@@ -146,6 +146,8 @@ class BlogRenderer extends Renderer
             $this->hotkey('→', 'Next page', $prompt->browsePage < count($prompt->posts) - 1);
         }
 
+        $this->hotkey('↑ ↓', 'Change selection');
+        $this->hotkey('Enter', 'Select');
         $this->hotkey('q', 'Quit');
 
         foreach ($this->hotkeys() as $hotkey) {

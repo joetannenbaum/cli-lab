@@ -32,11 +32,12 @@ class BrowseRenderer extends Renderer
         $this->newLine(2);
 
         $longestDescription = collect($prompt->items)
-            ->pluck('description')
+            ->map(fn ($page) => collect($page)->pluck('description'))
+            ->flatten()
             ->map(fn ($description) => mb_strlen($description))
             ->max() + 2;
 
-        collect($prompt->items)->each(function ($item, $index) use ($prompt, $longestDescription) {
+        collect($prompt->items[$prompt->browsePage])->each(function ($item, $index) use ($prompt, $longestDescription) {
             $active = $prompt->index === $index;
 
             $title = $active ? $this->bold($item['title']) : $this->dim($this->bold($item['title']));
@@ -51,6 +52,18 @@ class BrowseRenderer extends Renderer
             );
             $this->newLine();
         });
+
+        if (count($prompt->items) > 1) {
+            $dots = Util::range(1, count($prompt->items))
+                ->map(fn ($page) => $page === $prompt->browsePage + 1 ? $this->green('•') : $this->dim('•'))
+                ->join(' ');
+
+            $this->line($dots);
+            $this->newLine(2);
+
+            $this->hotkey('←', 'Previous page', $prompt->browsePage > 0);
+            $this->hotkey('→', 'Next page', $prompt->browsePage < count($prompt->items) - 1);
+        }
 
         $this->hotkey('↑ ↓', 'Change selection');
         $this->hotkey('Enter', 'Select');

@@ -24,9 +24,13 @@ class Browse extends Prompt
 
     public int $index = 0;
 
+    public int $browsePage = 0;
+
     public function __construct()
     {
-        $this->items = [
+        $height = self::terminal()->lines() - 12;
+
+        $this->items = collect([
             [
                 'title'       => 'Resume',
                 'description' => 'View my resume',
@@ -51,7 +55,13 @@ class Browse extends Prompt
                 'run'         => fn () => (new DataTable)->prompt(),
                 'command'     => 'datatable',
             ],
-        ];
+            [
+                'title' => 'My Blog',
+                'description' => 'A terminal recreation of my blog',
+                'run' => fn () => (new Blog)->prompt(),
+                'command' => 'blog',
+            ],
+        ])->chunk((int) floor($height / 10))->map(fn ($p) => $p->values())->toArray();
 
         $this->registerTheme(BrowseRenderer::class);
 
@@ -59,8 +69,16 @@ class Browse extends Prompt
 
         KeyPressListener::for($this)
             ->on(['q', Key::CTRL_C], fn () => $this->terminal()->exit())
-            ->on([Key::UP, Key::UP_ARROW], fn () => $this->index = max(0, $this->index - 1))
-            ->on([Key::DOWN, Key::DOWN_ARROW], fn () => $this->index = min(count($this->items) - 1, $this->index + 1))
+            ->on([Key::DOWN_ARROW, Key::DOWN],  fn () => $this->index = min($this->index + 1, count($this->items[$this->browsePage]) - 1))
+            ->on([Key::UP_ARROW, Key::UP],  fn () => $this->index = max($this->index - 1, 0))
+            ->on([Key::RIGHT_ARROW, Key::RIGHT], function () {
+                $this->browsePage = min(count($this->items) - 1, $this->browsePage + 1);
+                $this->index = 0;
+            })
+            ->on([Key::LEFT_ARROW, Key::LEFT], function () {
+                $this->browsePage = max(0, $this->browsePage - 1);
+                $this->index = 0;
+            })
             ->on(Key::ENTER, $this->onEnter(...))
             ->listen();
     }
@@ -68,7 +86,7 @@ class Browse extends Prompt
     public function onEnter(): void
     {
         $this->exitAltScreen();
-        $this->items[$this->index]['run']();
+        $this->items[$this->browsePage][$this->index]['run']();
     }
 
     public function __destruct()
