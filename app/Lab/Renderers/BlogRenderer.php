@@ -64,7 +64,7 @@ class BlogRenderer extends Renderer
 
                 $lineLength = $this->maxLineLength;
                 $final = Util::stripEscapeSequences($line);
-                $final = mb_wordwrap($final, $lineLength);
+                $final = mb_wordwrap($final, $lineLength, PHP_EOL, true);
 
                 foreach ($matches[0] as $match) {
                     $final = substr_replace($final, $match[0], $match[1], 0);
