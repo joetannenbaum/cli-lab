@@ -41,7 +41,7 @@ class Blog extends Prompt
 
         $this->createAltScreen();
 
-        $posts = Cache::remember('blog:posts', CarbonInterval::day(), fn () => Http::get('http://127.0.0.1:8000/api/cli-lab/posts')->json());
+        $posts = Cache::remember('blog:posts', CarbonInterval::day(), fn () => Http::get(config('services.blog.url') . '/api/cli-lab/posts?shh=' . config('services.blog.secret'))->json());
 
         $height = self::terminal()->lines() - 12;
 
@@ -104,12 +104,20 @@ class Blog extends Prompt
     {
         $this->state = 'reading';
 
-        $this->post = Cache::remember(
+        $post = Cache::remember(
             "blog:post:{$slug}",
             CarbonInterval::day(),
             fn () =>
-            Http::get('http://127.0.0.1:8000/api/cli-lab/posts/' . $slug)->json()
+            Http::get(config('services.blog.url') . '/api/cli-lab/posts/' . $slug  . '?shh=' . config('services.blog.secret'))->json()
         );
+
+        if ($post === null) {
+            $this->enterBrowsingMode();
+            return;
+        }
+
+        $this->post = $post;
+        $this->scrollPosition = 0;
 
         $this->listenForReadingKeys();
     }

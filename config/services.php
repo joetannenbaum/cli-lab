@@ -40,4 +40,9 @@ return [
         'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
         'redirect_uri' => env('SPOTIFY_REDIRECT_URI'),
     ],
+
+    'blog' => [
+        'url' => env('BLOG_URL'),
+        'secret' => env('BLOG_SECRET'),
+    ],
 ];
