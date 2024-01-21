@@ -9,17 +9,18 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
+        "fakerphp/faker": "^1.9.1",
         "guzzlehttp/guzzle": "^7.2",
         "laravel/framework": "^10.10",
         "laravel/octane": "^2.2",
         "laravel/pulse": "^1.0@beta",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
+        "nunomaduro/termwind": "^1.15",
         "saloonphp/laravel-plugin": "^3.0",
         "saloonphp/saloon": "^3.0",
         "sentry/sentry-laravel": "^4.1",
         "spiral/roadrunner-cli": "^2.5.0",
-        "fakerphp/faker": "^1.9.1",
         "spiral/roadrunner-http": "^3.0.1"
     },
     "require-dev": {
