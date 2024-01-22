@@ -144,13 +144,13 @@ class Blog extends Prompt
             exit(0);
         }
 
-        $missingPosts = Cache::missing($cacheKey);
+        $missingPosts = Cache::get($cacheKey) === null;
 
         while ($missingPosts) {
             $this->render();
             usleep(75_000);
             $this->spinnerCount++;
-            $missingPosts = Cache::missing($cacheKey);
+            $missingPosts = Cache::get($cacheKey) === null;
         }
 
         $posts = Cache::get($cacheKey);
