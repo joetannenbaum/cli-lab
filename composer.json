@@ -22,6 +22,8 @@
         "saloonphp/saloon": "^3.0",
         "sentry/sentry-laravel": "^4.1",
         "spatie/fork": "^1.2",
+        "spatie/invade": "^2.0",
+        "spatie/php-structure-discoverer": "^2.0",
         "spiral/roadrunner-cli": "^2.5.0",
         "spiral/roadrunner-http": "^3.0.1"
     },

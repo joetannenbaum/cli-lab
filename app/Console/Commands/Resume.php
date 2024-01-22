@@ -2,10 +2,11 @@
 
 namespace App\Console\Commands;
 
+use App\Contracts\LabCommand;
 use App\Lab\Resume as LabResume;
 use Illuminate\Console\Command;
 
-class Resume extends Command
+class Resume extends Command implements LabCommand
 {
     protected $signature = 'lab:resume';
 
