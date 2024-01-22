@@ -21,6 +21,7 @@
         "saloonphp/laravel-plugin": "^3.0",
         "saloonphp/saloon": "^3.0",
         "sentry/sentry-laravel": "^4.1",
+        "spatie/fork": "^1.2",
         "spiral/roadrunner-cli": "^2.5.0",
         "spiral/roadrunner-http": "^3.0.1"
     },

@@ -36,13 +36,13 @@ return [
     ],
 
     'spotify' => [
-        'client_id' => env('SPOTIFY_CLIENT_ID'),
+        'client_id'     => env('SPOTIFY_CLIENT_ID'),
         'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
-        'redirect_uri' => env('SPOTIFY_REDIRECT_URI'),
+        'redirect_uri'  => env('SPOTIFY_REDIRECT_URI'),
     ],
 
     'blog' => [
-        'url' => env('BLOG_URL'),
+        'url'    => env('BLOG_URL'),
         'secret' => env('BLOG_SECRET'),
     ],
 ];

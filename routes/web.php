@@ -25,7 +25,7 @@ Route::get('spotify/auth/{token}', function (string $token, Spotify $spotify) {
 
 Route::get('spotify/callback', function (Request $request, Spotify $spotify) {
     $validator = Validator::make($request->all(), [
-        'code' => 'required',
+        'code'  => 'required',
         'state' => 'required',
     ]);
 

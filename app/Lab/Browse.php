@@ -39,7 +39,7 @@ class Browse extends Prompt
             ],
             [
                 'title'       => 'Prong',
-                'description' => "Play a game of Prompts Pong with a friend (or against the computer)",
+                'description' => 'Play a game of Prompts Pong with a friend (or against the computer)',
                 'run'         => fn () => (new Prong)->play(),
                 'command'     => 'prong',
             ],
@@ -56,10 +56,10 @@ class Browse extends Prompt
                 'command'     => 'datatable',
             ],
             [
-                'title' => 'My Blog',
+                'title'       => 'My Blog',
                 'description' => 'A terminal recreation of my blog',
-                'run' => fn () => (new Blog)->prompt(),
-                'command' => 'blog',
+                'run'         => fn () => (new Blog)->prompt(),
+                'command'     => 'blog',
             ],
         ])->chunk((int) floor($height / 10))->map(fn ($p) => $p->values())->toArray();
 
@@ -69,8 +69,8 @@ class Browse extends Prompt
 
         KeyPressListener::for($this)
             ->on(['q', Key::CTRL_C], fn () => $this->terminal()->exit())
-            ->on([Key::DOWN_ARROW, Key::DOWN],  fn () => $this->index = min($this->index + 1, count($this->items[$this->browsePage]) - 1))
-            ->on([Key::UP_ARROW, Key::UP],  fn () => $this->index = max($this->index - 1, 0))
+            ->on([Key::DOWN_ARROW, Key::DOWN], fn () => $this->index = min($this->index + 1, count($this->items[$this->browsePage]) - 1))
+            ->on([Key::UP_ARROW, Key::UP], fn () => $this->index = max($this->index - 1, 0))
             ->on([Key::RIGHT_ARROW, Key::RIGHT], function () {
                 $this->browsePage = min(count($this->items) - 1, $this->browsePage + 1);
                 $this->index = 0;

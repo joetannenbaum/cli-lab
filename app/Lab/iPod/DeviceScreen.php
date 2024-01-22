@@ -3,7 +3,6 @@
 namespace App\Lab\iPod;
 
 use App\Http\Integrations\SpotifyApi\Requests\GetDevices;
-use App\Http\Integrations\SpotifyApi\Requests\GetPlaylists;
 use App\Lab\Input\KeyPressListener;
 use App\Lab\iPod;
 use Illuminate\Support\Collection;

@@ -4,9 +4,9 @@ namespace App\Lab;
 
 use App\Lab\Concerns\CreatesAnAltScreen;
 use App\Lab\Concerns\Loops;
+use App\Lab\Concerns\RegistersThemes;
 use App\Lab\Concerns\SetsUpAndResets;
 use App\Lab\Input\KeyPressListener;
-use App\Lab\Concerns\RegistersThemes;
 use App\Lab\Nissan\Battery;
 use App\Lab\Nissan\EngineTemp;
 use App\Lab\Nissan\Fuel;

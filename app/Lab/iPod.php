@@ -12,14 +12,12 @@ use App\Lab\iPod\DeviceScreen;
 use App\Lab\iPod\ImportedPhotos;
 use App\Lab\iPod\ImportingPhotos;
 use App\Lab\iPod\ImportPhotosInfo;
-use App\Lab\iPod\ListPlaylistsScreen;
-use App\Lab\iPod\iPodScreen;
 use App\Lab\iPod\PlayerScreen;
 use App\Lab\Renderers\iPodRenderer;
 use Illuminate\Support\Collection;
-use Laravel\Prompts\Prompt;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Key;
+use Laravel\Prompts\Prompt;
 
 class iPod extends Prompt
 {

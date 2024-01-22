@@ -3,7 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Lab\DataTable as LabDataTable;
-use App\Lab\Nissan as LabNissan;
 use Illuminate\Console\Command;
 
 class DataTable extends Command

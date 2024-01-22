@@ -31,7 +31,7 @@ class PlayTrack extends Request implements HasBody
         return [
             'context_uri' => $this->contextUri,
             'position_ms' => 0,
-            'offset' => [
+            'offset'      => [
                 'position' => $this->offset,
             ],
             'device_id' => $this->deviceId,

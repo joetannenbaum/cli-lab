@@ -9,8 +9,8 @@ use Saloon\Traits\Plugins\AcceptsJson;
 
 class Spotify extends Connector
 {
-    use AuthorizationCodeGrant;
     use AcceptsJson;
+    use AuthorizationCodeGrant;
 
     public function resolveBaseUrl(): string
     {

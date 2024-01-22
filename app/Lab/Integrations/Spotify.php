@@ -15,6 +15,11 @@ class Spotify
         Cache::put('spotify:generated_token:' . $this->key, CarbonInterval::day());
     }
 
+    public static function validKey(string $key): bool
+    {
+        return Cache::has("spotify:generated_token:{$key}");
+    }
+
     public function storeAuthenticator($authenticator)
     {
         Cache::put("spotify:{$this->key}:authenticator", $authenticator->serialize(), CarbonInterval::day());
@@ -38,10 +43,5 @@ class Spotify
     public function authenticator(): AccessTokenAuthenticator
     {
         return AccessTokenAuthenticator::unserialize(Cache::get("spotify:{$this->key}:authenticator"));
-    }
-
-    public static function validKey(string $key): bool
-    {
-        return Cache::has("spotify:generated_token:{$key}");
     }
 }

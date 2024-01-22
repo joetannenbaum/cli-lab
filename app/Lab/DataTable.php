@@ -3,8 +3,8 @@
 namespace App\Lab;
 
 use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Input\KeyPressListener;
 use App\Lab\Concerns\RegistersThemes;
+use App\Lab\Input\KeyPressListener;
 use App\Lab\Renderers\DataTableRenderer;
 use Illuminate\Support\Collection;
 use Laravel\Prompts\Concerns\TypedValue;
@@ -40,8 +40,8 @@ class DataTable extends Prompt
         $this->headers = ['name' => 'Name', 'email' => 'Email', 'address' => 'Address'];
         $this->rows = collect(range(1, 100))->map(
             fn ($i) => [
-                'name' => fake()->name(),
-                'email' => fake()->email(),
+                'name'    => fake()->name(),
+                'email'   => fake()->email(),
                 'address' => str_replace(PHP_EOL, ' ', fake()->address()),
             ]
         )->all();
@@ -75,10 +75,10 @@ class DataTable extends Prompt
             if (count($result) === 0) {
                 return [
                     [
-                        'name' => 'No results',
-                        'email' => '',
+                        'name'    => 'No results',
+                        'email'   => '',
                         'address' => '',
-                    ]
+                    ],
                 ];
             }
 

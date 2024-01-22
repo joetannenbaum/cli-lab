@@ -4,10 +4,10 @@ namespace App\Lab\Renderers;
 
 use App\Lab\Concerns\Aligns;
 use App\Lab\Concerns\DrawsHotkeys;
+use App\Lab\iPod;
 use App\Lab\iPod\ImportedPhotos;
 use App\Lab\iPod\ImportingPhotos;
 use App\Lab\iPod\ImportPhotosInfo;
-use App\Lab\iPod;
 use App\Lab\iPod\PlayerScreen;
 use App\Lab\iPod\PlaylistScreen;
 use Illuminate\Support\Collection;

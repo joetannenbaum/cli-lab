@@ -9,11 +9,11 @@ use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Concerns\DrawsTables;
 use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Output\Util;
+use Illuminate\Support\Str;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
 use Laravel\Prompts\Themes\Default\Renderer;
 use League\HTMLToMarkdown\HtmlConverter;
-use Illuminate\Support\Str;
 
 class BlogRenderer extends Renderer
 {
@@ -29,6 +29,8 @@ class BlogRenderer extends Renderer
 
     protected int $maxLineLength;
 
+    protected array $spinnerFrames = ['⠂', '⠒', '⠐', '⠰', '⠠', '⠤', '⠄', '⠆'];
+
     public function __invoke(Blog $prompt): string
     {
         return $this->minDimensions(fn () => $this->renderState($prompt), 100, 20);
@@ -43,20 +45,28 @@ class BlogRenderer extends Renderer
             return $this->renderBrowseState($prompt);
         }
 
+        if ($prompt->fetching) {
+            $frame = $this->spinnerFrames[$prompt->spinnerCount % count($this->spinnerFrames)];
+
+            $this->line($this->magenta($frame) . ' Fetching post...');
+
+            return $this;
+        }
+
         $finalLines = [];
 
         foreach ($prompt->post['content'] as $index => $block) {
             $lines = match ($block['type']) {
-                'tweet' => $this->drawTweet($block),
-                'code_block' => $this->drawCodeBlock($block),
-                'torchlight' => $this->drawTorchlight($block),
-                'video' => $this->drawVideo($block),
-                'image' => $this->drawImage($block),
-                'text' => $this->drawText($block),
-                'callout' => $this->drawCallout($block),
-                'buttons' => $this->drawButtons($block),
+                'tweet'         => $this->drawTweet($block),
+                'code_block'    => $this->drawCodeBlock($block),
+                'torchlight'    => $this->drawTorchlight($block),
+                'video'         => $this->drawVideo($block),
+                'image'         => $this->drawImage($block),
+                'text'          => $this->drawText($block),
+                'callout'       => $this->drawCallout($block),
+                'buttons'       => $this->drawButtons($block),
                 'youtube_video' => $this->drawYouTubeVideo($block),
-                default => throw new \Exception('Unknown block type: ' . $block['type']),
+                default         => throw new \Exception('Unknown block type: ' . $block['type']),
             };
 
             foreach ($lines as $line) {
@@ -121,6 +131,14 @@ class BlogRenderer extends Renderer
         $this->line($this->dim('https://blog.joe.codes · https://twitter.com/joetannenbaum'));
 
         $this->newLine(2);
+
+        if ($prompt->fetching) {
+            $frame = $this->spinnerFrames[$prompt->spinnerCount % count($this->spinnerFrames)];
+
+            $this->line($this->magenta($frame) . ' Fetching posts...');
+
+            return $this;
+        }
 
         foreach ($prompt->posts[$prompt->browsePage] as $index => $post) {
             if ($index === $prompt->browseSelected) {
@@ -266,7 +284,7 @@ class BlogRenderer extends Renderer
                         'MAGENTA',
                         $this->tag(
                             'BOLD',
-                            str_repeat('#', ltrim($element->getTagName(), 'h')) . ' ' .  $element->getValue()
+                            str_repeat('#', ltrim($element->getTagName(), 'h')) . ' ' . $element->getValue()
                         )
                     ) . PHP_EOL . PHP_EOL,
                     default => $element->getValue(),

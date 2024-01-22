@@ -3,7 +3,7 @@
 /**
  * Multi-byte version of wordwrap.
  *
- * @param non-empty-string $break
+ * @param  non-empty-string  $break
  */
 if (!function_exists('mb_wordwrap')) {
     function mb_wordwrap(
@@ -18,6 +18,7 @@ if (!function_exists('mb_wordwrap')) {
         foreach ($lines as $originalLine) {
             if (mb_strwidth($originalLine) <= $width) {
                 $result[] = $originalLine;
+
                 continue;
             }
             $words = explode(' ', $originalLine);
@@ -78,6 +79,7 @@ if (!function_exists('mb_wordwrap')) {
             }
             $line = null;
         }
+
         return implode($break, $result);
     }
 }
