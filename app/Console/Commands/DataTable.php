@@ -16,6 +16,11 @@ class DataTable extends Command implements LabCommand
 
     public function handle()
     {
+        $this->runLab();
+    }
+
+    public function runLab(): void
+    {
         $value = (new LabDataTable())->prompt();
     }
 }

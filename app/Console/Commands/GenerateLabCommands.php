@@ -18,6 +18,7 @@ class GenerateLabCommands extends Command
         $commands = Discover::in(__DIR__)->classes()->implementing(LabCommand::class)->get();
 
         $commandInfo = collect($commands)->map(fn ($command) => app($command))->map(fn (Command $c) => [
+            'class' => get_class($c),
             'name' => $c->displayName ?? collect(explode('\\', get_class($c)))->last(),
             'command' => collect(explode(' ', invade($c)->signature))->first(),
             'description' => invade($c)->description,

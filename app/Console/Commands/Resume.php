@@ -10,9 +10,14 @@ class Resume extends Command implements LabCommand
 {
     protected $signature = 'lab:resume';
 
-    protected $description = 'Command description';
+    protected $description = 'View my resume';
 
     public function handle()
+    {
+        $this->runLab();
+    }
+
+    public function runLab(): void
     {
         (new LabResume)->run();
     }

@@ -10,9 +10,14 @@ class Nissan extends Command implements LabCommand
 {
     protected $signature = 'lab:nissan';
 
-    protected $description = 'Command description';
+    protected $description = 'A terminal recreation of the dashboard of the Nissan 300 ZX (1984)';
 
     public function handle()
+    {
+        $this->runLab();
+    }
+
+    public function runLab(): void
     {
         (new LabNissan)->run();
     }

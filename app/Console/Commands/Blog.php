@@ -10,9 +10,14 @@ class Blog extends Command implements LabCommand
 {
     protected $signature = 'lab:blog {slug?}';
 
-    protected $description = 'Command description';
+    protected $description = 'A terminal recreation of my blog';
 
     public function handle()
+    {
+        $this->runLab();
+    }
+
+    public function runLab(): void
     {
         (new LabBlog($this->argument('slug')))->prompt();
     }

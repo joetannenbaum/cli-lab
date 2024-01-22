@@ -14,6 +14,11 @@ class Browse extends Command implements LabCommand
 
     public function handle()
     {
+        $this->runLab();
+    }
+
+    public function runLab(): void
+    {
         (new LabBrowse)->run();
     }
 }

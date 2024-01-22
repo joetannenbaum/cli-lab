@@ -40,9 +40,9 @@ class BrowseRenderer extends Renderer
         collect($prompt->items[$prompt->browsePage])->each(function ($item, $index) use ($prompt, $longestDescription) {
             $active = $prompt->index === $index;
 
-            $title = $active ? $this->bold($item['title']) : $this->dim($this->bold($item['title']));
+            $title = $active ? $this->bold($item['name']) : $this->dim($this->bold($item['name']));
             $description = $active ? $item['description'] : $this->dim($item['description']);
-            $footer = $active ? $this->dim('> ') . $this->green(SSH::command($item['command'])) : '';
+            $footer = $active ? $this->dim('> ') . $this->green(SSH::command($item['arg'])) : '';
 
             $this->box(
                 title: $title,
