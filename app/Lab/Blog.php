@@ -6,6 +6,7 @@ use App\Lab\Concerns\CreatesAnAltScreen;
 use App\Lab\Concerns\RegistersThemes;
 use App\Lab\Concerns\SetsUpAndResets;
 use App\Lab\Input\KeyPressListener;
+use App\Lab\Integrations\Fathom;
 use App\Lab\Renderers\BlogRenderer;
 use Carbon\CarbonInterval;
 use Illuminate\Support\Facades\Cache;
@@ -44,6 +45,8 @@ class Blog extends Prompt
     public function __construct(?string $slug = null)
     {
         $this->registerTheme(BlogRenderer::class);
+
+        Fathom::track($this);
 
         $this->createAltScreen();
 

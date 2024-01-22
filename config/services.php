@@ -33,6 +33,8 @@ return [
 
     'fathom_analytics' => [
         'site_id' => env('FATHOM_SITE_ID'),
+        'ssh_site_id' => env('FATHOM_SSH_SITE_ID'),
+        'api_key' => env('FATHOM_API_KEY'),
     ],
 
     'spotify' => [
