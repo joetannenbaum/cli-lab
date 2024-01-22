@@ -134,7 +134,7 @@ class Blog extends Prompt
                 $cacheKey,
                 CarbonInterval::day(),
                 fn () => Http::get(
-                    config('services.blog.url') . '/api/cli-lab/posts',
+                    config('services.blog.url') . '/cli-lab/posts',
                     [
                         'shh' => config('services.blog.secret'),
                     ],
@@ -181,7 +181,7 @@ class Blog extends Prompt
                 $cacheKey,
                 CarbonInterval::day(),
                 fn () => Http::get(
-                    config('services.blog.url') . '/api/cli-lab/posts/' . $slug,
+                    config('services.blog.url') . '/cli-lab/posts/' . $slug,
                     [
                         'shh' => config('services.blog.secret'),
                     ],
