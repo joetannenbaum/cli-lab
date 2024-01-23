@@ -18,9 +18,9 @@ class GenerateLabCommands extends Command
         $commands = Discover::in(__DIR__)->classes()->implementing(LabCommand::class)->get();
 
         $commandInfo = collect($commands)->map(fn ($command) => app($command))->map(fn (Command $c) => [
-            'class' => get_class($c),
-            'name' => $c->displayName ?? collect(explode('\\', get_class($c)))->last(),
-            'command' => collect(explode(' ', invade($c)->signature))->first(),
+            'class'       => get_class($c),
+            'name'        => $c->displayName ?? collect(explode('\\', get_class($c)))->last(),
+            'command'     => collect(explode(' ', invade($c)->signature))->first(),
             'description' => invade($c)->description,
         ])->map(fn ($c) => array_merge($c, [
             'arg' => str_replace('lab:', '', $c['command']),
@@ -32,7 +32,7 @@ class GenerateLabCommands extends Command
         $finalCommands = $finalCommands->sortBy('name')->values();
 
         File::put(storage_path('app/lab-commands.json'), json_encode([
-            'default' => $defaultCommand,
+            'default'  => $defaultCommand,
             'commands' => $finalCommands->toArray(),
         ]));
     }
