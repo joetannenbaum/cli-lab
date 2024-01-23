@@ -64,13 +64,15 @@ class DashboardRenderer extends Renderer
             $this->line($lines->implode(' '));
         });
 
+        $this->newLine();
+
         $this->hotkey('↑', 'Speed up');
         $this->hotkey('↓', 'Slow down');
         $this->hotkey('q', 'Quit');
 
-        foreach ($this->hotkeys() as $hotkey) {
-            $this->line($hotkey);
-        }
+        $this->centerHorizontally($this->hotkeys(), $dashboard->terminal()->cols() - 2)->each(
+            fn ($line) => $this->line($line),
+        );
 
         return $this;
     }
