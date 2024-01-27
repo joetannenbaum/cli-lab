@@ -19,9 +19,9 @@ class DashboardRenderer extends Renderer
 {
     use Aligns;
     use DrawsBoxes;
+    use DrawsHotkeys;
     use DrawsScrollbars;
     use HasMinimumDimensions;
-    use DrawsHotkeys;
 
     protected int $leftColumnWidth;
 
