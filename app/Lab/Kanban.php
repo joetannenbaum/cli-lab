@@ -136,6 +136,10 @@ class Kanban extends Prompt
 
     protected function moveCurrentItem(): void
     {
+        if (count($this->columns[$this->columnIndex]['items']) === 0) {
+            return;
+        }
+
         $newColumnIndex = $this->columnIndex + 1;
 
         if ($newColumnIndex >= count($this->columns)) {

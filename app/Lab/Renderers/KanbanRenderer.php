@@ -45,7 +45,9 @@ class KanbanRenderer extends Renderer
             $cardContent = PHP_EOL . $cards->implode(PHP_EOL);
 
             // Add new lines to the card content to make it the same height as the terminal
-            $cardContent .= str_repeat(PHP_EOL, $totalHeight - count(explode(PHP_EOL, $cardContent)) + 1);
+            $cardContent .= str_repeat(PHP_EOL, max($totalHeight - count(explode(PHP_EOL, $cardContent)) + 1, 0));
+
+            $cardContent = collect(explode(PHP_EOL, $cardContent))->slice(0, $totalHeight)->implode(PHP_EOL);
 
             $columnTitle = $kanban->columns[$columnIndex]['title'];
 
