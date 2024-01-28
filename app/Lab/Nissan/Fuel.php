@@ -4,8 +4,8 @@ namespace App\Lab\Nissan;
 
 use App\Lab\Concerns\Ticks;
 use App\Lab\Contracts\Tickable;
-use App\Lab\Support\Animatable;
 use App\Lab\Nissan;
+use App\Lab\Support\Animatable;
 
 class Fuel implements Tickable
 {

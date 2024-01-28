@@ -6,24 +6,24 @@ use App\Lab\Concerns\Aligns;
 use App\Lab\Concerns\DrawsBigNumbers;
 use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Concerns\HasMinimumDimensions;
-use App\Lab\Output\Lines;
-use App\Lab\Output\Util;
 use App\Lab\Nissan;
 use App\Lab\Nissan\Battery;
 use App\Lab\Nissan\EngineTemp;
 use App\Lab\Nissan\Fuel;
 use App\Lab\Nissan\OilLevel;
 use App\Lab\Nissan\Rpm;
+use App\Lab\Output\Lines;
+use App\Lab\Output\Util;
 use Illuminate\Support\Collection;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Renderer;
 
 class NissanRenderer extends Renderer
 {
+    use Aligns;
     use DrawsBigNumbers;
     use DrawsBoxes;
     use DrawsHotkeys;
-    use Aligns;
     use HasMinimumDimensions;
 
     protected $gaugeHeight = 12;

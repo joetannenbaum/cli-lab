@@ -34,4 +34,15 @@ return [
     'fathom_analytics' => [
         'site_id' => env('FATHOM_SITE_ID'),
     ],
+
+    'spotify' => [
+        'client_id'     => env('SPOTIFY_CLIENT_ID'),
+        'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+        'redirect_uri'  => env('SPOTIFY_REDIRECT_URI'),
+    ],
+
+    'blog' => [
+        'url'    => env('BLOG_URL'),
+        'secret' => env('BLOG_SECRET'),
+    ],
 ];

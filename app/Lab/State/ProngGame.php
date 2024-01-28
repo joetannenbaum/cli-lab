@@ -5,12 +5,10 @@ declare(strict_types=1);
 namespace App\Lab\State;
 
 use App\Models\ProngGame as ModelsProngGame;
-use Exception;
-use Illuminate\Database\Events\ModelsPruned;
-use Illuminate\Support\Collection;
-use SysvSharedMemory;
-use Illuminate\Support\Str;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
+use SysvSharedMemory;
 
 class ProngGame
 {
@@ -151,19 +149,19 @@ class ProngGame
     protected function keys(): Collection
     {
         return collect([
-            'playerOne' => 'player_one',
-            'playerTwo' => 'player_two',
+            'playerOne'         => 'player_one',
+            'playerTwo'         => 'player_two',
             'playerOnePosition' => 'player_one_position',
             'playerTwoPosition' => 'player_two_position',
-            'ballPositionX' => 'ball_position_x',
-            'ballPositionY' => 'ball_position_y',
-            'ballDirection' => 'ball_direction',
-            'ballSpeed' => 'ball_speed',
-            'ballSpeedLevel' => 'ball_speed_level',
-            'winner' => 'winner',
-            'playerOneReady' => 'player_one_ready',
-            'playerTwoReady' => 'player_two_ready',
-            'paddleHeight' => 'paddle_height',
+            'ballPositionX'     => 'ball_position_x',
+            'ballPositionY'     => 'ball_position_y',
+            'ballDirection'     => 'ball_direction',
+            'ballSpeed'         => 'ball_speed',
+            'ballSpeedLevel'    => 'ball_speed_level',
+            'winner'            => 'winner',
+            'playerOneReady'    => 'player_one_ready',
+            'playerTwoReady'    => 'player_two_ready',
+            'paddleHeight'      => 'paddle_height',
         ]);
     }
 }
