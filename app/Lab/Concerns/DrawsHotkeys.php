@@ -15,6 +15,11 @@ trait DrawsHotkeys
         $this->hotkeys[] = $key . ' ' . $this->dim($label);
     }
 
+    protected function hotkeyQuit()
+    {
+        $this->hotkey('q', 'Quit');
+    }
+
     protected function clearHotkeys()
     {
         $this->hotkeys = [];

@@ -134,6 +134,26 @@ class KeyPressListener
         return $this;
     }
 
+    public function onUp(callable $callback): static
+    {
+        return $this->on([Key::UP, Key::UP_ARROW], $callback);
+    }
+
+    public function onDown(callable $callback): static
+    {
+        return $this->on([Key::DOWN, Key::DOWN_ARROW], $callback);
+    }
+
+    public function onRight(callable $callback): static
+    {
+        return $this->on([Key::RIGHT, Key::RIGHT_ARROW], $callback);
+    }
+
+    public function onLeft(callable $callback): static
+    {
+        return $this->on([Key::LEFT, Key::LEFT_ARROW], $callback);
+    }
+
     public function listen()
     {
         $this->listenForQuit();
