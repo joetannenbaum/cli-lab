@@ -36,13 +36,27 @@ class Laradir extends Prompt
 
     public array $detail = [];
 
-    protected PendingRequest $client;
-
-    public array $filters;
+    public array $filters = [];
 
     public array $selectedFilters = [];
 
-    public array $results;
+    public array $results = [];
+
+    public int $currentFilter = 0;
+
+    public int $filterScrollPosition = 0;
+
+    public string $filterFocus = 'categories';
+
+    public array $filtersFromApi;
+
+    public bool $searching = false;
+
+    public int $spinnerCount = 0;
+
+    public int $pid = 0;
+
+    protected PendingRequest $client;
 
     public function __construct()
     {
@@ -50,12 +64,116 @@ class Laradir extends Prompt
 
         $this->client = Http::baseUrl('https://laradir.com/api')->acceptJson()->asJson();
 
-        $this->filters = Cache::remember('laradir-filters', CarbonInterval::day(), fn () => $this->client->get('filters')->json());
+        $filters = Cache::remember('laradir-filters', CarbonInterval::day(), fn () => $this->client->get('filters')->json());
+
+        foreach ($filters as $key => $subFilters) {
+            $arr = [
+                'key'     => $key,
+                'filters' => [],
+            ];
+
+            foreach ($subFilters as $key => $value) {
+                $arr['filters'][] = [
+                    'key'   => $key,
+                    'value' => $value,
+                ];
+            }
+
+            $this->filters[] = $arr;
+        }
+
+        $this->filtersFromApi = $filters;
 
         $this->state = 'search';
 
-        // $this->createAltScreen();
+        $this->createAltScreen();
         $this->listenForSearchKeys();
+    }
+
+    public function onEnter(): void
+    {
+        $item = $this->items[$this->index];
+
+        $this->detail = $item;
+
+        $this->state = 'detail';
+
+        $this->bioScrollPosition = 0;
+
+        $this->listenForDetailKeys();
+    }
+
+    public function __destruct()
+    {
+        if ($this->pid > 0) {
+            // Only do this in the parent
+            $this->exitAltScreen();
+        }
+    }
+
+    public function search()
+    {
+        $this->searching = true;
+
+        $params = array_merge(
+            [
+                'per_page' => $this->perPage,
+                'page'     => $this->page,
+                'seed'     => $this->results['meta']['filters']['seed'] ?? null,
+            ],
+            $this->selectedFilters,
+        );
+
+        $cacheKey = collect([
+            'laradir',
+            'search',
+            microtime(),
+            md5(json_encode($params)),
+        ])->implode(':');
+
+        $this->pid = pcntl_fork();
+
+        if ($this->pid == -1) {
+            exit('could not fork');
+        } elseif ($this->pid) {
+            // we are the parent
+        } else {
+            Cache::remember(
+                $cacheKey,
+                CarbonInterval::seconds(10),
+                fn () => $this->client->get('search', $params)->json(),
+            );
+
+            exit(0);
+        }
+
+        do {
+            $this->render();
+            usleep(75_000);
+            $this->spinnerCount++;
+        } while (Cache::missing($cacheKey));
+
+        $this->results = Cache::pull($cacheKey);
+
+        $this->items = array_slice($this->results['data'], 0, $this->perPage);
+        $this->index = 0;
+        $this->searching = false;
+        $this->render();
+    }
+
+    public function run()
+    {
+        // Render it once to determine perPage
+        $this->render();
+
+        $this->search();
+
+        $this->prompt();
+    }
+
+    public function value(): mixed
+    {
+        return null;
     }
 
     protected function listenForSearchKeys(): void
@@ -71,7 +189,6 @@ class Laradir extends Prompt
                 if ($newPage !== $this->page) {
                     $this->page = $newPage;
                     $this->search();
-                    $this->index = 0;
                 }
             })
             ->onRight(function () {
@@ -80,24 +197,17 @@ class Laradir extends Prompt
                 if ($newPage !== $this->page) {
                     $this->page = $newPage;
                     $this->search();
-                    $this->index = 0;
                 }
+            })
+            ->on('/', function () {
+                $this->state = 'filter';
+                $this->currentFilter = 0;
+                $this->filterScrollPosition = 0;
+                $this->filterFocus = 'categories';
+                $this->listenForFilterKeys();
             })
             ->on(Key::ENTER, $this->onEnter(...))
             ->listen();
-    }
-
-    public function onEnter(): void
-    {
-        $item = $this->items[$this->index];
-
-        $this->detail = $item;
-
-        $this->state = 'detail';
-
-        $this->bioScrollPosition = 0;
-
-        $this->listenForDetailKeys();
     }
 
     protected function listenForDetailKeys(): void
@@ -114,34 +224,50 @@ class Laradir extends Prompt
             ->listen();
     }
 
-    public function __destruct()
+    protected function listenForFilterKeys(): void
     {
-        $this->exitAltScreen();
-    }
+        KeyPressListener::for($this)
+            ->clearExisting()
+            ->listenForQuit()
+            ->onUp(function () {
+                if ($this->filterFocus === 'categories') {
+                    $this->currentFilter = max(0, $this->currentFilter - 1);
+                    $this->filterScrollPosition = 0;
+                } else {
+                    $this->filterScrollPosition = max(0, $this->filterScrollPosition - 1);
+                }
+            })
+            ->onDown(function () {
+                if ($this->filterFocus === 'categories') {
+                    $this->currentFilter = min(count($this->filters) - 1, $this->currentFilter + 1);
+                    $this->filterScrollPosition = 0;
+                } else {
+                    $this->filterScrollPosition += 1;
+                }
+            })
+            ->onLeft(fn () => $this->filterFocus = 'categories')
+            ->onRight(fn () => $this->filterFocus = 'filters')
+            ->on(Key::ENTER, function () {
+                $this->state = 'search';
+                $this->page = 1;
+                $this->search();
+                $this->listenForSearchKeys();
+            })
+            ->on(Key::SPACE, function () {
+                if ($this->filterFocus === 'categories') {
+                    return;
+                }
 
-    public function search()
-    {
-        $this->results = $this->client->get('search', [
-            'per_page' => $this->perPage,
-            'page' => $this->page,
-            'seed' => $this->results['meta']['filters']['seed'] ?? null,
-        ])->json();
+                $currentFilter = $this->filters[$this->currentFilter];
+                $filter = $currentFilter['filters'][$this->filterScrollPosition];
+                $currentlySelected = $this->selectedFilters[$currentFilter['key']] ?? [];
 
-        $this->items = $this->results['data'];
-    }
-
-    public function run()
-    {
-        // Render it once to determine perPage
-        $this->render();
-
-        $this->search();
-
-        $this->prompt();
-    }
-
-    public function value(): mixed
-    {
-        return null;
+                if (in_array($filter['key'], $currentlySelected)) {
+                    $this->selectedFilters[$currentFilter['key']] = array_values(array_diff($currentlySelected, [$filter['key']]));
+                } else {
+                    $this->selectedFilters[$currentFilter['key']] = array_values(array_merge($currentlySelected, [$filter['key']]));
+                }
+            })
+            ->listen();
     }
 }

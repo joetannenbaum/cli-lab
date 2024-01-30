@@ -13,8 +13,8 @@ use function Laravel\Prompts\text;
 
 class Kanban extends Prompt
 {
-    use RegistersThemes;
     use CreatesAnAltScreen;
+    use RegistersThemes;
 
     public array $columns = [
         [
@@ -44,7 +44,7 @@ class Kanban extends Prompt
                 [
                     'title'       => 'Change Profile Pic',
                     'description' => 'It\'s been a while.',
-                ]
+                ],
             ],
         ],
         [

@@ -123,9 +123,7 @@ class Blog extends Prompt
 
         $this->pid = pcntl_fork();
 
-        if (
-            $this->pid == -1
-        ) {
+        if ($this->pid == -1) {
             exit('could not fork');
         } elseif ($this->pid) {
             // we are the parent

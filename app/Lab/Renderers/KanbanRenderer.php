@@ -4,7 +4,6 @@ namespace App\Lab\Renderers;
 
 use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Kanban;
-use App\Lab\Output\Util;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
 use Laravel\Prompts\Themes\Default\Renderer;

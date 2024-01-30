@@ -10,6 +10,7 @@ use App\Lab\Laradir;
 use App\Lab\Output\Lines;
 use App\Lab\Output\Util;
 use Exception;
+use Illuminate\Support\Str;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
 use Laravel\Prompts\Themes\Default\Renderer;
@@ -29,6 +30,8 @@ class LaradirRenderer extends Renderer
 
     protected int $maxTextWidth;
 
+    protected array $spinnerFrames = ['⠂', '⠒', '⠐', '⠰', '⠠', '⠤', '⠄', '⠆'];
+
     public function __invoke(Laradir $prompt): string
     {
         $this->width = $prompt->terminal()->cols() - 2;
@@ -38,10 +41,11 @@ class LaradirRenderer extends Renderer
         if ($prompt->perPage === 0) {
             // Each result is 8 lines, pad to 10 just in case
             $prompt->perPage = (int) floor(($this->height - 10) / 10);
+
             return $this;
         }
 
-        $this->line($this->bold('Laradir') . $this->dim(' • https://laradir.com/'));
+        $this->line($this->bold('Lara') . $this->bold($this->inverse(' dir ')) . $this->dim(' • https://laradir.com/'));
 
         $this->newLine(2);
 
@@ -51,6 +55,111 @@ class LaradirRenderer extends Renderer
 
         if ($prompt->state === 'detail') {
             return $this->renderDetail($prompt);
+        }
+
+        if ($prompt->state === 'filter') {
+            return $this->renderFilters($prompt);
+        }
+
+        return $this;
+    }
+
+    public function getResultMeta($result): string
+    {
+        $meta = [];
+
+        if ($result['availability'] === 'now') {
+            $meta[] = $this->green('⏺︎ Available now');
+        } else {
+            $meta[] = $this->yellow('⏺︎ Available soon');
+        }
+
+        if (count($result['levels'])) {
+            $meta[] = collect($result['levels'])->map(
+                fn ($l) => $this->prompt->filtersFromApi['roles'][$l],
+            )->join(', ');
+        }
+
+        try {
+            $meta[] = $this->prompt->filtersFromApi['locations'][$result['country']] ?? null;
+        } catch (Exception) {
+            //
+        }
+
+        return implode($this->dim(' • '), $meta);
+    }
+
+    protected function renderFilters(Laradir $prompt): static
+    {
+        $firstCol = [];
+
+        $longest = collect($prompt->filters)->map(fn ($k) => strlen($k['key']))->max();
+
+        foreach ($prompt->filters as $i => $filter) {
+            $label = Str::of($filter['key'])->ucfirst()->singular()->padRight($longest)->padBoth($longest + 2)->toString();
+
+            if ($i === $prompt->currentFilter) {
+                $label = $this->inverse($this->cyan($label));
+            }
+
+            if ($prompt->filterFocus === 'categories') {
+                $label = $this->bold($label);
+            } else {
+                $label = $this->dim($label);
+            }
+
+            $firstCol[] = $label;
+        }
+
+        $secondCol = collect();
+
+        foreach ($prompt->filters[$prompt->currentFilter]['filters'] as $i => $filter) {
+            if ($prompt->filterFocus === 'categories') {
+                $label = $this->dim($filter['value']);
+            } elseif ($prompt->filterScrollPosition === $i) {
+                $label = $this->bold($filter['value']);
+            } else {
+                $label = $filter['value'];
+            }
+
+            if (in_array($filter['key'], $prompt->selectedFilters[$prompt->filters[$prompt->currentFilter]['key']] ?? [])) {
+                $secondCol->push($this->green('● ') . $label);
+            } else {
+                $secondCol->push($this->dim('○ ') . $label);
+            }
+        }
+
+        $scrollHeight = $this->height - 20;
+
+        $prompt->filterScrollPosition = min($prompt->filterScrollPosition, $secondCol->count() - 1);
+
+        $firstVisible = $prompt->filterScrollPosition >= $scrollHeight - 1 ? $prompt->filterScrollPosition - $scrollHeight : 0;
+
+        $secondColScroll = $this->scrollbar(
+            visible: $secondCol->slice($firstVisible, $scrollHeight),
+            firstVisible: $firstVisible,
+            height: $scrollHeight,
+            total: $secondCol->count(),
+            width: $this->maxTextWidth + 2,
+        );
+
+        Lines::fromColumns([$firstCol, $secondColScroll])
+            ->spacing(10)
+            ->lines()
+            ->each(fn ($line) => $this->line($line));
+
+        $this->verticalPadding(3);
+
+        $this->newLine(2);
+
+        $this->hotkey('Enter', 'Apply Filters');
+        $this->hotkey('↑ ↓', 'Change selection');
+        $this->hotkey('← →', 'Change focus');
+        $this->hotkey('Space', 'Toggle selection', $prompt->filterFocus !== 'categories');
+        $this->hotkeyQuit();
+
+        foreach ($this->hotkeys() as $line) {
+            $this->line($line);
         }
 
         return $this;
@@ -84,18 +193,15 @@ class LaradirRenderer extends Renderer
         $maxSkills = 10;
 
         if ($skills->count() > $maxSkills) {
-            $skills = $skills->map(fn ($s) => "  {$s}");
-            $skills = $skills->chunk($maxSkills)->map(fn ($chunk, $i) => $i > 0 ? $chunk : $chunk->map(fn ($s) => ltrim($s)));
-
-            $skills = Lines::fromColumns($skills)->lines();
+            $skills = Lines::fromColumns($skills->chunk($maxSkills))->spacing(2)->lines();
         }
 
         $row = [
             collect($prompt->detail['levels'])->map(
-                fn ($l) => $prompt->filters['roles'][$l],
+                fn ($l) => $prompt->filtersFromApi['roles'][$l],
             )->join(PHP_EOL),
             collect($prompt->detail['types'])->map(
-                fn ($l) => $prompt->filters['types'][$l],
+                fn ($l) => $prompt->filtersFromApi['types'][$l],
             )->join(PHP_EOL),
         ];
 
@@ -153,13 +259,18 @@ class LaradirRenderer extends Renderer
 
     protected function renderSearch(Laradir $prompt): static
     {
-        $results = collect($prompt->items)->slice(0, $prompt->perPage);
+        if ($prompt->searching) {
+            $frame = $this->spinnerFrames[$prompt->spinnerCount % count($this->spinnerFrames)];
+            $searchIndicator = ' ' . $this->magenta($frame);
+        } else {
+            $searchIndicator = '';
+        }
 
-        $this->line($this->bold('Search Laravel Developers'));
+        $this->line($this->bold('Search Laravel Developers') . $searchIndicator);
 
         $this->newLine(2);
 
-        $results->each(function ($result, $i) use ($prompt) {
+        collect($prompt->items)->each(function ($result, $i) use ($prompt) {
             if ($i > 0) {
                 $this->newLine();
                 $this->line($this->dim(str_repeat('─', $this->maxTextWidth)));
@@ -212,28 +323,19 @@ class LaradirRenderer extends Renderer
             $this->line($bio);
         });
 
-        // foreach ($prompt->filters as $key => $filters) {
-        //     $this->line($this->bold(Str::of($key)->ucfirst()->singular()->toString()));
-
-        //     foreach ($filters as $value => $label) {
-        //         if (in_array($value, $prompt->selectedFilters[$key] ?? [])) {
-        //             $this->line($this->dim('● ') . $label);
-        //             continue;
-        //         }
-
-        //         $this->line($this->dim('○ ') . $label);
-        //     }
-
-        //     $this->newLine();
-        // }
-
         $this->verticalPadding(6);
 
-        $dots = Util::range($prompt->results['meta']['last_page'])
-            ->map(fn ($page) => $page === $prompt->page ? $this->green('⏺︎') : $this->dim('⏺︎'))
-            ->join(' ');
-
         $this->newLine(2);
+
+        $total = $prompt->results['meta']['total'] ?? 0;
+
+        if ($total > 0) {
+            $dots = Util::range(min($prompt->results['meta']['last_page'] ?? 0, 30))
+                ->map(fn ($page) => $page === $prompt->page ? $this->green('⏺︎') : $this->dim('⏺︎'))
+                ->join(' ');
+        } else {
+            $dots = '';
+        }
 
         $this->line($dots);
 
@@ -242,7 +344,7 @@ class LaradirRenderer extends Renderer
         $this->hotkey('/', 'Search');
         $this->hotkey('↑ ↓', 'Change selection');
         $this->hotkey('←', 'Previous page', $prompt->page > 1);
-        $this->hotkey('→', 'Next page', $prompt->page < $prompt->results['meta']['last_page']);
+        $this->hotkey('→', 'Next page', $prompt->page < ($prompt->results['meta']['last_page'] ?? 0));
         $this->hotkey('Enter', 'Select');
         $this->hotkeyQuit();
 
@@ -263,30 +365,5 @@ class LaradirRenderer extends Renderer
         if ($padding > 0) {
             $this->newLine($padding);
         }
-    }
-
-    public function getResultMeta($result): string
-    {
-        $meta = [];
-
-        if ($result['availability'] === 'now') {
-            $meta[] = $this->green('⏺︎ Available now');
-        } else {
-            $meta[] = $this->yellow('⏺︎ Available soon');
-        }
-
-        if (count($result['levels'])) {
-            $meta[] = collect($result['levels'])->map(
-                fn ($l) => $this->prompt->filters['roles'][$l],
-            )->join(', ');
-        }
-
-        try {
-            $meta[] = $this->prompt->filters['locations'][$result['country']] ?? null;
-        } catch (Exception) {
-            //
-        }
-
-        return implode($this->dim(' • '), $meta);
     }
 }
