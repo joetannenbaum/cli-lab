@@ -2,16 +2,22 @@
 
 namespace App\Console\Commands;
 
+use App\Contracts\LabCommand;
 use App\Lab\Laradir as LabLaradir;
 use Illuminate\Console\Command;
 
-class Laradir extends Command
+class Laradir extends Command implements LabCommand
 {
     protected $signature = 'lab:laradir';
 
-    protected $description = 'Command description';
+    protected $description = 'Search Laradir developer directory and view profiles';
 
     public function handle()
+    {
+        $this->runLab();
+    }
+
+    public function runLab(): void
     {
         (new LabLaradir)->run();
     }
