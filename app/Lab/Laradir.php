@@ -12,6 +12,7 @@ use Carbon\CarbonInterval;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Laravel\Prompts\Concerns\Scrolling;
 use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
@@ -23,6 +24,7 @@ class Laradir extends Prompt
     use RegistersThemes;
     use SetsUpAndResets;
     use TypedValue;
+    use Scrolling;
 
     public array $items = [];
 
@@ -61,6 +63,10 @@ class Laradir extends Prompt
     public function __construct()
     {
         $this->registerTheme(LaradirRenderer::class);
+
+        $this->scroll = 20;
+
+        $this->initializeScrolling(0);
 
         $this->client = Http::baseUrl('https://laradir.com/api')->acceptJson()->asJson();
 
@@ -232,17 +238,17 @@ class Laradir extends Prompt
             ->onUp(function () {
                 if ($this->filterFocus === 'categories') {
                     $this->currentFilter = max(0, $this->currentFilter - 1);
-                    $this->filterScrollPosition = 0;
+                    $this->highlight(0);
                 } else {
-                    $this->filterScrollPosition = max(0, $this->filterScrollPosition - 1);
+                    $this->highlightPrevious(count($this->filters[$this->currentFilter]['filters']));
                 }
             })
             ->onDown(function () {
                 if ($this->filterFocus === 'categories') {
                     $this->currentFilter = min(count($this->filters) - 1, $this->currentFilter + 1);
-                    $this->filterScrollPosition = 0;
+                    $this->highlight(0);
                 } else {
-                    $this->filterScrollPosition += 1;
+                    $this->highlightNext(count($this->filters[$this->currentFilter]['filters']));
                 }
             })
             ->onLeft(fn () => $this->filterFocus = 'categories')
@@ -259,7 +265,7 @@ class Laradir extends Prompt
                 }
 
                 $currentFilter = $this->filters[$this->currentFilter];
-                $filter = $currentFilter['filters'][$this->filterScrollPosition];
+                $filter = $currentFilter['filters'][$this->highlighted];
                 $currentlySelected = $this->selectedFilters[$currentFilter['key']] ?? [];
 
                 if (in_array($filter['key'], $currentlySelected)) {

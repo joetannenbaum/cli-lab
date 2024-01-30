@@ -6,6 +6,7 @@ use App\Lab\Concerns\Aligns;
 use App\Lab\Concerns\DrawsAscii;
 use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Concerns\DrawsTables;
+use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Laradir;
 use App\Lab\Output\Lines;
 use App\Lab\Output\Util;
@@ -23,6 +24,7 @@ class LaradirRenderer extends Renderer
     use DrawsHotkeys;
     use DrawsScrollbars;
     use DrawsTables;
+    use HasMinimumDimensions;
 
     protected int $width;
 
@@ -33,6 +35,11 @@ class LaradirRenderer extends Renderer
     protected array $spinnerFrames = ['⠂', '⠒', '⠐', '⠰', '⠠', '⠤', '⠄', '⠆'];
 
     public function __invoke(Laradir $prompt): string
+    {
+        return $this->minDimensions(fn () => $this->renderLaradir($prompt), 80, 30);
+    }
+
+    protected function renderLaradir(Laradir $prompt): static
     {
         $this->width = $prompt->terminal()->cols() - 2;
         $this->height = $prompt->terminal()->lines() - 5;
@@ -114,31 +121,35 @@ class LaradirRenderer extends Renderer
         $secondCol = collect();
 
         foreach ($prompt->filters[$prompt->currentFilter]['filters'] as $i => $filter) {
+            $isHighlighted = $prompt->highlighted === $i;
+
             if ($prompt->filterFocus === 'categories') {
                 $label = $this->dim($filter['value']);
-            } elseif ($prompt->filterScrollPosition === $i) {
+            } elseif ($isHighlighted) {
                 $label = $this->bold($filter['value']);
             } else {
                 $label = $filter['value'];
             }
 
             if (in_array($filter['key'], $prompt->selectedFilters[$prompt->filters[$prompt->currentFilter]['key']] ?? [])) {
-                $secondCol->push($this->green('● ') . $label);
+                $label = $this->green('◼ ') . $label;
             } else {
-                $secondCol->push($this->dim('○ ') . $label);
+                $label = $this->dim('◻ ') . $label;
             }
+
+            if ($isHighlighted) {
+                $label = $this->cyan('› ') . $label;
+            } else {
+                $label = '  ' . $label;
+            }
+
+            $secondCol->push($label);
         }
 
-        $scrollHeight = $this->height - 20;
-
-        $prompt->filterScrollPosition = min($prompt->filterScrollPosition, $secondCol->count() - 1);
-
-        $firstVisible = $prompt->filterScrollPosition >= $scrollHeight - 1 ? $prompt->filterScrollPosition - $scrollHeight : 0;
-
         $secondColScroll = $this->scrollbar(
-            visible: $secondCol->slice($firstVisible, $scrollHeight),
-            firstVisible: $firstVisible,
-            height: $scrollHeight,
+            visible: $secondCol->slice($prompt->firstVisible, $prompt->scroll),
+            firstVisible: $prompt->firstVisible,
+            height: $prompt->scroll,
             total: $secondCol->count(),
             width: $this->maxTextWidth + 2,
         );
