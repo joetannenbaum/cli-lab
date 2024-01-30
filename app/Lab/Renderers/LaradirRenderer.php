@@ -36,7 +36,7 @@ class LaradirRenderer extends Renderer
 
     public function __invoke(Laradir $prompt): string
     {
-        return $this->minDimensions(fn () => $this->renderLaradir($prompt), 80, 30);
+        return $this->minDimensions(fn () => $this->renderLaradir($prompt), 110, 30);
     }
 
     protected function renderLaradir(Laradir $prompt): static
@@ -279,7 +279,21 @@ class LaradirRenderer extends Renderer
 
         $this->line($this->bold('Search Laravel Developers') . $searchIndicator);
 
-        $this->newLine(2);
+        $this->newLine();
+
+        if (count($prompt->selectedFilters)) {
+            $filters = collect($prompt->selectedFilters)->map(function ($filters, $key) use ($prompt) {
+                return collect($filters)->map(
+                    fn ($f) => $this->green('✔︎ ') . $prompt->filtersFromApi[$key][$f],
+                );
+            })->flatten()->join('  ');
+
+            $this->line($filters);
+        } else {
+            $this->newLine();
+        }
+
+        $this->newLine();
 
         collect($prompt->items)->each(function ($result, $i) use ($prompt) {
             if ($i > 0) {
@@ -357,6 +371,7 @@ class LaradirRenderer extends Renderer
         $this->hotkey('←', 'Previous page', $prompt->page > 1);
         $this->hotkey('→', 'Next page', $prompt->page < ($prompt->results['meta']['last_page'] ?? 0));
         $this->hotkey('Enter', 'Select');
+        $this->hotkey('c', 'Clear filters', count($prompt->selectedFilters) > 0);
         $this->hotkeyQuit();
 
         foreach ($this->hotkeys() as $line) {

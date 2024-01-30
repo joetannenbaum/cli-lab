@@ -213,6 +213,15 @@ class Laradir extends Prompt
                 $this->listenForFilterKeys();
             })
             ->on(Key::ENTER, $this->onEnter(...))
+            ->on('c', function () {
+                if (count($this->selectedFilters) === 0) {
+                    return;
+                }
+
+                $this->selectedFilters = [];
+                $this->page = 1;
+                $this->search();
+            })
             ->listen();
     }
 
