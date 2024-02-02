@@ -69,26 +69,12 @@ class BlogRenderer extends Renderer
                 default         => throw new \Exception('Unknown block type: ' . $block['type']),
             };
 
-            foreach ($lines as $line) {
-                preg_match_all("/\e[^m]*m/", $line, $matches, PREG_OFFSET_CAPTURE);
-
-                $lineLength = $this->maxLineLength;
-                $final = Util::stripEscapeSequences($line);
-                $final = mb_wordwrap($final, $lineLength, PHP_EOL, true);
-
-                foreach ($matches[0] as $match) {
-                    $final = substr_replace($final, $match[0], $match[1], 0);
-                }
-
-                $formatted = explode(PHP_EOL, $final);
-
-                foreach ($formatted as $l) {
-                    $finalLines[] = $l;
-                }
-            }
-
-            $finalLines[] = '';
+            $finalLines = array_merge($finalLines, $lines, ['']);
         }
+
+        $finalLines = collect($finalLines)->implode(PHP_EOL);
+        $finalLines = Util::wordwrap($finalLines, $this->maxLineLength, PHP_EOL, true);
+        $finalLines = explode(PHP_EOL, $finalLines);
 
         $height = $prompt->terminal()->lines() - 12;
 

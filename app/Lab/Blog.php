@@ -45,7 +45,7 @@ class Blog extends Prompt
     {
         $this->registerTheme(BlogRenderer::class);
 
-        $this->createAltScreen();
+        // $this->createAltScreen();
 
         $this->fetchPosts();
 
