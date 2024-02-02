@@ -45,4 +45,8 @@ return [
         'url'    => env('BLOG_URL'),
         'secret' => env('BLOG_SECRET'),
     ],
+
+    'mailcoach' => [
+        'api_token' => env('MAILCOACH_API_TOKEN'),
+    ],
 ];
