@@ -29,6 +29,9 @@ class PhpXNyc extends Command implements LabCommand
 
     public function runLab(): void
     {
+        $this->output->write("\e[?1049h");
+
+
         $this->newLine();
 
         $this->output->writeln($this->indent($this->bold($this->cyan('PHP × NYC'))));
@@ -119,6 +122,17 @@ class PhpXNyc extends Command implements LabCommand
         }
 
         info($this->indent("Got it! We'll see you there. Can't wait to meet you."));
+
+        $this->output->write($this->indent(' Closing in  '));
+
+        $i = 5;
+
+        while ($i > 0) {
+            $this->output->write("\033[1D");
+            $this->output->write($i);
+            sleep(1);
+            $i--;
+        }
     }
 
     protected function indent(string|array $value)
@@ -130,5 +144,10 @@ class PhpXNyc extends Command implements LabCommand
         }
 
         return collect($value)->map(fn ($line) => $spaces . $line)->toArray();
+    }
+
+    public function __destruct()
+    {
+        $this->output->write("\e[?1049l");
     }
 }
