@@ -148,6 +148,8 @@ class PhpXNyc extends Command implements LabCommand
 
     public function __destruct()
     {
-        $this->output->write("\e[?1049l");
+        if ($this->output) {
+            $this->output->write("\e[?1049l");
+        }
     }
 }
