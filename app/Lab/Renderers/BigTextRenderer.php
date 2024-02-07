@@ -23,11 +23,13 @@ class BigTextRenderer extends Renderer
 
     protected function renderMessage(BigText $prompt): self
     {
+        $message = strtolower($prompt->message);
+
         $width = $prompt->terminal()->cols() - 2;
         $height = $prompt->terminal()->lines() - 5;
 
         $messageLines = wordwrap(
-            string: $prompt->message,
+            string: $message,
             width: floor($width / 7),
             cut_long_words: true,
         );
@@ -61,8 +63,8 @@ class BigTextRenderer extends Renderer
         $this->center($lines, $width, $height - 2)
             ->each(fn ($line) => $this->line($line));
 
-        $this->pinToBottom($height, function () use ($prompt, $width) {
-            $this->hotkey('Enter', 'Clear', $prompt->message !== '');
+        $this->pinToBottom($height, function () use ($message, $width) {
+            $this->hotkey('Enter', 'Clear', $message !== '');
 
             foreach ($this->hotkeys() as $hotkey) {
                 $this->centerHorizontally($hotkey, $width)
