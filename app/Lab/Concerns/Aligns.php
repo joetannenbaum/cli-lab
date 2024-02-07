@@ -81,4 +81,26 @@ trait Aligns
 
         return collect($lines);
     }
+
+    protected function pinToBottom(int $height, $cb)
+    {
+        // Count line breaks in current string
+        $lineBreaks = substr_count($this->output, PHP_EOL);
+
+        $originalOutput = $this->output;
+        $this->output = '';
+
+        $cb();
+
+        $newOutput = $this->output;
+        $this->output = $originalOutput;
+
+        $padding = $height - $lineBreaks - substr_count($newOutput, PHP_EOL);
+
+        if ($padding > 0) {
+            $this->newLine($padding);
+        }
+
+        $this->output .= $newOutput;
+    }
 }
