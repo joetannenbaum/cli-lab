@@ -6,11 +6,6 @@ use App\Lab\Concerns\Aligns;
 use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Dashboard;
-use App\Lab\Dashboard\BarGraph;
-use App\Lab\Dashboard\Chat;
-use App\Lab\Dashboard\HalPulse;
-use App\Lab\Dashboard\Health;
-use App\Lab\Dashboard\PercentageBar;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
 use Laravel\Prompts\Themes\Default\Renderer;
@@ -79,8 +74,6 @@ class DashboardRenderer extends Renderer
 
     protected function renderBarGraph(Dashboard $dashboard)
     {
-        /** @var BarGraph $barGraph */
-        $barGraph = $dashboard->loopable(BarGraph::class);
         $barGraphWidth = $this->leftColumnWidth - 4;
 
         $colors = [
@@ -89,7 +82,7 @@ class DashboardRenderer extends Renderer
             'blue',
         ];
 
-        $lines = collect($barGraph->values)->map(fn ($value) => round($value->current() / 100 * $barGraphWidth))
+        $lines = collect($dashboard->barGraph->values)->map(fn ($value) => round($value->current() / 100 * $barGraphWidth))
             ->map(function ($value, $index) use ($colors, $barGraphWidth) {
                 $color = ($value < $barGraphWidth * .4) ? 'red' : $colors[$index];
 
@@ -110,11 +103,8 @@ class DashboardRenderer extends Renderer
 
     protected function renderPercentageBar(Dashboard $dashboard)
     {
-        /** @var PercentageBar $percentageBar */
-        $percentageBar = $dashboard->loopable(PercentageBar::class);
-
         $barWidth = $this->leftColumnWidth - 4;
-        $barPercentage = $percentageBar->value->current() / 100;
+        $barPercentage = $dashboard->percentageBar->value->current() / 100;
         $barFilled = round($barWidth * $barPercentage);
         $barEmpty = $barWidth - $barFilled;
 
@@ -132,11 +122,9 @@ class DashboardRenderer extends Renderer
 
     protected function renderHealth(Dashboard $dashboard)
     {
-        /** @var Health $health */
-        $health = $dashboard->loopable(Health::class);
-        $asciiIndex = $health->value->current() - $health->lowerBound;
+        $asciiIndex = $dashboard->health->value->current() - $dashboard->health->lowerBound;
 
-        $lines = collect($this->bold($this->cyan('SHIP HEALTH')))->merge($health->ascii->get($asciiIndex));
+        $lines = collect($this->bold($this->cyan('SHIP HEALTH')))->merge($dashboard->health->ascii->get($asciiIndex));
 
         $lines->prepend('');
         $lines->push('');
@@ -146,9 +134,7 @@ class DashboardRenderer extends Renderer
 
     protected function renderHeader(Dashboard $dashboard)
     {
-        /** @var HalPulse $halPulse */
-        $halPulse = $dashboard->loopable(HalPulse::class);
-        $halFrame = $halPulse->frames[$halPulse->current];
+        $halFrame = $dashboard->halPulse->frames[$dashboard->halPulse->current];
 
         $leftHalf = $this->bold($this->red($halFrame) . ' Good afternoon, Dave.');
 
@@ -163,12 +149,9 @@ class DashboardRenderer extends Renderer
 
     protected function getChat(Dashboard $dashboard)
     {
-        /** @var Chat $chat */
-        $chat = $dashboard->loopable(Chat::class);
-
         $width = $this->leftColumnWidth - 4;
 
-        $messages = $chat->messages->map(
+        $messages = $dashboard->chat->messages->map(
             fn ($message) => [$message[0] === 'HAL' ? $this->red($message[0]) : $this->cyan($message[0]), $message[1]],
         )
             ->map(function ($message) use ($width) {
