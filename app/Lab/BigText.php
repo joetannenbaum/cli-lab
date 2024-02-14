@@ -2,9 +2,9 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Concerns\SetsUpAndResets;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\SetsUpAndResets;
 use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
@@ -51,14 +51,5 @@ class BigText extends Prompt
     public function value(): mixed
     {
         return null;
-    }
-
-    protected function loadAscii()
-    {
-        $alpha = file_get_contents(storage_path('ascii/alphabet/all.txt'));
-
-        $letters = range('a', 'z');
-
-        $alpha = collect(explode("\n\n", $alpha))->map(fn ($letter, $i) => file_put_contents(storage_path("ascii/alphabet/{$letters[$i]}.txt"), $letter));
     }
 }

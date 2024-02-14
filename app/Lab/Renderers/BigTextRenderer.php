@@ -3,10 +3,11 @@
 namespace App\Lab\Renderers;
 
 use App\Lab\BigText;
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsAscii;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\HasMinimumDimensions;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsAscii;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\HasMinimumDimensions;
+use Chewie\Output\Lines;
 use Laravel\Prompts\Themes\Default\Renderer;
 
 class BigTextRenderer extends Renderer
@@ -23,7 +24,7 @@ class BigTextRenderer extends Renderer
 
     protected function renderMessage(BigText $prompt): self
     {
-        $message = strtolower($prompt->message);
+        $message = mb_strtolower($prompt->message);
 
         $width = $prompt->terminal()->cols() - 2;
         $height = $prompt->terminal()->lines() - 5;
@@ -35,7 +36,7 @@ class BigTextRenderer extends Renderer
         );
 
         $lines = collect(explode("\n", $messageLines))
-            ->map(fn ($line) => str_split($line))
+            ->map(fn ($line) => mb_str_split($line))
             ->map(
                 fn ($letters) => collect($letters)
                     ->map(fn ($letter) => match ($letter) {
@@ -48,27 +49,16 @@ class BigTextRenderer extends Renderer
                         default => $this->asciiLines('alphabet/' . $letter),
                     })
             )
-            ->flatMap(function ($letters) {
+            ->flatMap(fn ($letters) => Lines::fromColumns($letters)->lines())
+            ->slice(($height - 4) * -1);
 
-                $lines = collect($letters->shift());
-
-                if ($letters->isNotEmpty()) {
-                    $lines = $lines->zip(...$letters->toArray())->map(fn ($line) => $line->implode(''));
-                }
-
-                return $lines;
-            })
-            ->slice(-($height - 4));
-
-        $this->center($lines, $width, $height - 2)
-            ->each(fn ($line) => $this->line($line));
+        $this->center($lines, $width, $height - 2)->each($this->line(...));
 
         $this->pinToBottom($height, function () use ($message, $width) {
             $this->hotkey('Enter', 'Clear', $message !== '');
 
             foreach ($this->hotkeys() as $hotkey) {
-                $this->centerHorizontally($hotkey, $width)
-                    ->each(fn ($line) => $this->line($line));
+                $this->centerHorizontally($hotkey, $width)->each($this->line(...));
             }
         });
 
