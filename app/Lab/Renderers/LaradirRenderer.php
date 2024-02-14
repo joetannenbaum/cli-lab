@@ -39,6 +39,31 @@ class LaradirRenderer extends Renderer
         return $this->minDimensions(fn () => $this->renderLaradir($prompt), 110, 30);
     }
 
+    public function getResultMeta($result): string
+    {
+        $meta = [];
+
+        if ($result['availability'] === 'now') {
+            $meta[] = $this->green('⏺︎ Available now');
+        } else {
+            $meta[] = $this->yellow('⏺︎ Available soon');
+        }
+
+        if (count($result['levels'])) {
+            $meta[] = collect($result['levels'])->map(
+                fn ($l) => $this->prompt->filtersFromApi['roles'][$l],
+            )->join(', ');
+        }
+
+        try {
+            $meta[] = $this->prompt->filtersFromApi['locations'][$result['country']] ?? null;
+        } catch (Exception) {
+            //
+        }
+
+        return implode($this->dim(' • '), $meta);
+    }
+
     protected function renderLaradir(Laradir $prompt): static
     {
         $this->width = $prompt->terminal()->cols() - 2;
@@ -69,31 +94,6 @@ class LaradirRenderer extends Renderer
         }
 
         return $this;
-    }
-
-    public function getResultMeta($result): string
-    {
-        $meta = [];
-
-        if ($result['availability'] === 'now') {
-            $meta[] = $this->green('⏺︎ Available now');
-        } else {
-            $meta[] = $this->yellow('⏺︎ Available soon');
-        }
-
-        if (count($result['levels'])) {
-            $meta[] = collect($result['levels'])->map(
-                fn ($l) => $this->prompt->filtersFromApi['roles'][$l],
-            )->join(', ');
-        }
-
-        try {
-            $meta[] = $this->prompt->filtersFromApi['locations'][$result['country']] ?? null;
-        } catch (Exception) {
-            //
-        }
-
-        return implode($this->dim(' • '), $meta);
     }
 
     protected function renderFilters(Laradir $prompt): static

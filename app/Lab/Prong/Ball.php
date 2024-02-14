@@ -3,10 +3,10 @@
 namespace App\Lab\Prong;
 
 use App\Lab\Concerns\Ticks;
-use App\Lab\Contracts\Tickable;
+use App\Lab\Contracts\Loopable;
 use App\Lab\Prong;
 
-class Ball implements Tickable
+class Ball implements Loopable
 {
     use Ticks;
 

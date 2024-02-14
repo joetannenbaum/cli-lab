@@ -2,19 +2,19 @@
 
 namespace App\Lab\Renderers;
 
+use App\Lab\BigText;
 use App\Lab\Concerns\Aligns;
 use App\Lab\Concerns\DrawsAscii;
-use App\Lab\Concerns\HasMinimumDimensions;
-use App\Lab\BigText;
 use App\Lab\Concerns\DrawsHotkeys;
+use App\Lab\Concerns\HasMinimumDimensions;
 use Laravel\Prompts\Themes\Default\Renderer;
 
 class BigTextRenderer extends Renderer
 {
     use Aligns;
     use DrawsAscii;
-    use HasMinimumDimensions;
     use DrawsHotkeys;
+    use HasMinimumDimensions;
 
     public function __invoke(BigText $prompt): string
     {
@@ -39,12 +39,12 @@ class BigTextRenderer extends Renderer
             ->map(
                 fn ($letters) => collect($letters)
                     ->map(fn ($letter) => match ($letter) {
-                        ' ' => array_fill(0, 7, str_repeat(' ', 4)),
-                        '.' => $this->asciiLines('alphabet/period'),
-                        ',' => $this->asciiLines('alphabet/comma'),
-                        '?' => $this->asciiLines('alphabet/question-mark'),
-                        '!' => $this->asciiLines('alphabet/exclamation-point'),
-                        "'" => $this->asciiLines('alphabet/apostrophe'),
+                        ' '     => array_fill(0, 7, str_repeat(' ', 4)),
+                        '.'     => $this->asciiLines('alphabet/period'),
+                        ','     => $this->asciiLines('alphabet/comma'),
+                        '?'     => $this->asciiLines('alphabet/question-mark'),
+                        '!'     => $this->asciiLines('alphabet/exclamation-point'),
+                        "'"     => $this->asciiLines('alphabet/apostrophe'),
                         default => $this->asciiLines('alphabet/' . $letter),
                     })
             )
@@ -58,7 +58,7 @@ class BigTextRenderer extends Renderer
 
                 return $lines;
             })
-            ->slice(- ($height - 4));
+            ->slice(-($height - 4));
 
         $this->center($lines, $width, $height - 2)
             ->each(fn ($line) => $this->line($line));

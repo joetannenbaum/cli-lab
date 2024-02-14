@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Lab\Support;
 
-class Animatable
+use Exception;
+
+class Animation
 {
     protected int|float $nextValue;
 
@@ -21,9 +23,23 @@ class Animatable
         $this->nextValue = $value;
     }
 
+    public static function fromRandom(int|float $lowerLimit, int|float $upperLimit): static
+    {
+        return new static(rand($lowerLimit, $upperLimit), $lowerLimit, $upperLimit);
+    }
+
     public static function fromValue(int|float $value): static
     {
         return new static($value);
+    }
+
+    public function whenDoneAnimating(callable $callback): void
+    {
+        if ($this->isAnimating()) {
+            $this->animate();
+        } else {
+            $callback();
+        }
     }
 
     public function lowerLimit(int|float $lowerLimit): static
@@ -98,6 +114,19 @@ class Animatable
     public function toRelative(int|float $value): void
     {
         $this->to($this->value + $value);
+    }
+
+    public function toRandom(): void
+    {
+        if ($this->lowerLimit === null || $this->upperLimit === null) {
+            throw new Exception('Lower and upper limits must be set to use random');
+        }
+
+        do {
+            $value = rand($this->lowerLimit, $this->upperLimit);
+        } while ($value === $this->nextValue);
+
+        $this->to($value);
     }
 
     public function current(): int|float

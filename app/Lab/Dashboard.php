@@ -2,19 +2,17 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\Loops;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Concerns\SetsUpAndResets;
 use App\Lab\Dashboard\BarGraph;
 use App\Lab\Dashboard\Chat;
 use App\Lab\Dashboard\HalPulse;
 use App\Lab\Dashboard\Health;
 use App\Lab\Dashboard\PercentageBar;
-use App\Lab\Input\KeyPressListener;
-use App\Lab\Renderers\DashboardRenderer;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\Loops;
+use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\SetsUpAndResets;
+use Chewie\Input\KeyPressListener;
 use Laravel\Prompts\Concerns\TypedValue;
-use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
 
 class Dashboard extends Prompt
@@ -39,7 +37,7 @@ class Dashboard extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme(DashboardRenderer::class);
+        $this->registerTheme();
 
         $this->health = new Health;
         $this->percentageBar = new PercentageBar;
@@ -47,11 +45,13 @@ class Dashboard extends Prompt
         $this->chat = new Chat;
         $this->barGraph = new BarGraph;
 
-        $this->registerLoopable($this->health);
-        $this->registerLoopable($this->percentageBar);
-        $this->registerLoopable($this->halPulse);
-        $this->registerLoopable($this->chat);
-        $this->registerLoopable($this->barGraph);
+        $this->registerLoopables(
+            $this->health,
+            $this->percentageBar,
+            $this->halPulse,
+            $this->chat,
+            $this->barGraph,
+        );
 
         $this->createAltScreen();
     }
@@ -63,7 +63,12 @@ class Dashboard extends Prompt
 
     public function run()
     {
-        $this->setup(fn () => $this->loop($this->showDashboard(...), 100_000));
+        $listener = KeyPressListener::for($this)
+            ->onUp(fn () => $this->sleepBetweenLoops = max(50_000, $this->sleepBetweenLoops - 50_000))
+            ->onDown(fn () => $this->sleepBetweenLoops += 50_000)
+            ->listenForQuit();
+
+        $this->setup(fn () => $this->loop(fn () => $this->showDashboard($listener), 100_000));
     }
 
     public function value(): mixed
@@ -80,14 +85,9 @@ class Dashboard extends Prompt
         return $this->addCursor($this->chat->currentlyTyping, strlen($this->chat->currentlyTyping), $maxWidth);
     }
 
-    protected function showDashboard(): void
+    protected function showDashboard(KeyPressListener $listener): void
     {
         $this->render();
-
-        KeyPressListener::for($this)
-            ->onUp(fn () => $this->sleepBetweenLoops = max(50_000, $this->sleepBetweenLoops - 50_000))
-            ->onDown(fn () => $this->sleepBetweenLoops += 50_000)
-            ->listenForQuit()
-            ->once();
+        $listener->once();
     }
 }

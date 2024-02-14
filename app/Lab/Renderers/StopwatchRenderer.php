@@ -5,8 +5,8 @@ namespace App\Lab\Renderers;
 use App\Lab\Concerns\Aligns;
 use App\Lab\Concerns\DrawsAscii;
 use App\Lab\Concerns\DrawsBigNumbers;
-use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Concerns\DrawsHotkeys;
+use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Stopwatch;
 use Laravel\Prompts\Themes\Default\Renderer;
 
@@ -14,9 +14,9 @@ class StopwatchRenderer extends Renderer
 {
     use Aligns;
     use DrawsAscii;
-    use HasMinimumDimensions;
-    use DrawsHotkeys;
     use DrawsBigNumbers;
+    use DrawsHotkeys;
+    use HasMinimumDimensions;
 
     public function __invoke(Stopwatch $prompt): string
     {
@@ -33,7 +33,7 @@ class StopwatchRenderer extends Renderer
         $seconds = str_pad($seconds, 2, '0', STR_PAD_LEFT);
         $milliseconds = str_pad($milliseconds, 3, '0', STR_PAD_LEFT);
 
-        $colon = <<<COLON
+        $colon = <<<'COLON'
 
         •
         •

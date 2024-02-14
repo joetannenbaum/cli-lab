@@ -56,7 +56,7 @@ class PhpXNycRenderer extends Renderer
             'Fill out the form below if you\'d like to join.',
         ]);
 
-        $emailInput =  $this->boxInternal($prompt, 'Email');
+        $emailInput = $this->boxInternal($prompt, 'Email');
 
         ray($emailInput);
 

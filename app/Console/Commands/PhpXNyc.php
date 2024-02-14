@@ -3,8 +3,6 @@
 namespace App\Console\Commands;
 
 use App\Contracts\LabCommand;
-use App\Lab\PhpXNyc as LabPhpXNyc;
-use App\Lab\Resume as LabResume;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -30,7 +28,6 @@ class PhpXNyc extends Command implements LabCommand
     public function runLab(): void
     {
         $this->output->write("\e[?1049h");
-
 
         $this->newLine();
 
@@ -84,7 +81,7 @@ class PhpXNyc extends Command implements LabCommand
         );
 
         Log::info('Attendee form submitted', [
-            'name' => $name,
+            'name'  => $name,
             'email' => $email,
         ]);
 
@@ -103,10 +100,10 @@ class PhpXNyc extends Command implements LabCommand
         );
 
         $params = [
-            'email' => $email,
+            'email'      => $email,
             'first_name' => $firstName,
-            'last_name' => $lastName,
-            'tags' => ['meetup-2024-02-29'],
+            'last_name'  => $lastName,
+            'tags'       => ['meetup-2024-02-29'],
         ];
 
         if (count($existing->json('data')) > 0) {
@@ -135,6 +132,13 @@ class PhpXNyc extends Command implements LabCommand
         }
     }
 
+    public function __destruct()
+    {
+        if ($this->output) {
+            $this->output->write("\e[?1049l");
+        }
+    }
+
     protected function indent(string|array $value)
     {
         $spaces = ' ';
@@ -144,12 +148,5 @@ class PhpXNyc extends Command implements LabCommand
         }
 
         return collect($value)->map(fn ($line) => $spaces . $line)->toArray();
-    }
-
-    public function __destruct()
-    {
-        if ($this->output) {
-            $this->output->write("\e[?1049l");
-        }
     }
 }

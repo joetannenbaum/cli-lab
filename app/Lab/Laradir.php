@@ -22,9 +22,9 @@ class Laradir extends Prompt
     use CreatesAnAltScreen;
     use Loops;
     use RegistersThemes;
+    use Scrolling;
     use SetsUpAndResets;
     use TypedValue;
-    use Scrolling;
 
     public array $items = [];
 

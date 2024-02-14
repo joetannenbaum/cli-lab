@@ -2,10 +2,11 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Dashboard;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsBigNumbers;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\HasMinimumDimensions;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
 use Laravel\Prompts\Themes\Default\Renderer;
@@ -13,6 +14,7 @@ use Laravel\Prompts\Themes\Default\Renderer;
 class DashboardRenderer extends Renderer
 {
     use Aligns;
+    use DrawsBigNumbers;
     use DrawsBoxes;
     use DrawsHotkeys;
     use DrawsScrollbars;
@@ -122,9 +124,7 @@ class DashboardRenderer extends Renderer
 
     protected function renderHealth(Dashboard $dashboard)
     {
-        $asciiIndex = $dashboard->health->value->current() - $dashboard->health->lowerBound;
-
-        $lines = collect($this->bold($this->cyan('SHIP HEALTH')))->merge($dashboard->health->ascii->get($asciiIndex));
+        $lines = collect($this->bold($this->cyan('SHIP HEALTH')))->merge($this->bigNumber($dashboard->health->value->current()));
 
         $lines->prepend('');
         $lines->push('');
@@ -134,9 +134,9 @@ class DashboardRenderer extends Renderer
 
     protected function renderHeader(Dashboard $dashboard)
     {
-        $halFrame = $dashboard->halPulse->frames[$dashboard->halPulse->current];
-
-        $leftHalf = $this->bold($this->red($halFrame) . ' Good afternoon, Dave.');
+        $leftHalf = $this->bold(
+            $this->red($dashboard->halPulse->frames->frame(['●', '○'])) . ' Good afternoon, Dave.'
+        );
 
         $rightHalf = $this->dim(date('Y-m-d H:i:s'));
 

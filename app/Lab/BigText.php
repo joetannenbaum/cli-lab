@@ -27,9 +27,9 @@ class BigText extends Prompt
         $this->on('key', function ($key) {
             if ($key === Key::ENTER) {
                 $this->message = '';
-            } else if ($key === Key::BACKSPACE) {
+            } elseif ($key === Key::BACKSPACE) {
                 $this->message = substr($this->message, 0, -1);
-            } else if ($key === Key::CTRL_C) {
+            } elseif ($key === Key::CTRL_C) {
                 $this->terminal()->exit();
             } else {
                 $key = strtolower($key);
@@ -48,6 +48,11 @@ class BigText extends Prompt
         $this->exitAltScreen();
     }
 
+    public function value(): mixed
+    {
+        return null;
+    }
+
     protected function loadAscii()
     {
         $alpha = file_get_contents(storage_path('ascii/alphabet/all.txt'));
@@ -55,10 +60,5 @@ class BigText extends Prompt
         $letters = range('a', 'z');
 
         $alpha = collect(explode("\n\n", $alpha))->map(fn ($letter, $i) => file_put_contents(storage_path("ascii/alphabet/{$letters[$i]}.txt"), $letter));
-    }
-
-    public function value(): mixed
-    {
-        return null;
     }
 }
