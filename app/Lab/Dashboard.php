@@ -27,15 +27,31 @@ class Dashboard extends Prompt
 
     public array $components = [];
 
+    public Health $health;
+
+    public PercentageBar $percentageBar;
+
+    public HalPulse $halPulse;
+
+    public Chat $chat;
+
+    public BarGraph $barGraph;
+
     public function __construct()
     {
         $this->registerTheme(DashboardRenderer::class);
 
-        $this->registerLoopable(Health::class);
-        $this->registerLoopable(PercentageBar::class);
-        $this->registerLoopable(HalPulse::class);
-        $this->registerLoopable(Chat::class);
-        $this->registerLoopable(BarGraph::class);
+        $this->health = new Health;
+        $this->percentageBar = new PercentageBar;
+        $this->halPulse = new HalPulse;
+        $this->chat = new Chat;
+        $this->barGraph = new BarGraph;
+
+        $this->registerLoopable($this->health);
+        $this->registerLoopable($this->percentageBar);
+        $this->registerLoopable($this->halPulse);
+        $this->registerLoopable($this->chat);
+        $this->registerLoopable($this->barGraph);
 
         $this->createAltScreen();
     }
@@ -57,24 +73,21 @@ class Dashboard extends Prompt
 
     public function valueWithCursor(int $maxWidth): string
     {
-        $chat = $this->loopable(Chat::class);
-
-        if ($chat->currentlyTyping === '') {
+        if ($this->chat->currentlyTyping === '') {
             return $this->dim($this->addCursor('Chat with HAL', 0, $maxWidth));
         }
 
-        return $this->addCursor($chat->currentlyTyping, strlen($chat->currentlyTyping), $maxWidth);
+        return $this->addCursor($this->chat->currentlyTyping, strlen($this->chat->currentlyTyping), $maxWidth);
     }
 
     protected function showDashboard(): void
     {
         $this->render();
 
-        match (KeyPressListener::once()) {
-            'q', Key::CTRL_C => $this->terminal()->exit(),
-            Key::UP_ARROW, Key::UP => $this->sleepBetweenLoops = max(50_000, $this->sleepBetweenLoops - 50_000),
-            Key::DOWN_ARROW, Key::DOWN => $this->sleepBetweenLoops += 50_000,
-            default => null,
-        };
+        KeyPressListener::for($this)
+            ->onUp(fn () => $this->sleepBetweenLoops = max(50_000, $this->sleepBetweenLoops - 50_000))
+            ->onDown(fn () => $this->sleepBetweenLoops += 50_000)
+            ->listenForQuit()
+            ->once();
     }
 }
