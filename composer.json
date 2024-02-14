@@ -11,6 +11,7 @@
         "php": "^8.1",
         "fakerphp/faker": "^1.9.1",
         "guzzlehttp/guzzle": "^7.2",
+        "joetannenbaum/chewie": "^0.1.0",
         "laravel/framework": "^10.10",
         "laravel/octane": "^2.2",
         "laravel/pulse": "^1.0@beta",
@@ -82,5 +83,11 @@
         }
     },
     "minimum-stability": "beta",
-    "prefer-stable": true
+    "prefer-stable": true,
+    "repositories": {
+        "joetannenbaum/chewie": {
+            "type": "path",
+            "url": "../chewie"
+        }
+    }
 }

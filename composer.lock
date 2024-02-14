@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "915bb73e00a9e3921b40f68b5d5a99be",
+    "content-hash": "77826b8cea5413d39890522d76aa17bd",
     "packages": [
         {
             "name": "amphp/amp",
@@ -2201,6 +2201,30 @@
                 "source": "https://github.com/Jean85/pretty-package-versions/tree/2.0.5"
             },
             "time": "2021-10-08T21:21:46+00:00"
+        },
+        {
+            "name": "joetannenbaum/chewie",
+            "version": "0.1.0",
+            "dist": {
+                "type": "path",
+                "url": "../chewie",
+                "reference": "317015dbd4603d190a587ca27ffb546f13f919b4"
+            },
+            "require": {
+                "laravel/prompts": "^0.1.15"
+            },
+            "require-dev": {
+                "pestphp/pest": "^2.33"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Chewie\\": "src"
+                }
+            },
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "kelunik/certificate",
@@ -12223,5 +12247,5 @@
         "php": "^8.1"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }
