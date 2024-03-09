@@ -8,6 +8,7 @@ use App\Lab\Concerns\RegistersThemes;
 use App\Lab\Concerns\SetsUpAndResets;
 use App\Lab\Input\KeyPressListener;
 use App\Lab\Renderers\BrowseRenderer;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
@@ -64,7 +65,7 @@ class Browse extends Prompt
 
         $class = $this->items[$this->browsePage][$this->index]['class'];
 
-        app($class)->runLab();
+        app($class)->runLab(true);
     }
 
     public function __destruct()

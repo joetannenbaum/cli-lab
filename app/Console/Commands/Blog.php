@@ -17,8 +17,8 @@ class Blog extends Command implements LabCommand
         $this->runLab();
     }
 
-    public function runLab(): void
+    public function runLab($internal = false): void
     {
-        (new LabBlog($this->argument('slug')))->prompt();
+        (new LabBlog($internal ? null : $this->argument('slug')))->prompt();
     }
 }

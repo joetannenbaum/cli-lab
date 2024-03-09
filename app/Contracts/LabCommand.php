@@ -4,5 +4,5 @@ namespace App\Contracts;
 
 interface LabCommand
 {
-    public function runLab(): void;
+    public function runLab($internal = false): void;
 }

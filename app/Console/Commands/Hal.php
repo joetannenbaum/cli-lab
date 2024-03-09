@@ -17,7 +17,7 @@ class Hal extends Command implements LabCommand
         $this->runLab();
     }
 
-    public function runLab(): void
+    public function runLab($internal = false): void
     {
         (new Dashboard())->run();
     }
