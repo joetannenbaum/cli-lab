@@ -2,9 +2,11 @@
 
 namespace App\Lab;
 
+use App\Lab\Renderers\BigTextRenderer;
+use Chewie\Art;
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\RegistersThemes;
-use Chewie\Concerns\SetsUpAndResets;
+use Chewie\Input\KeyPressListener;
 use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
@@ -13,39 +15,39 @@ class BigText extends Prompt
 {
     use CreatesAnAltScreen;
     use RegistersThemes;
-    use SetsUpAndResets;
     use TypedValue;
 
-    public string $message = "Type a messsage,\nenter to clear";
+    public string $message = "";
+    // public string $message = "Type a messsage,\nenter to clear";
 
     public function __construct()
     {
-        $this->registerTheme();
+        $this->registerTheme(BigTextRenderer::class);
 
         $this->createAltScreen();
 
-        $this->on('key', function ($key) {
-            if ($key === Key::ENTER) {
-                $this->message = '';
-            } elseif ($key === Key::BACKSPACE) {
-                $this->message = substr($this->message, 0, -1);
-            } elseif ($key === Key::CTRL_C) {
-                $this->terminal()->exit();
-            } else {
-                $key = strtolower($key);
+        // Art::setDirectory(__DIR__ . '/../art/characters');
+        // Art::setDirectory(storage_path('art'));
 
-                $valid = array_merge(range('a', 'z'), [' '], ['.', ',', '?', '!', "'"]);
+        $validCharacters = array_merge(
+            range('a', 'z'),
+            range('A', 'Z'),
+            [
+                ' ',
+                '.',
+                ',',
+                '?',
+                '!',
+                "'",
+            ],
+        );
 
-                if (in_array($key, $valid)) {
-                    $this->message .= $key;
-                }
-            }
-        });
-    }
-
-    public function __destruct()
-    {
-        $this->exitAltScreen();
+        KeyPressListener::for($this)
+            ->on($validCharacters, fn ($key) => $this->message .= $key)
+            ->on(Key::ENTER, fn () => $this->message = '')
+            ->on(Key::BACKSPACE, fn () => $this->message = substr($this->message, 0, -1))
+            ->on(Key::CTRL_C, fn () => $this->terminal()->exit())
+            ->listen();
     }
 
     public function value(): mixed

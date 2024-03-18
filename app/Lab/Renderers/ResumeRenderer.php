@@ -84,7 +84,7 @@ class ResumeRenderer extends Renderer
 
         $this->line($nav);
 
-        $table->each(fn ($line) => $this->line($line));
+        $table->each($this->line(...));
 
         $this->hotkey('↑ ↓', 'Scroll');
         $this->hotkey('←', 'Previous Section', $prompt->page > 0);

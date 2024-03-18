@@ -4,7 +4,7 @@ namespace App\Lab\Renderers;
 
 use App\Lab\BigText;
 use Chewie\Concerns\Aligns;
-use Chewie\Concerns\DrawsAscii;
+use Chewie\Concerns\DrawsArt;
 use Chewie\Concerns\DrawsHotkeys;
 use Chewie\Concerns\HasMinimumDimensions;
 use Chewie\Output\Lines;
@@ -13,7 +13,7 @@ use Laravel\Prompts\Themes\Default\Renderer;
 class BigTextRenderer extends Renderer
 {
     use Aligns;
-    use DrawsAscii;
+    use DrawsArt;
     use DrawsHotkeys;
     use HasMinimumDimensions;
 
@@ -26,8 +26,25 @@ class BigTextRenderer extends Renderer
     {
         $message = mb_strtolower($prompt->message);
 
+        // Version without wordwrap
+        // $lines = collect(mb_str_split($message))
+        //     ->map(fn ($letter) => match ($letter) {
+        //         ' '     => array_fill(0, 7, str_repeat(' ', 4)),
+        //         '.'     => $this->artLines('alphabet/period'),
+        //         ','     => $this->artLines('alphabet/comma'),
+        //         '?'     => $this->artLines('alphabet/question-mark'),
+        //         '!'     => $this->artLines('alphabet/exclamation-point'),
+        //         "'"     => $this->artLines('alphabet/apostrophe'),
+        //         default => $this->artLines('alphabet/' . $letter),
+        //     });
+
+        // $lines = Lines::fromColumns($lines)->lines();
+        // Lines::fromColumns($lines)->lines()->each($this->line(...));
+
+        // Version with wordwrap
+
         $width = $prompt->terminal()->cols() - 2;
-        $height = $prompt->terminal()->lines() - 5;
+        $height = $prompt->terminal()->lines() - 3;
 
         $messageLines = wordwrap(
             string: $message,
@@ -36,31 +53,26 @@ class BigTextRenderer extends Renderer
         );
 
         $lines = collect(explode("\n", $messageLines))
-            ->map(fn ($line) => mb_str_split($line))
+            ->map(fn ($line) => collect(mb_str_split($line)))
             ->map(
-                fn ($letters) => collect($letters)
-                    ->map(fn ($letter) => match ($letter) {
-                        ' '     => array_fill(0, 7, str_repeat(' ', 4)),
-                        '.'     => $this->asciiLines('alphabet/period'),
-                        ','     => $this->asciiLines('alphabet/comma'),
-                        '?'     => $this->asciiLines('alphabet/question-mark'),
-                        '!'     => $this->asciiLines('alphabet/exclamation-point'),
-                        "'"     => $this->asciiLines('alphabet/apostrophe'),
-                        default => $this->asciiLines('alphabet/' . $letter),
-                    })
+                fn ($letters) => $letters->map(fn ($letter) => match ($letter) {
+                    ' '     => array_fill(0, 7, str_repeat(' ', 4)),
+                    '.'     => $this->artLines('alphabet/period'),
+                    ','     => $this->artLines('alphabet/comma'),
+                    '?'     => $this->artLines('alphabet/question-mark'),
+                    '!'     => $this->artLines('alphabet/exclamation-point'),
+                    "'"     => $this->artLines('alphabet/apostrophe'),
+                    default => $this->artLines('alphabet/' . $letter),
+                })
             )
             ->flatMap(fn ($letters) => Lines::fromColumns($letters)->lines())
-            ->slice(($height - 4) * -1);
+            ->slice(($height - 2) * -1);
 
-        $this->center($lines, $width, $height - 2)->each($this->line(...));
+        $this->center($lines, $width, $height)->each($this->line(...));
 
-        $this->pinToBottom($height, function () use ($message, $width) {
-            $this->hotkey('Enter', 'Clear', $message !== '');
+        // $this->hotkey('Enter', 'Clear', $message !== '');
 
-            foreach ($this->hotkeys() as $hotkey) {
-                $this->centerHorizontally($hotkey, $width)->each($this->line(...));
-            }
-        });
+        // $this->centerHorizontally($this->hotkeys(), $width)->each($this->line(...));
 
         return $this;
     }

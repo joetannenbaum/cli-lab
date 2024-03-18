@@ -3,20 +3,24 @@
 namespace App\Lab\Renderers;
 
 use App\Lab\Browse;
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsAscii;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\DrawsTables;
-use App\Lab\Output\Util;
 use App\Lab\Support\SSH;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\CapturesOutput;
+use Chewie\Concerns\DrawsArt;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\DrawsTables;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
 use Laravel\Prompts\Themes\Default\Renderer;
 
+use function Chewie\collectionOf;
+use function Chewie\stripEscapeSequences;
+
 class BrowseRenderer extends Renderer
 {
     use Aligns;
-    use DrawsAscii;
+    use CapturesOutput;
+    use DrawsArt;
     use DrawsBoxes;
     use DrawsHotkeys;
     use DrawsScrollbars;
@@ -24,7 +28,7 @@ class BrowseRenderer extends Renderer
 
     public function __invoke(Browse $prompt): string
     {
-        $this->asciiLines('cli-lab')->map(fn ($line) => $this->cyan($line))->each(fn ($line) => $this->line($line));
+        $this->artLines('cli-lab')->map($this->cyan(...))->each($this->line(...));
         $this->newLine();
         $this->line('by ' . $this->bold($this->cyan('Joe Tannenbaum')));
         $this->line($this->dim('https://twitter.com/joetannenbaum'));
@@ -46,15 +50,16 @@ class BrowseRenderer extends Renderer
 
             $this->box(
                 title: $title,
-                body: PHP_EOL . $description . str_repeat(' ', $longestDescription - mb_strlen(Util::stripEscapeSequences($description))) . PHP_EOL,
+                body: PHP_EOL . $description . str_repeat(' ', $longestDescription - mb_strlen(stripEscapeSequences($description))) . PHP_EOL,
                 footer: $footer,
                 color: $prompt->index === $index ? 'cyan' : 'gray',
             );
+
             $this->newLine();
         });
 
         if (count($prompt->items) > 1) {
-            $dots = Util::range(1, count($prompt->items))
+            $dots = collectionOf(1, count($prompt->items))
                 ->map(fn ($page) => $page === $prompt->browsePage + 1 ? $this->green('•') : $this->dim('•'))
                 ->join(' ');
 
@@ -71,13 +76,9 @@ class BrowseRenderer extends Renderer
 
         $this->newLine();
 
-        collect($this->hotkeys())->each(fn ($line) => $this->line($line));
+        $this->hotkeyLines();
 
-        $output = $this->output;
-
-        $this->output = '';
-
-        $this->centerHorizontally($output, $prompt->terminal()->cols() - 2)->each(fn ($line) => $this->line($line));
+        $this->centerHorizontally($this->captureAndResetOutput(), $prompt->terminal()->cols() - 2)->each($this->line(...));
 
         return $this;
     }

@@ -2,21 +2,18 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsBigNumbers;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\HasMinimumDimensions;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsBigNumbers;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\HasMinimumDimensions;
 use App\Lab\Nissan;
-use App\Lab\Nissan\Battery;
-use App\Lab\Nissan\EngineTemp;
-use App\Lab\Nissan\Fuel;
-use App\Lab\Nissan\OilLevel;
-use App\Lab\Nissan\Rpm;
-use App\Lab\Output\Lines;
-use App\Lab\Output\Util;
+use Chewie\Output\Lines;
 use Illuminate\Support\Collection;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Renderer;
+
+use function Chewie\collectionOf;
+use function Chewie\stripEscapeSequences;
 
 class NissanRenderer extends Renderer
 {
@@ -46,7 +43,7 @@ class NissanRenderer extends Renderer
             ->spacing(1)
             ->lines();
 
-        $contentWidth = mb_strwidth(Util::stripEscapeSequences($lines->last()));
+        $contentWidth = mb_strwidth(stripEscapeSequences($lines->last()));
 
         $lines->push('');
         $lines->push('');
@@ -63,16 +60,13 @@ class NissanRenderer extends Renderer
             $this->spaceBetween($contentWidth, collect($this->hotkeys)->implode('    '), $this->dim('Original Inspiration') . ' https://twitter.com/RetroTechDreams/status/1718761638042402973'),
         ]);
 
-        $this->center($lines, $prompt->terminal()->cols() - 2, $prompt->terminal()->lines() - 6)->each(fn ($line) => $this->line($line));
+        $this->center($lines, $prompt->terminal()->cols() - 2, $prompt->terminal()->lines() - 6)->each($this->line(...));
 
         return $this;
     }
 
     protected function rpmLines(Nissan $prompt)
     {
-        /** @var Rpm $rpm */
-        $rpm = $prompt->loopable(Rpm::class);
-
         $lines = collect();
 
         $fullBar = '█';
@@ -103,8 +97,8 @@ class NissanRenderer extends Renderer
         $totalColumns = 38;
         $highest = 11;
         $startRedAt = $totalColumns - 6;
-        $factor = $rpm->multiplier->current() * (1 / $barCount);
-        $offset = ($rpm->multiplier->current() - 1) % $barCount;
+        $factor = $prompt->rpm->multiplier->current() * (1 / $barCount);
+        $offset = ($prompt->rpm->multiplier->current() - 1) % $barCount;
 
         $markerOffset = 3;
 
@@ -131,7 +125,7 @@ class NissanRenderer extends Renderer
 
         $curve = collect(explode("\n", $curve))->map(fn ($l) => mb_str_split($l));
 
-        $rpms = $this->bigNumber($rpm->rpms->current())->map(fn ($l) => collect(mb_str_split($l)))->map(function ($l) {
+        $rpms = $this->bigNumber($prompt->rpm->rpms->current())->map(fn ($l) => collect(mb_str_split($l)))->map(function ($l) {
             while ($l->count() < 4) {
                 $l->push(' ');
             }
@@ -168,7 +162,7 @@ class NissanRenderer extends Renderer
                 return $l;
             });
 
-        $lines->push(Util::range($highest)->map(fn ($l) => ' '));
+        $lines->push(collectionOf($highest)->map(fn ($l) => ' '));
 
         foreach ($up->chunkWhile(fn ($i) => $i !== '▁') as $setIndex => $set) {
             foreach ($set as $index => $bar) {
@@ -196,7 +190,7 @@ class NissanRenderer extends Renderer
                 $col = $col->reverse()->values()
                     ->map(fn ($l) => mb_str_pad($l, 2))
                     ->map(fn ($l) => $counter > $startRedAt ? $this->red($l) : $this->green($l))
-                    ->map(fn ($l) => $rpm->value->current() === $counter ? $l : $this->dim($l));
+                    ->map(fn ($l) => $prompt->rpm->value->current() === $counter ? $l : $this->dim($l));
 
                 $lines->push($col);
                 $counter++;
@@ -233,7 +227,7 @@ class NissanRenderer extends Renderer
                 $col = $col->reverse()->values()
                     ->map(fn ($l) => mb_str_pad($l, 2))
                     ->map(fn ($l) => $counter > $startRedAt ? $this->red($l) : $this->green($l))
-                    ->map(fn ($l) => $rpm->value->current() === $counter ? $l : $this->dim($l));
+                    ->map(fn ($l) => $prompt->rpm->value->current() === $counter ? $l : $this->dim($l));
 
                 $lines->push($col);
 
@@ -244,10 +238,10 @@ class NissanRenderer extends Renderer
         }
 
         $leftCap = floor($highest * .7);
-        $leftBorder = Util::range($highest)->map(fn ($i) => $i > $leftCap ? '┃' : ' ')->concat(['┗'])->map(fn ($l) => $prompt->carStarted ? $l : $this->dim($l));
+        $leftBorder = collectionOf($highest)->map(fn ($i) => $i > $leftCap ? '┃' : ' ')->concat(['┗'])->map(fn ($l) => $prompt->carStarted ? $l : $this->dim($l));
 
         $rightCap = floor($highest * .25);
-        $rightBorder = Util::range($highest)->map(fn ($i) => $i > $rightCap ? '┃' : ' ')->concat(['┛'])->map(fn ($l) => $prompt->carStarted ? $l : $this->dim($l));
+        $rightBorder = collectionOf($highest)->map(fn ($i) => $i > $rightCap ? '┃' : ' ')->concat(['┛'])->map(fn ($l) => $prompt->carStarted ? $l : $this->dim($l));
 
         $lines = $lines->map(function (Collection $l, $i) use ($prompt, $curveColumns) {
             $colWidth = mb_strlen($this->stripEscapeSequences($l->first()));
@@ -343,9 +337,6 @@ class NissanRenderer extends Renderer
 
     protected function batteryLines(Nissan $prompt): Collection
     {
-        /** @var Battery $gauge */
-        $gauge = $prompt->loopable(Battery::class);
-
         $top = '┏ ' . $this->bold('   ');
         $belowTop = '┣ ' . $this->bold('90 ');
         $aboveBottom = '┣ ' . $this->bold('10 ');
@@ -353,7 +344,7 @@ class NissanRenderer extends Renderer
         $default = '┃' . str_repeat(' ', 4);
 
         return $this->gaugeLines(
-            $gauge->value->current(),
+            $prompt->battery->value->current(),
             16,
             fn ($i) => match ($i) {
                 $this->gaugeHeight     => $prompt->carStarted ? $top : $this->dim($top),
@@ -368,16 +359,13 @@ class NissanRenderer extends Renderer
 
     protected function oilLevelLines(Nissan $prompt): Collection
     {
-        /** @var OilLevel $gauge */
-        $gauge = $prompt->loopable(OilLevel::class);
-
         $ninety = '┏ ' . $this->bold('90 ');
         $fortyFive = '┣ ' . $this->bold('45 ');
         $zero = '┗ ' . $this->bold('0  ');
         $default = '┃' . str_repeat(' ', 4);
 
         return $this->gaugeLines(
-            $gauge->value->current(),
+            $prompt->oilLevel->value->current(),
             16,
             fn ($i) => match ($i) {
                 $this->gaugeHeight     => $prompt->carStarted ? $ninety : $this->dim($ninety),
@@ -391,16 +379,13 @@ class NissanRenderer extends Renderer
 
     protected function fuelLines(Nissan $prompt): Collection
     {
-        /** @var Fuel $gauge */
-        $gauge = $prompt->loopable(Fuel::class);
-
         $full = '┏ ' . $this->bold('F  ');
         $half = '┣ ' . $this->bold('½  ');
         $empty = '┗ ' . $this->bold('E  ');
         $default = '┃' . str_repeat(' ', 4);
 
         return $this->gaugeLines(
-            $gauge->value->current(),
+            $prompt->fuel->value->current(),
             16,
             fn ($i) => match ($i) {
                 $this->gaugeHeight     => $prompt->carStarted ? $full : $this->dim($full),
@@ -415,16 +400,13 @@ class NissanRenderer extends Renderer
 
     protected function engineTempLines(Nissan $prompt): Collection
     {
-        /** @var EngineTemp $gauge */
-        $gauge = $prompt->loopable(EngineTemp::class);
-
         $top = '┏ ' . $this->bold('270');
         $bottom = '┗ ' . $this->bold('120');
         $aboveBottom = '┣' . str_repeat(' ', 4);
         $default = '┃' . str_repeat(' ', 4);
 
         return $this->gaugeLines(
-            $gauge->value->current(),
+            $prompt->engineTemp->value->current(),
             16,
             fn ($i) => match ($i) {
                 $this->gaugeHeight => $prompt->carStarted ? $top : $this->dim($top),

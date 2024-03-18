@@ -8,12 +8,13 @@ use App\Lab\Concerns\DrawsAscii;
 use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Concerns\DrawsTables;
 use App\Lab\Concerns\HasMinimumDimensions;
-use App\Lab\Output\Util;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
 use Laravel\Prompts\Themes\Default\Renderer;
 use League\HTMLToMarkdown\HtmlConverter;
+
+use function Chewie\collectionOf;
 
 class BlogRenderer extends Renderer
 {
@@ -111,7 +112,7 @@ class BlogRenderer extends Renderer
             total: count($finalLines),
             height: $height,
             width: $this->scrollWidth,
-        )->each(fn ($line) => $this->line($line));
+        )->each($this->line(...));
 
         $this->newLine(2);
 
@@ -153,7 +154,7 @@ class BlogRenderer extends Renderer
         }
 
         if (count($prompt->posts) > 1) {
-            $dots = Util::range(1, count($prompt->posts))
+            $dots = collectionOf(1, count($prompt->posts))
                 ->map(fn ($page) => $page === $prompt->browsePage + 1 ? $this->green('•') : $this->dim('•'))
                 ->join(' ');
 

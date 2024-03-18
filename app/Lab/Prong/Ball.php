@@ -2,8 +2,8 @@
 
 namespace App\Lab\Prong;
 
-use App\Lab\Concerns\Ticks;
-use App\Lab\Contracts\Loopable;
+use Chewie\Concerns\Ticks;
+use Chewie\Contracts\Loopable;
 use App\Lab\Prong;
 
 class Ball implements Loopable
@@ -20,7 +20,7 @@ class Ball implements Loopable
 
     public int $speed = 1;
 
-    public int $maxSpeed = 5;
+    public int $maxSpeed = 1;
 
     public int $nextSpeed = 1;
 
@@ -46,7 +46,7 @@ class Ball implements Loopable
             return;
         }
 
-        $this->speed = $this->nextSpeed;
+        // $this->speed = $this->nextSpeed;
 
         if (count($this->steps) === 0) {
             $this->prompt->determineWinner();
@@ -92,13 +92,13 @@ class Ball implements Loopable
 
         if ($this->directionChangeCount > 0 && $this->directionChangeCount % $this->changeSpeedEvery === 0) {
             if ($this->speed < $this->maxSpeed) {
-                $this->nextSpeed++;
-                $this->prompt->game->ballSpeed -= 4000;
-                $this->prompt->game->update('ballSpeedLevel', $this->nextSpeed);
-            } elseif ($this->prompt->loopable('player1')->height > 2) {
-                $this->prompt->loopable('player1')->height--;
-                $this->prompt->loopable('player2')->height--;
-                $this->prompt->game->update('paddleHeight', $this->prompt->loopable('player2')->height);
+                // $this->nextSpeed++;
+                // $this->prompt->game->ballSpeed -= 4000;
+                // $this->prompt->game->update('ballSpeedLevel', $this->nextSpeed);
+            } elseif ($this->prompt->player1->height > 2) {
+                $this->prompt->player1->height--;
+                $this->prompt->player2->height--;
+                $this->prompt->game->update('paddleHeight', $this->prompt->player2->height);
             }
         }
 

@@ -6,7 +6,6 @@ use App\Lab\Concerns\DrawsHotkeys;
 use App\Lab\Concerns\DrawsTables;
 use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\DataTable;
-use App\Lab\Output\Util;
 use Laravel\Prompts\Themes\Default\Renderer;
 use Symfony\Component\Console\Helper\TableCell;
 use Symfony\Component\Console\Helper\TableCellStyle;
@@ -102,7 +101,7 @@ class DataTableRenderer extends Renderer
 
         $outputLines->prepend($header);
 
-        $this->center($outputLines, $table->terminal()->cols() - 2, $table->terminal()->lines() - 6)->each(fn ($line) => $this->line($line));
+        $this->center($outputLines, $table->terminal()->cols() - 2, $table->terminal()->lines() - 6)->each($this->line(...));
 
         return $this;
     }

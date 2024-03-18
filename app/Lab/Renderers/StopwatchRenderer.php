@@ -2,18 +2,18 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsAscii;
-use App\Lab\Concerns\DrawsBigNumbers;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\HasMinimumDimensions;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsBigNumbers;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\HasMinimumDimensions;
 use App\Lab\Stopwatch;
+use Chewie\Concerns\DrawsArt;
 use Laravel\Prompts\Themes\Default\Renderer;
 
 class StopwatchRenderer extends Renderer
 {
     use Aligns;
-    use DrawsAscii;
+    use DrawsArt;
     use DrawsBigNumbers;
     use DrawsHotkeys;
     use HasMinimumDimensions;
@@ -51,7 +51,7 @@ class StopwatchRenderer extends Renderer
             ->map(fn ($line, $index) => $index === 1 ? $line . ' ' . $milliseconds : $line . str_repeat(' ', 4))
             ->map(fn ($line) => str_repeat(' ', 4) . $line);
 
-        $this->centerHorizontally($stopwatchLines, 27)->each(fn ($line) => $this->line($line));
+        $this->centerHorizontally($stopwatchLines, 27)->each($this->line(...));
 
         if (count($prompt->laps) > 0) {
             $this->newLine();
@@ -80,7 +80,7 @@ class StopwatchRenderer extends Renderer
 
         $this->output = '';
 
-        $this->center($output, $width, $height)->each(fn ($line) => $this->line($line));
+        $this->center($output, $width, $height)->each($this->line(...));
 
         return $this;
     }

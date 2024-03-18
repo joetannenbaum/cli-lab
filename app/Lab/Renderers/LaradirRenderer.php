@@ -9,12 +9,13 @@ use App\Lab\Concerns\DrawsTables;
 use App\Lab\Concerns\HasMinimumDimensions;
 use App\Lab\Laradir;
 use App\Lab\Output\Lines;
-use App\Lab\Output\Util;
 use Exception;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
 use Laravel\Prompts\Themes\Default\Renderer;
+
+use function Chewie\collectionOf;
 
 class LaradirRenderer extends Renderer
 {
@@ -157,7 +158,7 @@ class LaradirRenderer extends Renderer
         Lines::fromColumns([$firstCol, $secondColScroll])
             ->spacing(10)
             ->lines()
-            ->each(fn ($line) => $this->line($line));
+            ->each($this->line(...));
 
         $this->verticalPadding(3);
 
@@ -252,7 +253,7 @@ class LaradirRenderer extends Renderer
             height: $scrollHeight,
             total: $bio->count(),
             width: $this->maxTextWidth + 2,
-        )->each(fn ($line) => $this->line($line));
+        )->each($this->line(...));
 
         $this->verticalPadding(3);
 
@@ -355,7 +356,7 @@ class LaradirRenderer extends Renderer
         $total = $prompt->results['meta']['total'] ?? 0;
 
         if ($total > 0) {
-            $dots = Util::range(min($prompt->results['meta']['last_page'] ?? 0, 30))
+            $dots = collectionOf(min($prompt->results['meta']['last_page'] ?? 0, 30))
                 ->map(fn ($page) => $page === $prompt->page ? $this->green('⏺︎') : $this->dim('⏺︎'))
                 ->join(' ');
         } else {

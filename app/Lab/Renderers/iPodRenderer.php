@@ -2,8 +2,8 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsHotkeys;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsHotkeys;
 use App\Lab\iPod;
 use App\Lab\iPod\ImportedPhotos;
 use App\Lab\iPod\ImportingPhotos;
@@ -36,7 +36,7 @@ class iPodRenderer extends Renderer
                 ],
                 $width,
                 $height,
-            )->each(fn ($line) => $this->line($line));
+            )->each($this->line(...));
 
             return $this;
         }
@@ -56,7 +56,7 @@ class iPodRenderer extends Renderer
 
         $output = $output->concat($this->hotkeys());
 
-        $this->center($output, $width, $height)->each(fn ($line) => $this->line($line));
+        $this->center($output, $width, $height)->each($this->line(...));
 
         return $this;
     }

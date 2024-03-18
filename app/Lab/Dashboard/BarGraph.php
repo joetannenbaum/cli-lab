@@ -5,7 +5,8 @@ namespace App\Lab\Dashboard;
 use App\Lab\Support\Animation;
 use Chewie\Concerns\Ticks;
 use Chewie\Contracts\Loopable;
-use Chewie\Output\Util;
+
+use function Chewie\collectionOf;
 
 class BarGraph implements Loopable
 {
@@ -15,7 +16,7 @@ class BarGraph implements Loopable
 
     public function __construct()
     {
-        $this->values = Util::range(3)->map(
+        $this->values = collectionOf(3)->map(
             fn () => Animation::fromRandom(25, 75),
         )->toArray();
     }

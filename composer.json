@@ -83,11 +83,5 @@
         }
     },
     "minimum-stability": "beta",
-    "prefer-stable": true,
-    "repositories": {
-        "joetannenbaum/chewie": {
-            "type": "path",
-            "url": "../chewie"
-        }
-    }
+    "prefer-stable": true
 }

@@ -2,9 +2,9 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Input\KeyPressListener;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\RegistersThemes;
+use Chewie\Input\KeyPressListener;
 use App\Lab\Renderers\KanbanRenderer;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;

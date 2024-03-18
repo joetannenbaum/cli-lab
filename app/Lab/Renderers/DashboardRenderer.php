@@ -67,9 +67,10 @@ class DashboardRenderer extends Renderer
         $this->hotkey('↓', 'Slow down');
         $this->hotkey('q', 'Quit');
 
-        $this->centerHorizontally($this->hotkeys(), $dashboard->terminal()->cols() - 2)->each(
-            fn ($line) => $this->line($line),
-        );
+        $this->centerHorizontally(
+            $this->hotkeys(),
+            $dashboard->terminal()->cols() - 2,
+        )->each($this->line(...));
 
         return $this;
     }

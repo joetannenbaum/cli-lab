@@ -2,11 +2,11 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\Loops;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Concerns\SetsUpAndResets;
-use App\Lab\Input\KeyPressListener;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\Loops;
+use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\SetsUpAndResets;
+use Chewie\Input\KeyPressListener;
 use App\Lab\Prong\Ball;
 use App\Lab\Prong\Paddle;
 use App\Lab\Prong\Title;
@@ -33,6 +33,16 @@ class Prong extends Prompt
 
     public $countdown = 3;
 
+    public Ball $ball;
+
+    public Paddle $player1;
+
+    public Paddle $player2;
+
+    public Title $title;
+
+    protected KeyPressListener $listener;
+
     public function __construct(public ?string $gameId = null)
     {
         $this->registerTheme(ProngRenderer::class);
@@ -42,6 +52,13 @@ class Prong extends Prompt
         $this->state = 'title';
 
         $this->createAltScreen();
+
+        $this->ball = new Ball($this);
+        $this->player1 = new Paddle($this);
+        $this->player2 = new Paddle($this);
+        $this->title = new Title($this);
+
+        $this->listener = KeyPressListener::for($this);
     }
 
     public function play(): void
@@ -65,16 +82,9 @@ class Prong extends Prompt
             return;
         }
 
-        /** @var Ball $ball */
-        $ball = $this->loopable(Ball::class);
+        $this->registerLoopables($this->ball, $this->player1, $this->player2);
 
-        /** @var Paddle $player1 */
-        $player1 = $this->loopable('player1');
-
-        /** @var Paddle $player2 */
-        $player2 = $this->loopable('player2');
-
-        $winner = $ball->x === 0 ? $this->getWinner($ball, $player1, 2) : $this->getWinner($ball, $player2, 1);
+        $winner = $this->ball->x === 0 ? $this->getWinner($this->ball, $this->player1, 2) : $this->getWinner($this->ball, $this->player2, 1);
 
         if ($winner !== null) {
             $this->game->update('winner', $winner);
@@ -148,36 +158,36 @@ class Prong extends Prompt
         $refreshPlayers();
 
         if ($this->game->playerNumber !== 1 && $this->game->ballPositionX !== null && $this->game->ballPositionY !== null) {
-            $this->loopable(Ball::class)->x = $this->game->ballPositionX;
-            $this->loopable(Ball::class)->y = $this->game->ballPositionY;
-            $this->loopable(Ball::class)->speed = $this->game->ballSpeedLevel ?? 1;
+            $this->ball->x = $this->game->ballPositionX;
+            $this->ball->y = $this->game->ballPositionY;
+            // $this->ball->speed = $this->game->ballSpeedLevel ?? 1;
         }
     }
 
     protected function updatePlayerOnePosition()
     {
         if ($this->game->playerOnePosition !== null) {
-            $this->loopable('player1')->value->update($this->game->playerOnePosition);
+            $this->player1->value->update($this->game->playerOnePosition);
         }
     }
 
     protected function updatePlayerTwoPosition()
     {
         if ($this->game->playerTwoPosition !== null) {
-            $this->loopable('player2')->value->update($this->game->playerTwoPosition);
+            $this->player2->value->update($this->game->playerTwoPosition);
         }
     }
 
     protected function getWinner(Ball $ball, Paddle $player, int $winnerNumber)
     {
-        $okZone = $ball->y >= $player->value->current() && $ball->y <= $player->value->current() + $this->loopable('player1')->height;
+        $okZone = $ball->y >= $player->value->current() && $ball->y <= $player->value->current() + $this->player1->height;
 
         return $okZone ? null : $winnerNumber;
     }
 
     protected function showTitle()
     {
-        $this->registerLoopable(Title::class);
+        $this->registerLoopable($this->title);
 
         $this->render();
 
@@ -188,12 +198,12 @@ class Prong extends Prompt
             };
 
             if ($key === Key::ENTER) {
-                $this->loopable(Title::class)->hide();
+                $this->title->hide();
 
                 $this->loop(function () {
                     $this->render();
 
-                    if ($this->loopable(Title::class)->value->current() === 0) {
+                    if ($this->title->value->current() === 0) {
                         return false;
                     }
                 }, 50_000);
@@ -244,30 +254,25 @@ class Prong extends Prompt
 
         // Make sure the computer gets at least 4 hits before it starts to possibly miss
         if ($ball->directionChangeCount <= 4 || Lottery::odds(9, 10)->choose()) {
-            $this->loopable('player2')->value->to($nextY);
+            $this->player2->value->to($nextY);
         } else {
             $offset = Lottery::odds(1, 2)->choose() ? 1 : -1;
-            $this->loopable('player2')->value->to($nextY - (6 * $offset));
+            $this->player2->value->to($nextY - (6 * $offset));
         }
     }
 
     protected function playGame()
     {
-        $this->registerLoopable(Paddle::class, 'player1');
-        $this->registerLoopable(Paddle::class, 'player2');
-        $this->registerLoopable(Ball::class);
+        $this->registerLoopables($this->ball, $this->player1, $this->player2);
+
+        $this->listener->listenForQuit()->on('c', fn () => $this->game->againstComputer = true);
 
         while (!$this->game->playerOneReady || !$this->game->playerTwoReady) {
             $this->refreshGame();
 
             $this->render();
 
-            match (KeyPressListener::once()) {
-                'q', Key::CTRL_C  => static::terminal()->exit(),
-                // TODO: Make this an actual update?
-                'c'               => $this->game->againstComputer = true,
-                default           => null,
-            };
+            $this->listener->once();
 
             if ($this->game->againstComputer) {
                 break;
@@ -276,48 +281,52 @@ class Prong extends Prompt
             usleep(50_000);
         }
 
-        $this->loopable(Ball::class)->onDirectionChange($this->onBallDirectionChange(...));
-        $this->loopable(Ball::class)->start();
+        $this->ball->onDirectionChange($this->onBallDirectionChange(...));
+        $this->ball->start();
 
         $this->game->everyoneReady = true;
+
+        $this->listener->clearExisting()
+            ->listenForQuit()
+            ->onUp(fn () => $this->move(-1))
+            ->onDown(fn () => $this->move(1));
 
         while ($this->countdown > 0) {
             $this->render();
 
-            $this->handleKey(KeyPressListener::once());
+            $this->listener->once();
 
             $this->countdown--;
 
-            usleep(1_000_000);
+            sleep(1);
         }
 
-        $this->loop(function ($loopable) {
+        $this->loop(function (self $loopable) {
             if ($this->game->winner !== null) {
                 return false;
             }
 
-            $loopable->sleepFor($this->game->ballSpeed);
+            // $loopable->sleepFor($this->game->ballSpeed);
 
-            $ball = $this->loopable(Ball::class);
+            // $this->game->updateMany([
+            //     'ballPositionX' => $this->ball->x,
+            //     'ballPositionY' => $this->ball->y,
+            //     'ballDirection' => $this->ball->direction,
+            // ]);
 
-            $this->game->updateMany([
-                'ballPositionX' => $ball->x,
-                'ballPositionY' => $ball->y,
-                'ballDirection' => $ball->direction,
-            ]);
+            // match ($this->game->playerNumber) {
+            //     1       => $this->game->update('playerOnePosition', $this->player1->value->current()),
+            //     2       => $this->game->update('playerTwoPosition', $this->player2->value->current()),
+            //     default => null,
+            // };
 
-            match ($this->game->playerNumber) {
-                1       => $this->game->update('playerOnePosition', $this->loopable('player1')->value->current()),
-                2       => $this->game->update('playerTwoPosition', $this->loopable('player2')->value->current()),
-                default => null,
-            };
+            // $this->refreshGame();
 
-            $this->refreshGame();
-
-            $this->handleKey(KeyPressListener::once());
+            $this->listener->once();
 
             $this->render();
-        }, $this->game->ballSpeed);
+        }, 25_000);
+        // }, $this->game->ballSpeed);
 
         $this->game->update('playerOneReady', false);
         $this->game->update('playerTwoReady', false);
@@ -333,24 +342,19 @@ class Prong extends Prompt
         }
     }
 
-    protected function handleKey($key)
+    protected function move(int $direction)
     {
-        $playerKey = match ($this->game->playerNumber) {
-            1       => 'player1',
-            2       => 'player2',
+        $player = match ($this->game->playerNumber) {
+            1       => $this->player1,
+            2       => $this->player2,
             default => null,
         };
 
-        match ($key) {
-            'q', Key::CTRL_C => static::terminal()->exit(),
-            default          => null,
-        };
-
-        if ($playerKey !== null) {
-            match ($key) {
-                Key::UP_ARROW, Key::UP     => $this->loopable($playerKey)->moveUp(),
-                Key::DOWN_ARROW, Key::DOWN => $this->loopable($playerKey)->moveDown(),
-                default                    => null,
+        if ($player !== null) {
+            match ($direction) {
+                -1      => $player->moveUp(),
+                1       => $player->moveDown(),
+                default => null,
             };
         } else {
             // match ($key) {

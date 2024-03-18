@@ -2,7 +2,7 @@
 
 namespace App\Lab\iPod;
 
-use App\Lab\Input\KeyPressListener;
+use Chewie\Input\KeyPressListener;
 use Laravel\Prompts\Key;
 
 class ImportingPhotos extends iPodScreen

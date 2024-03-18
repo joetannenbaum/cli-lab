@@ -14,6 +14,10 @@ class Animation
 
     protected int $pauseFor = 0;
 
+    protected int $delay = 0;
+
+    protected bool $firstLoop = true;
+
     public function __construct(
         protected int|float $value,
         protected int|float|null $lowerLimit = null,
@@ -63,6 +67,13 @@ class Animation
         return $this;
     }
 
+    public function delay(int $delay): static
+    {
+        $this->delay = $delay;
+
+        return $this;
+    }
+
     public function pauseAfter(int $pauseAfter): static
     {
         $this->pauseAfter = $pauseAfter;
@@ -72,6 +83,14 @@ class Animation
 
     public function animate(): void
     {
+        if ($this->delay) {
+            if ($this->delay > 0) {
+                $this->delay--;
+            }
+
+            return;
+        }
+
         if ($this->value === $this->nextValue) {
             $this->pauseFor = max(0, $this->pauseFor - 1);
 

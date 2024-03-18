@@ -2,8 +2,8 @@
 
 namespace App\Lab\Prong;
 
-use App\Lab\Concerns\Ticks;
-use App\Lab\Contracts\Loopable;
+use Chewie\Concerns\Ticks;
+use Chewie\Contracts\Loopable;
 use App\Lab\Prong;
 use App\Lab\Support\Animation;
 
