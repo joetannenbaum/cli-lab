@@ -1,0 +1,4 @@
+I’m James Brooks. I build epic developer tools.
+I’m a software engineer who goes by @jbrooksuk on the internet.
+I work at Laravel, creating epic developer tools such as Laravel Forge and Envoyer. You‘ll sometimes see me contributing to the docs, framework and packages.
+I live in Newcastle-Under-Lyme, United Kingdom with my wife, two daughters and cocker-spaniel.

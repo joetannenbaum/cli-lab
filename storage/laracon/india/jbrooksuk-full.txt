@@ -1,0 +1,6 @@
+I’m James Brooks. I build epic developer tools.
+I’m a software engineer who goes by @jbrooksuk on the internet.
+I work at Laravel, creating epic developer tools such as Laravel Forge and Envoyer. You‘ll sometimes see me contributing to the docs, framework and packages.
+I live in Newcastle-Under-Lyme, United Kingdom with my wife, two daughters and cocker-spaniel.
+I co-organise PHP Stoke, a quarterly meet-up in Stoke-on-Trent.
+I’m also the host of Happy Dev, a podcast that talks about mental health in the software development industry. Advocating for mental health and suicide awareness are two of my deepest passions.

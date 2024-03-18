@@ -1,0 +1,4 @@
+I am Jason McCreary. I go by JMac.
+I've been writing code for over 20 years. During that time I created a top ranked iOS application, started a successful SaaS, wrote the BaseCode Field Guide, and produced Getting Git and Confident Laravel.
+I share my experiences through articles on programming, with an occasional life story. I also co-host the BaseCode Podcast.
+I am available for pairing or speaking. You may reach out to me on Twitter or email.

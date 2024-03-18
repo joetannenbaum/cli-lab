@@ -1,0 +1,3 @@
+I like to make web development simple for beginners through courses, Youtube tutorials and eBooks.
+
+I have created courses on LinkedIn Learning and Laracasts. My latest eBook Complete Guide to CSS Flex & Grid has sold more than 1400 copies across 80 countries.
