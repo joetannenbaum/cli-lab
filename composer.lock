@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2c56d5f344542c4c82200153a09c4751",
+    "content-hash": "77826b8cea5413d39890522d76aa17bd",
     "packages": [
         {
             "name": "amphp/amp",
@@ -2205,16 +2205,10 @@
         {
             "name": "joetannenbaum/chewie",
             "version": "0.1.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/joetannenbaum/chewie.git",
-                "reference": "727b7adda10a673310f2ef772de746556945492d"
-            },
             "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/joetannenbaum/chewie/zipball/727b7adda10a673310f2ef772de746556945492d",
-                "reference": "727b7adda10a673310f2ef772de746556945492d",
-                "shasum": ""
+                "type": "path",
+                "url": "../chewie",
+                "reference": "db53b18d59d527f974cf4e9c2e40e605874890a4"
             },
             "require": {
                 "laravel/prompts": "^0.1.15"
@@ -2225,19 +2219,16 @@
             },
             "type": "library",
             "autoload": {
-                "files": [
-                    "src/helpers.php"
-                ],
                 "psr-4": {
                     "Chewie\\": "src/"
-                }
+                },
+                "files": [
+                    "src/helpers.php"
+                ]
             },
-            "notification-url": "https://packagist.org/downloads/",
-            "support": {
-                "issues": "https://github.com/joetannenbaum/chewie/issues",
-                "source": "https://github.com/joetannenbaum/chewie/tree/0.1.0"
-            },
-            "time": "2024-03-18T13:53:15+00:00"
+            "transport-options": {
+                "relative": true
+            }
         },
         {
             "name": "kelunik/certificate",

@@ -4,9 +4,11 @@ namespace App\Lab\Renderers;
 
 use App\Lab\Dashboard;
 use Chewie\Concerns\Aligns;
+use Chewie\Concerns\CapturesOutput;
 use Chewie\Concerns\DrawsBigNumbers;
 use Chewie\Concerns\DrawsHotkeys;
 use Chewie\Concerns\HasMinimumDimensions;
+use Chewie\Output\Lines;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
 use Laravel\Prompts\Themes\Default\Renderer;
@@ -19,47 +21,45 @@ class DashboardRenderer extends Renderer
     use DrawsHotkeys;
     use DrawsScrollbars;
     use HasMinimumDimensions;
+    use CapturesOutput;
 
     protected int $leftColumnWidth;
 
-    public function __invoke(Dashboard $dashboard): string
+    public function __invoke(Dashboard $prompt): string
     {
-        return $this->minDimensions(fn () => $this->renderDashboard($dashboard), 140, 30);
+        return $this->minDimensions(fn () => $this->renderDashboard($prompt), 140, 30);
     }
 
-    protected function renderDashboard(Dashboard $dashboard): self
+    protected function renderDashboard(Dashboard $prompt): self
     {
-        $this->leftColumnWidth = (int) floor($dashboard->terminal()->cols() / 2);
+        $columnSpacing = 1;
+        $columnWidth = (int) floor($prompt->terminal()->cols() / 2);
+        $this->leftColumnWidth = $columnWidth - ($columnSpacing * 2) - 1;
 
-        $this->renderHeader($dashboard);
+        $this->renderHeader($prompt);
 
-        $health = $this->renderHealth($dashboard);
+        $health = $this->renderHealth($prompt);
+        $percentageBar = $this->renderBattery($prompt);
+        $barGraph = $this->renderStats($prompt);
 
-        $percentageBar = $this->renderPercentageBar($dashboard);
+        $spacing = collect(['', '']);
 
-        $barGraph = $this->renderBarGraph($dashboard);
+        $leftColumn = $spacing
+            ->merge($health)
+            ->merge($spacing)
+            ->merge($percentageBar)
+            ->merge($spacing)
+            ->merge($barGraph);
 
-        $leftColumn = $health->merge($percentageBar)->merge($barGraph);
+        $chatLines = $this->getChat($prompt);
 
-        $chatLines = $this->getChat($dashboard);
+        $dividerLine = collect(range(1, $chatLines->count()))->map(fn () => $this->dim('│'));
 
-        while ($leftColumn->count() < $chatLines->count()) {
-            $leftColumn->push(str_repeat(' ', $this->leftColumnWidth));
-        }
-
-        $leftColumn = $leftColumn->map(function ($line) {
-            $lineLength = mb_strlen($this->stripEscapeSequences($line));
-
-            if ($lineLength > $this->leftColumnWidth) {
-                return mb_substr($line, 0, $this->leftColumnWidth - $lineLength);
-            }
-
-            return $line . str_repeat(' ', max($this->leftColumnWidth - $lineLength, 0));
-        })->map(fn ($line) => $line . $this->dim('│'));
-
-        $leftColumn->zip($chatLines)->each(function ($lines) {
-            $this->line($lines->implode(' '));
-        });
+        Lines::fromColumns([
+            $leftColumn,
+            $dividerLine,
+            $chatLines,
+        ])->spacing(1)->lines()->each($this->line(...));
 
         $this->newLine();
 
@@ -69,13 +69,13 @@ class DashboardRenderer extends Renderer
 
         $this->centerHorizontally(
             $this->hotkeys(),
-            $dashboard->terminal()->cols() - 2,
+            $prompt->terminal()->cols() - 2,
         )->each($this->line(...));
 
         return $this;
     }
 
-    protected function renderBarGraph(Dashboard $dashboard)
+    protected function renderStats(Dashboard $prompt)
     {
         $barGraphWidth = $this->leftColumnWidth - 4;
 
@@ -85,29 +85,36 @@ class DashboardRenderer extends Renderer
             'blue',
         ];
 
-        $lines = collect($dashboard->barGraph->values)->map(fn ($value) => round($value->current() / 100 * $barGraphWidth))
-            ->map(function ($value, $index) use ($colors, $barGraphWidth) {
-                $color = ($value < $barGraphWidth * .4) ? 'red' : $colors[$index];
-
-                return $this->{$color}(str_repeat('█', $value));
-            });
+        $labels = [
+            'POWER',
+            'SHIELDS',
+            'WEAPONS',
+        ];
 
         $lines = collect([
-            $this->bold($this->yellow('POWER')),
-            $this->bold($this->green('SHIELDS')),
-            $this->bold($this->blue('WEAPONS')),
-        ])->zip($lines)->zip(['', '', ''])->flatten();
+            $prompt->bar1->value,
+            $prompt->bar2->value,
+            $prompt->bar3->value,
+        ])
+            ->map(fn ($value) => round($value->current() / 100 * $barGraphWidth))
+            ->map(function ($value, $index) use ($colors, $barGraphWidth, $labels) {
+                $color = ($value < $barGraphWidth * .4) ? 'red' : $colors[$index];
 
-        $lines->prepend('');
-        $lines->push('');
+                return [
+                    $this->bold($this->{$color}($labels[$index])),
+                    $this->{$color}(str_repeat('█', $value)),
+                    '',
+                ];
+            })
+            ->flatten();
 
         return $lines;
     }
 
-    protected function renderPercentageBar(Dashboard $dashboard)
+    protected function renderBattery(Dashboard $prompt)
     {
         $barWidth = $this->leftColumnWidth - 4;
-        $barPercentage = $dashboard->percentageBar->value->current() / 100;
+        $barPercentage = $prompt->percentageBar->value->current() / 100;
         $barFilled = round($barWidth * $barPercentage);
         $barEmpty = $barWidth - $barFilled;
 
@@ -117,26 +124,20 @@ class DashboardRenderer extends Renderer
         $lines->push('┃' . str_repeat('┃', $barFilled) . str_repeat(' ', $barEmpty) . '┃');
         $lines->push('┗' . str_repeat('━', $barWidth) . '┛');
 
-        $lines->prepend('');
-        $lines->push('');
-
         return $lines;
     }
 
-    protected function renderHealth(Dashboard $dashboard)
+    protected function renderHealth(Dashboard $prompt)
     {
-        $lines = collect($this->bold($this->cyan('SHIP HEALTH')))->merge($this->bigNumber($dashboard->health->value->current()));
-
-        $lines->prepend('');
-        $lines->push('');
+        $lines = collect($this->bold($this->cyan('SHIP HEALTH')))->merge($this->bigNumber($prompt->health->value->current()));
 
         return $this->centerHorizontally($lines, $this->leftColumnWidth - 4);
     }
 
-    protected function renderHeader(Dashboard $dashboard)
+    protected function renderHeader(Dashboard $prompt)
     {
         $leftHalf = $this->bold(
-            $this->red($dashboard->halPulse->frames->frame(['●', '○'])) . ' Good afternoon, Dave.'
+            $this->red($prompt->halPulse->frames->frame(['●', '○'])) . ' Good afternoon, Dave.'
         );
 
         $rightHalf = $this->dim(date('Y-m-d H:i:s'));
@@ -144,17 +145,19 @@ class DashboardRenderer extends Renderer
         $leftHalfLength = mb_strlen($this->stripEscapeSequences($leftHalf));
         $rightHalfLength = mb_strlen($this->stripEscapeSequences($rightHalf));
 
-        $this->line($leftHalf . str_repeat(' ', $dashboard->terminal()->cols() - $leftHalfLength - $rightHalfLength) . $rightHalf);
-        $this->line($this->dim(str_repeat('─', $dashboard->terminal()->cols())));
+        $this->line($leftHalf . str_repeat(' ', $prompt->terminal()->cols() - $leftHalfLength - $rightHalfLength) . $rightHalf);
+        $this->line($this->dim(str_repeat('─', $prompt->terminal()->cols())));
     }
 
-    protected function getChat(Dashboard $dashboard)
+    protected function getChat(Dashboard $prompt)
     {
-        $width = $this->leftColumnWidth - 4;
+        $width = $this->leftColumnWidth;
 
-        $messages = $dashboard->chat->messages->map(
-            fn ($message) => [$message[0] === 'HAL' ? $this->red($message[0]) : $this->cyan($message[0]), $message[1]],
-        )
+        $messages = $prompt->chat->messages
+            ->map(fn ($message) => [
+                $message[0] === 'HAL' ? $this->red($message[0]) : $this->cyan($message[0]),
+                $message[1],
+            ])
             ->map(function ($message) use ($width) {
                 [$speaker, $message] = $message;
 
@@ -172,17 +175,9 @@ class DashboardRenderer extends Renderer
             })
             ->flatten();
 
-        $output = $this->output;
+        $input = $this->captureOutput(fn () => $this->box('', $prompt->valueWithCursor(60)));
 
-        $this->output = '';
-
-        $this->box('', $dashboard->valueWithCursor(60));
-
-        $input = $this->output;
-
-        $this->output = $output;
-
-        $height = $dashboard->terminal()->lines() - 10;
+        $height = $prompt->terminal()->lines() - 10;
 
         $emptyLines = max($height - $messages->count(), 0);
 

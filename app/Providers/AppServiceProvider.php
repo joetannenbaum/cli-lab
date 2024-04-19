@@ -3,7 +3,7 @@
 namespace App\Providers;
 
 use Chewie\Art;
-use Chewie\Theme;
+use Chewie\Renderer;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -13,7 +13,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        Theme::setNamespace('App\\Lab\\Renderers\\');
+        Renderer::setNamespace('App\\Lab\\Renderers\\');
         Art::setDirectory(storage_path('ascii'));
     }
 

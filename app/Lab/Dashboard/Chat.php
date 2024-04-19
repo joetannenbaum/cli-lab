@@ -10,7 +10,7 @@ class Chat implements Loopable
 {
     use Ticks;
 
-    public $currentlyTyping = '';
+    public $currentMessage = '';
 
     public $message = '';
 
@@ -18,7 +18,7 @@ class Chat implements Loopable
 
     public Collection $messages;
 
-    protected Collection $toType;
+    protected Collection $pendingMessages;
 
     public function __construct()
     {
@@ -45,21 +45,21 @@ class Chat implements Loopable
             return;
         }
 
-        if ($this->currentlyTyping === $this->message) {
+        if ($this->currentMessage === $this->message) {
             $this->messages->push([$this->speaker, $this->message]);
             $this->nextMessage();
 
             return;
         }
 
-        $this->currentlyTyping = substr($this->message, 0, strlen($this->currentlyTyping) + 1);
+        $this->currentMessage = substr($this->message, 0, strlen($this->currentMessage) + 1);
     }
 
     protected function loadConversation()
     {
         $data = file_get_contents(storage_path('ascii/chat.txt'));
 
-        $this->toType = collect(explode(PHP_EOL, $data))
+        $this->pendingMessages = collect(explode(PHP_EOL, $data))
             ->filter()
             ->map(fn ($line) => explode(':', $line))
             ->map(fn ($parts) => array_map('trim', $parts))
@@ -68,9 +68,9 @@ class Chat implements Loopable
 
     protected function nextMessage()
     {
-        [$speaker, $message] = $this->toType->shift();
+        [$speaker, $message] = $this->pendingMessages->shift();
 
-        $this->currentlyTyping = '';
+        $this->currentMessage = '';
         $this->message = $message;
         $this->speaker = $speaker;
         $this->pauseFor(10);

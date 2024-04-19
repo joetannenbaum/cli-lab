@@ -4,66 +4,60 @@ namespace App\Lab;
 
 use App\Lab\Renderers\StopwatchRenderer;
 use Chewie\Concerns\CreatesAnAltScreen;
-use Chewie\Concerns\RegistersThemes;
-use Chewie\Concerns\SetsUpAndResets;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Input\KeyPressListener;
-use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
 
 class Stopwatch extends Prompt
 {
+    use RegistersRenderers;
     use CreatesAnAltScreen;
-    use RegistersThemes;
-    use SetsUpAndResets;
-    use TypedValue;
 
-    public int $elapsedMilliseconds = 0;
+    public int $elapsedTime = 0;
 
     public array $laps = [];
 
+    public bool $started = false;
+
+    protected KeyPressListener $listener;
+
     public function __construct()
     {
-        $this->registerTheme(StopwatchRenderer::class);
+        $this->registerRenderer(StopwatchRenderer::class);
 
         $this->createAltScreen();
-    }
 
-    public function __destruct()
-    {
-        $this->exitAltScreen();
-    }
+        $this->listener = KeyPressListener::for($this);
 
-    public function run(): void
-    {
-        $this->setUp($this->start(...));
+        $this->listener
+            ->listenForQuit()
+            ->on(Key::SPACE, function () {
+                $this->started = true;
+                $this->listener->clearExisting();
+                $this->start();
+            })
+            ->listen();
     }
 
     public function start(): void
     {
-        $listener = KeyPressListener::for($this)->listenForQuit()->on(' ', fn () => $this->laps[] = $this->elapsedMilliseconds)->on('r', fn () => $this->laps = []);
+        $this->listener
+            ->listenForQuit()
+            ->on(Key::SPACE, fn () => $this->laps[] = $this->elapsedTime)
+            ->on('r', function () {
+                $this->laps = [];
+                $this->elapsedTime = 0;
+            });
 
         while (true) {
             usleep(1000);
 
-            $this->elapsedMilliseconds++;
+            $this->elapsedTime++;
 
             $this->render();
 
-            $listener->once();
-
-            // if (in_array($key, ['q', Key::CTRL_C])) {
-            //     static::terminal()->exit();
-            // }
-
-            // if ($key === ' ') {
-            //     $this->laps[] = $this->elapsedMilliseconds;
-            // }
-
-            // if ($key === 'r') {
-            //     $this->laps = [];
-            //     $this->elapsedMilliseconds = 0;
-            // }
+            $this->listener->once();
         }
     }
 

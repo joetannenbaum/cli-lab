@@ -12,6 +12,8 @@ use Chewie\Concerns\HasMinimumDimensions;
 use Chewie\Output\Lines;
 use Laravel\Prompts\Themes\Default\Renderer;
 
+use function Chewie\stripEscapeSequences;
+
 class LaraconIndiaClosingRenderer extends Renderer
 {
     use Aligns;
@@ -80,9 +82,17 @@ class LaraconIndiaClosingRenderer extends Renderer
                     ),
                 ),
             )
-            ->flatMap(fn ($letters) => Lines::fromColumns($letters)->lines());
+            ->flatMap(fn ($letters) => Lines::fromColumns($letters)->lines()->map(fn ($l) => $this->bold($l)));
 
-        $textLines = $this->center($lines, $width, $height, '+');
+        $lines = Lines::fromColumns([$this->getQrCode(), $lines])->spacing(6)->paddingCharacter('+')->spacingCharacter('+')->lines();
+
+        $textLines = $this->centerVertically($lines, $height, '+')->map(function ($line) use ($width) {
+            $length = mb_strwidth(stripEscapeSequences($line));
+
+            $padding = max($width - $length, 0);
+
+            return $line . str_repeat('+', $padding);
+        });
 
         $prompt->barHeight = $height;
 
@@ -130,5 +140,19 @@ class LaraconIndiaClosingRenderer extends Renderer
         collect($textLines)->map(fn ($t) => str_replace('+', ' ', implode('', $t)))->each($this->line(...));
 
         return $this;
+    }
+
+    protected function getQrCode()
+    {
+        $codeLines = $this->artLines('qr-to-links');
+
+        $longest = $codeLines->map(fn ($l) => mb_strwidth($l))->max();
+
+        $subtitle = $this->centerHorizontally([
+            '',
+            $this->cyan($this->bold('@joetannenbaum')),
+        ], $longest, '+');
+
+        return $codeLines->concat($subtitle)->map(fn ($l) => str_repeat('+', 4) . $l);
     }
 }

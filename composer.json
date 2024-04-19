@@ -53,6 +53,12 @@
             "Tests\\": "tests/"
         }
     },
+    "repositories": {
+        "joetannenbaum/chewie": {
+            "type": "path",
+            "url": "../chewie"
+        }
+    },
     "scripts": {
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",

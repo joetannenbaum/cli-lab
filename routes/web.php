@@ -41,6 +41,8 @@ Route::get('spotify/callback', function (Request $request, Spotify $spotify) {
 
     $authKey = session()->pull('spotify:generated_token');
 
+    file_put_contents(storage_path('spotify-auth'), $authenticator->serialize());
+
     (new IntegrationsSpotify($authKey))->storeAuthenticator($authenticator);
 
     return view('spotify-authed');

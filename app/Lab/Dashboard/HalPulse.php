@@ -2,9 +2,9 @@
 
 namespace App\Lab\Dashboard;
 
-use App\Lab\Support\Frames;
 use Chewie\Concerns\Ticks;
 use Chewie\Contracts\Loopable;
+use Chewie\Support\Frames;
 
 class HalPulse implements Loopable
 {

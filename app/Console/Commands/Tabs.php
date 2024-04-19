@@ -3,12 +3,12 @@
 namespace App\Console\Commands;
 
 use App\Contracts\LabCommand;
-use App\Lab\Stopwatch as LabStopwatch;
+use App\Lab\Tabs as LabTabs;
 use Illuminate\Console\Command;
 
-class Stopwatch extends Command implements LabCommand
+class Tabs extends Command implements LabCommand
 {
-    protected $signature = 'lab:stopwatch';
+    protected $signature = 'lab:tabs';
 
     protected $description = 'Go head, take your laptop on a run.';
 
@@ -19,6 +19,6 @@ class Stopwatch extends Command implements LabCommand
 
     public function runLab(): void
     {
-        (new LabStopwatch())->prompt();
+        (new LabTabs())->prompt();
     }
 }

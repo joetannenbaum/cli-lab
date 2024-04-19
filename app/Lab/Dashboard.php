@@ -7,8 +7,11 @@ use App\Lab\Dashboard\Chat;
 use App\Lab\Dashboard\HalPulse;
 use App\Lab\Dashboard\Health;
 use App\Lab\Dashboard\PercentageBar;
+use App\Lab\Dashboard\RandomValue;
+use App\Lab\Renderers\DashboardRenderer;
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\Loops;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Concerns\RegistersThemes;
 use Chewie\Concerns\SetsUpAndResets;
 use Chewie\Input\KeyPressListener;
@@ -19,38 +22,59 @@ class Dashboard extends Prompt
 {
     use CreatesAnAltScreen;
     use Loops;
-    use RegistersThemes;
+    use RegistersRenderers;
     use SetsUpAndResets;
     use TypedValue;
 
     public array $components = [];
 
-    public Health $health;
+    public RandomValue $health;
 
-    public PercentageBar $percentageBar;
+    public RandomValue $percentageBar;
 
     public HalPulse $halPulse;
 
     public Chat $chat;
 
-    public BarGraph $barGraph;
+    public RandomValue $bar1;
+
+    public RandomValue $bar2;
+
+    public RandomValue $bar3;
 
     public function __construct()
     {
-        $this->registerTheme();
+        $this->registerRenderer(DashboardRenderer::class);
 
-        $this->health = new Health;
-        $this->percentageBar = new PercentageBar;
+        $this->health = new RandomValue(
+            lowerLimit: 25,
+            upperLimit: 75,
+            initialValue: 50,
+            pauseAfter: 10,
+        );
+
+        $this->percentageBar = new RandomValue(
+            lowerLimit: 25,
+            upperLimit: 75,
+            initialValue: 25,
+            pauseAfter: 14,
+        );
+
+        $this->bar1 = new RandomValue(lowerLimit: 25, upperLimit: 75);
+        $this->bar2 = new RandomValue(lowerLimit: 25, upperLimit: 75);
+        $this->bar3 = new RandomValue(lowerLimit: 25, upperLimit: 75);
+
         $this->halPulse = new HalPulse;
         $this->chat = new Chat;
-        $this->barGraph = new BarGraph;
 
         $this->registerLoopables(
             $this->health,
             $this->percentageBar,
             $this->halPulse,
             $this->chat,
-            $this->barGraph,
+            $this->bar1,
+            $this->bar2,
+            $this->bar3,
         );
 
         $this->createAltScreen();

@@ -25,13 +25,10 @@ class StopwatchRenderer extends Renderer
 
     protected function renderMessage(Stopwatch $prompt): self
     {
-        $minutes = floor($prompt->elapsedMilliseconds / 60000);
-        $seconds = floor(($prompt->elapsedMilliseconds - $minutes * 60000) / 1000);
-        $milliseconds = $prompt->elapsedMilliseconds - ($minutes * 60000) - ($seconds * 1000);
+        $width = $prompt->terminal()->cols() - 2;
+        $height = $prompt->terminal()->lines() - 7;
 
-        $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT);
-        $seconds = str_pad($seconds, 2, '0', STR_PAD_LEFT);
-        $milliseconds = str_pad($milliseconds, 3, '0', STR_PAD_LEFT);
+        [$minutes, $seconds, $milliseconds] = $this->timeSegments($prompt->elapsedTime);
 
         $colon = <<<'COLON'
 
@@ -45,68 +42,83 @@ class StopwatchRenderer extends Renderer
             fn ($line) => mb_str_pad($line, 1, ' '),
         );
 
-        $stopwatchLines = collect($bigMinutes)
-            ->zip(...[$bigColon, $bigSeconds])
+        $lines = collect($bigMinutes)
+            ->zip($bigColon, $bigSeconds)
             ->map(fn ($line) => $line->implode(''))
             ->map(fn ($line, $index) => $index === 1 ? $line . ' ' . $milliseconds : $line . str_repeat(' ', 4))
             ->map(fn ($line) => str_repeat(' ', 4) . $line);
 
-        $this->centerHorizontally($stopwatchLines, 27)->each($this->line(...));
-
         if (count($prompt->laps) > 0) {
-            $this->newLine();
-            $this->line(str_repeat(' ', 5) . $this->bold($this->cyan('Lap')) . str_repeat(' ', 9) . $this->bold($this->green('Total')) . str_repeat(' ', 4));
-            $this->line(str_repeat(' ', 5) . $this->dim(str_repeat('─', 21)));
+            $lines->push('');
+
+            $timeLength = strlen('00:00.000');
+
+            $lapTitle = mb_str_pad('Lap', $timeLength + 3, ' ');
+            $totalTitle = mb_str_pad('Total', $timeLength, ' ');
+
+            $leftPad = str_repeat(' ', 5);
+
+            $lines->push($leftPad . $this->bold($this->cyan($lapTitle)) . $this->bold($this->green($totalTitle)));
+            $lines->push($leftPad . $this->dim(str_repeat('─', strlen($lapTitle . $totalTitle))));
         }
 
         foreach ($prompt->laps as $index => $lap) {
             $previousLap = $prompt->laps[$index - 1] ?? 0;
-            $this->renderLap($index, $lap, $previousLap);
+            $lines->push($this->renderLap($index, $lap, $previousLap));
         }
 
-        $this->newLine();
+        $this->center($lines, $width, $height)->each($this->line(...));
 
-        $this->hotkey('Space', 'Lap');
-        $this->hotkey('R', 'Reset');
+        $this->pinToBottom($height, function () use ($prompt, $width) {
+            $this->newLine();
 
-        foreach ($this->hotkeys() as $line) {
-            $this->line($line);
-        }
+            if ($prompt->started) {
+                $this->hotkey('Space', 'Lap');
+                $this->hotkey('R', 'Reset');
+            } else {
+                $this->hotkey('Space', 'Start');
+            }
 
-        $width = $prompt->terminal()->cols() - 2;
-        $height = $prompt->terminal()->lines() - 5;
+            $this->hotkey('q', 'Quit');
 
-        $output = $this->output;
+            $this->centerHorizontally($this->hotkeys(), $width)->each($this->line(...));
 
-        $this->output = '';
-
-        $this->center($output, $width, $height)->each($this->line(...));
+            $this->newLine();
+        });
 
         return $this;
     }
 
-    protected function renderLap(int $index, int $lap, int $previousLap): void
+    protected function renderLap(int $index, int $totalTime, int $previousLap): string
     {
-        $minutes = floor($lap / 60000);
-        $seconds = floor(($lap - $minutes * 60000) / 1000);
-        $milliseconds = $lap - ($minutes * 60000) - ($seconds * 1000);
+        $lap = $totalTime - $previousLap;
 
-        $minutes = str_pad($minutes, 2, '0', STR_PAD_LEFT);
-        $seconds = str_pad($seconds, 2, '0', STR_PAD_LEFT);
-        $milliseconds = str_pad($milliseconds, 3, '0', STR_PAD_LEFT);
+        $lapNumber = mb_str_pad($index + 1, 2, '0', STR_PAD_LEFT);
 
-        $lapNumber = str_pad($index + 1, 2, '0', STR_PAD_LEFT);
+        return collect([
+            $this->dim($lapNumber),
+            $this->cyan($this->timeFormatted($lap)),
+            $this->green($this->timeFormatted($totalTime)),
+        ])->implode(str_repeat(' ', 3));
+    }
 
-        $diff = $lap - $previousLap;
+    protected function timeSegments(int $milliseconds): array
+    {
+        $minutes = (int) floor($milliseconds / 60_000);
+        $seconds = (int) floor(($milliseconds - $minutes * 60_000) / 1000);
+        $milliseconds = $milliseconds - ($minutes * 60_000) - ($seconds * 1000);
 
-        $diffMinutes = floor($diff / 60000);
-        $diffSeconds = floor(($diff - $diffMinutes * 60000) / 1000);
-        $diffMilliseconds = $diff - ($diffMinutes * 60000) - ($diffSeconds * 1000);
+        return [
+            mb_str_pad($minutes, 2, '0', STR_PAD_LEFT),
+            mb_str_pad($seconds, 2, '0', STR_PAD_LEFT),
+            mb_str_pad($milliseconds, 3, '0', STR_PAD_LEFT),
+        ];
+    }
 
-        $diffMinutes = str_pad($diffMinutes, 2, '0', STR_PAD_LEFT);
-        $diffSeconds = str_pad($diffSeconds, 2, '0', STR_PAD_LEFT);
-        $diffMilliseconds = str_pad($diffMilliseconds, 3, '0', STR_PAD_LEFT);
+    protected function timeFormatted(int $milliseconds): string
+    {
+        [$minutes, $seconds, $milliseconds] = $this->timeSegments($milliseconds);
 
-        $this->line($this->dim($lapNumber . '   ') . $this->cyan("{$diffMinutes}:{$diffSeconds}.{$diffMilliseconds}") . $this->green("   {$minutes}:{$seconds}.{$milliseconds}"));
+        return "{$minutes}:{$seconds}.{$milliseconds}";
     }
 }
