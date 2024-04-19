@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "915bb73e00a9e3921b40f68b5d5a99be",
+    "content-hash": "ac76bc761069f32d2ebd91046d04668a",
     "packages": [
         {
             "name": "amphp/amp",
@@ -2201,6 +2201,43 @@
                 "source": "https://github.com/Jean85/pretty-package-versions/tree/2.0.5"
             },
             "time": "2021-10-08T21:21:46+00:00"
+        },
+        {
+            "name": "joetannenbaum/chewie",
+            "version": "0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/joetannenbaum/chewie.git",
+                "reference": "529230a0dc239a36e5dd5a3e006a7b34d504d4dc"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/joetannenbaum/chewie/zipball/529230a0dc239a36e5dd5a3e006a7b34d504d4dc",
+                "reference": "529230a0dc239a36e5dd5a3e006a7b34d504d4dc",
+                "shasum": ""
+            },
+            "require": {
+                "laravel/prompts": "^0.1.15"
+            },
+            "require-dev": {
+                "pestphp/pest": "^2.33",
+                "tightenco/duster": "^2.7"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/helpers.php"
+                ],
+                "psr-4": {
+                    "Chewie\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "support": {
+                "issues": "https://github.com/joetannenbaum/chewie/issues",
+                "source": "https://github.com/joetannenbaum/chewie/tree/0.1.1"
+            },
+            "time": "2024-04-19T14:48:45+00:00"
         },
         {
             "name": "kelunik/certificate",
@@ -6309,6 +6346,65 @@
                 "source": "https://github.com/spiral/tokenizer"
             },
             "time": "2023-12-29T10:41:21+00:00"
+        },
+        {
+            "name": "stripe/stripe-php",
+            "version": "v14.3.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/stripe/stripe-php.git",
+                "reference": "4825e7f03f9f83e091928c8f08f96bc87fdd2c7d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/stripe/stripe-php/zipball/4825e7f03f9f83e091928c8f08f96bc87fdd2c7d",
+                "reference": "4825e7f03f9f83e091928c8f08f96bc87fdd2c7d",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "ext-mbstring": "*",
+                "php": ">=5.6.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "3.5.0",
+                "phpstan/phpstan": "^1.2",
+                "phpunit/phpunit": "^5.7 || ^9.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "2.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Stripe\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Stripe and contributors",
+                    "homepage": "https://github.com/stripe/stripe-php/contributors"
+                }
+            ],
+            "description": "Stripe PHP Library",
+            "homepage": "https://stripe.com/",
+            "keywords": [
+                "api",
+                "payment processing",
+                "stripe"
+            ],
+            "support": {
+                "issues": "https://github.com/stripe/stripe-php/issues",
+                "source": "https://github.com/stripe/stripe-php/tree/v14.3.0"
+            },
+            "time": "2024-04-18T21:25:27+00:00"
         },
         {
             "name": "symfony/console",
@@ -12223,5 +12319,5 @@
         "php": "^8.1"
     },
     "platform-dev": [],
-    "plugin-api-version": "2.3.0"
+    "plugin-api-version": "2.6.0"
 }

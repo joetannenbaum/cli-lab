@@ -49,4 +49,8 @@ return [
     'mailcoach' => [
         'api_token' => env('MAILCOACH_API_TOKEN'),
     ],
+
+    'stripe' => [
+        'key' => env('STRIPE_KEY'),
+    ],
 ];

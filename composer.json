@@ -11,6 +11,7 @@
         "php": "^8.1",
         "fakerphp/faker": "^1.9.1",
         "guzzlehttp/guzzle": "^7.2",
+        "joetannenbaum/chewie": "^0.1",
         "laravel/framework": "^10.10",
         "laravel/octane": "^2.2",
         "laravel/pulse": "^1.0@beta",
@@ -25,7 +26,8 @@
         "spatie/invade": "^2.0",
         "spatie/php-structure-discoverer": "^2.0",
         "spiral/roadrunner-cli": "^2.5.0",
-        "spiral/roadrunner-http": "^3.0.1"
+        "spiral/roadrunner-http": "^3.0.1",
+        "stripe/stripe-php": "^14.3"
     },
     "require-dev": {
         "laravel/pint": "^1.0",
