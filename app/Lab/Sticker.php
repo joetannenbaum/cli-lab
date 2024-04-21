@@ -43,7 +43,7 @@ class Sticker extends Prompt
 
         Art::setDirectory(storage_path('ascii/alphabet'));
 
-        // $this->createAltScreen();
+        $this->createAltScreen();
 
         $this->stickersLeft = $this->totalStickers - StickerModel::count();
 
