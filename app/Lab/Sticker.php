@@ -80,10 +80,12 @@ class Sticker extends Prompt
             new Input('Name', 'name', ['required']),
             new Input('Twitter Handle (optional)', 'twitter'),
             new Input('Address 1', 'address1', ['required']),
-            new Input('Address 2', 'address2'),
-            new Input('City', 'city', ['required']),
-            new Input('State', 'state', ['required']),
-            new Input('Zip', 'zip', ['required']),
+            new Input('Address 2', 'address2', ['required']),
+            new Input('Address 3', 'address3'),
+            new Input('Address 4', 'address4'),
+            // new Input('City', 'city', ['required']),
+            // new Input('State', 'state', ['required']),
+            // new Input('Zip', 'zip', ['required']),
             new Input('Verification URL', 'verification_url', ['required', 'url'], 'Sensibly redacted screenshot of open source support'),
             new Input('Note (optional)', 'note', ['max:255']),
         ])->each(fn (Input $input) => $input->listener($this->listener, $defaultListeners));
@@ -122,9 +124,15 @@ class Sticker extends Prompt
         $this->inputs->each(fn (Input $input) => $input->validate());
 
         if ($this->inputs->every(fn (Input $input) => $input->isValid)) {
-            $params = $this->inputs->mapWithKeys(fn (Input $input) => [$input->key => $input->value()]);
+            $params = $this->inputs->mapWithKeys(fn (Input $input) => [$input->key => $input->value()])
+                ->map(fn ($value) => $value === '' ? null : $value)
+                ->merge([
+                    'city' => '',
+                    'state' => '',
+                    'zip' => '',
+                ]);
 
-            StickerModel::create($params->map(fn ($value) => $value === '' ? null : $value)->toArray());
+            StickerModel::create($params->toArray());
 
             $this->state = 'submitted';
 

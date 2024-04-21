@@ -179,9 +179,9 @@ class StickerRenderer extends Renderer
             "Great news: There are {$prompt->stickersLeft} " . Str::plural('sticker', $prompt->stickersLeft) . " left.",
             '',
             $this->magenta($this->bold("Press Enter to fill out the form.")),
-            '',
-            str_repeat($this->dim('-'), 60),
-            $this->dim("* Unfortunately, I can only ship to the US at this time. Sorry international friends. I love you all and will figure out a cost-effective way to send you stickers in the future. Trust and believe."),
+            // '',
+            // str_repeat($this->dim('-'), 60),
+            // $this->dim("* Unfortunately, I can only ship to the US at this time. Sorry international friends. I love you all and will figure out a cost-effective way to send you stickers in the future. Trust and believe."),
         ];
 
         $wrapped = wordwrap(implode(PHP_EOL, $rules), 60);
@@ -199,7 +199,12 @@ class StickerRenderer extends Renderer
 
         $this->newLine();
 
-        $this->line('  Tell me where to send your sticker!');
+        $wrapped = wordwrap(
+            string: 'Tell me where to send your sticker! Write your full address below, if you\'re outside the US be sure to include your country as well.',
+            width: 60,
+        );
+
+        collect(explode(PHP_EOL, $wrapped))->each(fn ($line) => $this->line('  ' . $line));
 
         $this->newLine();
 
