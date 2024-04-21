@@ -63,11 +63,6 @@ class Sticker extends Prompt
         $this->bars = collect(range(1, $this->barCount))->map(fn () => new Bar($this->barHeight));
 
         $this->registerLoopables(...$this->bars);
-    }
-
-    protected function form()
-    {
-        $this->state = 'form';
 
         $defaultListeners = [
             [Key::TAB, $this->onTab(...)],
@@ -89,6 +84,11 @@ class Sticker extends Prompt
             new Input('Verification URL', 'verification_url', ['required', 'url'], 'Sensibly redacted screenshot of open source support'),
             new Input('Note (optional)', 'note', ['max:255']),
         ])->each(fn (Input $input) => $input->listener($this->listener, $defaultListeners));
+    }
+
+    protected function form()
+    {
+        $this->state = 'form';
 
         $this->inputs->first()->focus();
     }
@@ -124,28 +124,46 @@ class Sticker extends Prompt
         $this->inputs->each(fn (Input $input) => $input->validate());
 
         if ($this->inputs->every(fn (Input $input) => $input->isValid)) {
-            $params = $this->inputs->mapWithKeys(fn (Input $input) => [$input->key => $input->value()])
-                ->map(fn ($value) => $value === '' ? null : $value)
-                ->merge([
-                    'city' => '',
-                    'state' => '',
-                    'zip' => '',
-                ]);
+            $this->listener
+                ->clearExisting()
+                ->listenForQuit()
+                ->on(Key::ENTER, $this->confirmed(...))
+                ->on('e', function () {
+                    $this->inputs->get($this->focused)->unfocus();
+                    $this->inputs->get(0)->focus();
+                    $this->focused = 0;
+                    $this->form();
+                })
+                ->listen();
 
-            StickerModel::create($params->toArray());
-
-            $this->state = 'submitted';
-
-            $this->listener->clearExisting()->on(['q', Key::CTRL_C], function () {
-                $this->exitAltScreen();
-                $this->terminal()->exit();
-            });
-
-            $this->loop(function () {
-                $this->render();
-                $this->listener->once();
-            });
+            $this->state = 'confirm';
+            $this->render();
         }
+    }
+
+    protected function confirmed()
+    {
+        $params = $this->inputs->mapWithKeys(fn (Input $input) => [$input->key => $input->value()])
+            ->map(fn ($value) => $value === '' ? null : $value)
+            ->merge([
+                'city' => '',
+                'state' => '',
+                'zip' => '',
+            ]);
+
+        StickerModel::create($params->toArray());
+
+        $this->state = 'submitted';
+
+        $this->listener->clearExisting()->on(['q', Key::CTRL_C], function () {
+            $this->exitAltScreen();
+            $this->terminal()->exit();
+        });
+
+        $this->loop(function () {
+            $this->render();
+            $this->listener->once();
+        });
     }
 
     public function value(): mixed

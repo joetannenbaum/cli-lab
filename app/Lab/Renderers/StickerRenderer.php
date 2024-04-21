@@ -46,8 +46,31 @@ class StickerRenderer extends Renderer
         match ($prompt->state) {
             'form' => $this->renderFormState($prompt),
             'submitted' => $this->renderSubmittedState($prompt),
+            'confirm' => $this->renderConfirmState($prompt),
             default => $this->renderInitialState($prompt),
         };
+
+        return $this;
+    }
+
+    protected function renderConfirmState(Sticker $prompt): self
+    {
+        $this->line($this->cyan($this->bold("  Everything look good?")));
+        $this->newLine();
+
+        $prompt->inputs->each(function (Input $input) {
+            $this->line($this->bold('  ' . $input->label));
+            $wrapped = wordwrap($input->value(), 60);
+            collect(explode(PHP_EOL, $wrapped))->each(fn ($line) => $this->line('  ' . $line));
+            $this->newLine();
+        });
+
+        $this->newLine(2);
+
+        $this->hotkey('Enter', 'Submit');
+        $this->hotkey('e', 'Edit');
+
+        collect($this->hotkeys())->each(fn ($line) => $this->line('  ' . $line));
 
         return $this;
     }
