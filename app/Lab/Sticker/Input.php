@@ -23,6 +23,8 @@ class Input
 
     public array $errors = [];
 
+    public bool $isDirty = false;
+
     public function __construct(
         public string $label,
         public string $key,
@@ -48,7 +50,18 @@ class Input
 
         $this->listener
             ->clearExisting()
-            ->listenToInput($this->typedValue, $this->cursorPosition);
+            ->listenToInput($this->typedValue, $this->cursorPosition)
+            ->wildcard(function () {
+                if (!$this->isFocused) {
+                    return;
+                }
+
+                if (!$this->isDirty) {
+                    return;
+                }
+
+                $this->validate();
+            });
 
         collect($this->listeners)->each(fn ($listener) => $this->listener->on($listener[0], $listener[1]));
 
@@ -74,8 +87,8 @@ class Input
         );
 
         $this->isValid = $result->passes();
-
         $this->errors = $result->errors()->all();
+        $this->isDirty = true;
     }
 
     public function valueWithCursor(int $maxWidth): string

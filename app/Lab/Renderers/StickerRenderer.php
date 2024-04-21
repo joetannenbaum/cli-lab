@@ -24,7 +24,7 @@ class StickerRenderer extends Renderer
 
     public function __invoke(Sticker $prompt): string
     {
-        return $this->minDimensions(fn () => $this->renderForm($prompt), 70, 30);
+        return $this->minDimensions(fn () => $this->renderForm($prompt), 70, 40);
     }
 
     protected function renderForm(Sticker $prompt): self

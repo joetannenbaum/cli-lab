@@ -50,6 +50,7 @@ class Sticker extends Prompt
         $this->listener = KeyPressListener::for($this);
 
         $this->listener
+            ->listenForQuit()
             ->on(Key::ENTER, $this->form(...))
             ->listen();
 
@@ -77,12 +78,14 @@ class Sticker extends Prompt
 
         $this->inputs = collect([
             new Input('Name', 'name', ['required']),
+            new Input('Twitter Handle (optional)', 'twitter'),
             new Input('Address 1', 'address1', ['required']),
             new Input('Address 2', 'address2'),
             new Input('City', 'city', ['required']),
             new Input('State', 'state', ['required']),
             new Input('Zip', 'zip', ['required']),
             new Input('Verification URL', 'verification_url', ['required', 'url'], 'Sensibly redacted screenshot of open source support'),
+            new Input('Note (optional)', 'note', ['max:255']),
         ])->each(fn (Input $input) => $input->listener($this->listener, $defaultListeners));
 
         $this->inputs->first()->focus();
@@ -121,7 +124,7 @@ class Sticker extends Prompt
         if ($this->inputs->every(fn (Input $input) => $input->isValid)) {
             $params = $this->inputs->mapWithKeys(fn (Input $input) => [$input->key => $input->value()]);
 
-            StickerModel::create($params->toArray());
+            StickerModel::create($params->map(fn ($value) => $value === '' ? null : $value)->toArray());
 
             $this->state = 'submitted';
 

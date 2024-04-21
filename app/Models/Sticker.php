@@ -17,5 +17,7 @@ class Sticker extends Model
         'state',
         'zip',
         'verification_url',
+        'twitter',
+        'note',
     ];
 }

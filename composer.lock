@@ -2204,16 +2204,16 @@
         },
         {
             "name": "joetannenbaum/chewie",
-            "version": "0.1.1",
+            "version": "0.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/joetannenbaum/chewie.git",
-                "reference": "529230a0dc239a36e5dd5a3e006a7b34d504d4dc"
+                "reference": "977ce825e93df31307c57ecc9562380d645b401b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/joetannenbaum/chewie/zipball/529230a0dc239a36e5dd5a3e006a7b34d504d4dc",
-                "reference": "529230a0dc239a36e5dd5a3e006a7b34d504d4dc",
+                "url": "https://api.github.com/repos/joetannenbaum/chewie/zipball/977ce825e93df31307c57ecc9562380d645b401b",
+                "reference": "977ce825e93df31307c57ecc9562380d645b401b",
                 "shasum": ""
             },
             "require": {
@@ -2235,9 +2235,9 @@
             "notification-url": "https://packagist.org/downloads/",
             "support": {
                 "issues": "https://github.com/joetannenbaum/chewie/issues",
-                "source": "https://github.com/joetannenbaum/chewie/tree/0.1.1"
+                "source": "https://github.com/joetannenbaum/chewie/tree/0.1.2"
             },
-            "time": "2024-04-19T14:48:45+00:00"
+            "time": "2024-04-21T12:09:46+00:00"
         },
         {
             "name": "kelunik/certificate",
