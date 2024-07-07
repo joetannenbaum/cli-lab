@@ -90,17 +90,17 @@ class Ball implements Loopable
 
         $this->direction = $this->x === 0 ? 1 : -1;
 
-        if ($this->directionChangeCount > 0 && $this->directionChangeCount % $this->changeSpeedEvery === 0) {
-            if ($this->speed < $this->maxSpeed) {
-                // $this->nextSpeed++;
-                // $this->prompt->game->ballSpeed -= 4000;
-                // $this->prompt->game->update('ballSpeedLevel', $this->nextSpeed);
-            } elseif ($this->prompt->player1->height > 2) {
-                $this->prompt->player1->height--;
-                $this->prompt->player2->height--;
-                $this->prompt->game->update('paddleHeight', $this->prompt->player2->height);
-            }
-        }
+        // if ($this->directionChangeCount > 0 && $this->directionChangeCount % $this->changeSpeedEvery === 0) {
+        //     if ($this->speed < $this->maxSpeed) {
+        //         // $this->nextSpeed++;
+        //         // $this->prompt->game->ballSpeed -= 4000;
+        //         // $this->prompt->game->update('ballSpeedLevel', $this->nextSpeed);
+        //     } elseif ($this->prompt->player1->height > 2) {
+        //         $this->prompt->player1->height--;
+        //         $this->prompt->player2->height--;
+        //         $this->prompt->game->update('paddleHeight', $this->prompt->player2->height);
+        //     }
+        // }
 
         $this->directionChangeCount++;
 
