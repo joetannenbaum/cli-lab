@@ -40,9 +40,10 @@ class PhotoBoothRenderer extends Renderer
         }
 
         $box = $this->captureOutput(function () use ($prompt) {
+            $lines = $prompt->latestFromPhoneCountdown > 0 ? $prompt->latestFromPhone : $prompt->artLines;
             $this->box(
                 title: '',
-                body: collect($prompt->artLines)->slice(0, $prompt->boothHeight)->implode(PHP_EOL),
+                body: collect($lines)->slice(0, $prompt->boothHeight)->implode(PHP_EOL),
                 color: $this->getBoxColor($prompt),
             );
 

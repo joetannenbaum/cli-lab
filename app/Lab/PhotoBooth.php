@@ -7,12 +7,15 @@ use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\RegistersRenderers;
 use Chewie\Concerns\SetsUpAndResets;
 use Chewie\Input\KeyPressListener;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Process as FacadesProcess;
 use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
 use Illuminate\Support\Str;
-use Spatie\Fork\Fork;
+use React\ChildProcess\Process;
+use React\EventLoop\Loop;
 use SplFileInfo;
 
 class PhotoBooth extends Prompt
@@ -60,13 +63,27 @@ class PhotoBooth extends Prompt
 
     protected string $recordingId;
 
+    protected Process $childProcess;
+
+    protected string $currentDevice = 'computer';
+
+    protected string $imageIdentifier;
+
+    protected Collection $fromPhone;
+
+    protected string $phoneDir = '/Users/joetannenbaum/Dropbox/Rando';
+
+    public array $latestFromPhone = [];
+
+    public int $latestFromPhoneCountdown = 0;
+
     public function __construct()
     {
         $this->registerRenderer(PhotoBoothRenderer::class);
 
         $this->setBrightness();
 
-        // $this->createAltScreen();
+        $this->createAltScreen();
 
         $dir = Str::slug(now()->toDateTimeString());
 
@@ -87,6 +104,8 @@ class PhotoBooth extends Prompt
 
         $this->boothHeight = floor($this->height * .75);
 
+        $this->fromPhone = collect(File::files($this->phoneDir))->map(fn($file) => $file->getFilename());
+
         $this->setup($this->startBooth(...));
     }
 
@@ -100,132 +119,129 @@ class PhotoBooth extends Prompt
 
     protected function startBooth()
     {
-        $pid = pcntl_fork();
+        $this->childProcess = $this->getProcess('computer');
 
-        if ($pid == -1) {
-            die('could not fork');
-        } else if ($pid) {
-            $listener = KeyPressListener::for($this)
-                ->on([Key::CTRL_C, 'q'], function () use ($pid) {
-                    posix_kill($pid, SIGKILL);
-                    pcntl_waitpid($pid, $status);
-                    $this->terminal()->exit();
-                })
-                ->on(Key::SPACE, fn() => $this->savePhoto())
-                ->onUp(function () {
-                    $this->brightness = max($this->brightness - 1, 0);
-                    $this->setBrightness();
-                })
-                ->onDown(function () {
-                    $this->brightness = $this->brightness + 1;
-                    $this->setBrightness();
-                })
-                ->on('o', function () {
-                    exec("open {$this->asciiDir}");
-                })
-                ->on('r', function () {
-                    $this->recording = ! $this->recording;
+        $listener = KeyPressListener::for($this)
+            ->on([Key::CTRL_C, 'q'], function () {
+                $this->childProcess->terminate();
+                $this->terminal()->exit();
+            })
+            ->on(Key::SPACE, fn() => $this->savePhoto())
+            ->onUp(function () {
+                $this->brightness = max($this->brightness - 1, 0);
+                $this->setBrightness();
+            })
+            ->onDown(function () {
+                $this->brightness = $this->brightness + 1;
+                $this->setBrightness();
+            })
+            ->on('o', function () {
+                exec("open {$this->asciiDir}");
+            })
+            ->on('r', function () {
+                $this->recording = ! $this->recording;
 
-                    if ($this->recording) {
-                        $this->recordingId = Str::slug(now()->toDateTimeString('microsecond'));
-                        File::ensureDirectoryExists("{$this->recordingDir}/{$this->recordingId}");
-                        $this->currentRecording = [];
-                    } else if (count($this->currentRecording)) {
-                        $pid = pcntl_fork();
+                if ($this->recording) {
+                    $this->recordingId = Str::slug(now()->toDateTimeString('microsecond'));
+                    File::ensureDirectoryExists("{$this->recordingDir}/{$this->recordingId}");
+                    $this->currentRecording = [];
+                } else if (count($this->currentRecording)) {
+                    $gifName = Str::slug(now()->toDateTimeString()) . '.gif';
+                    $gifProcess = new Process("magick -delay 10 -loop 0 {$this->recordingDir}/{$this->recordingId}/*.jpg {$this->asciiDir}/{$gifName}");
 
-                        if ($pid == -1) {
-                            die('could not fork');
-                        } else if ($pid) {
-                            // we are the parent
-                            info(['pid' => $pid]);
-                        } else {
-                            // we are the child
-
-                            $gifName = Str::slug(now()->toDateTimeString()) . '.gif';
-
-                            exec("magick -delay 10 -loop 0 {$this->recordingDir}/{$this->recordingId}/*.jpg {$this->asciiDir}/{$gifName} &");
-                        }
-                    }
-                });
-
-            while (true) {
-                $listener->once();
-
-                $latestImage = collect(File::files($this->dir))
-                    ->sortBy(fn($file) => $file->getFilename(), SORT_NATURAL)
-                    ->last();
-
-                if ($this->captureCountdown > 0) {
-                    $this->captureCountdown--;
-                } else {
-                    $this->recentlyCaptured = false;
+                    $gifProcess->start();
                 }
+            });
 
-                if ($latestImage) {
-                    $this->currentImage = $latestImage;
-                    $this->analyzeImage($latestImage->getPathname());
+        $loop = Loop::get();
 
-                    if ($this->recording) {
-                        $this->savePhoto();
-                    }
-                } else {
-                    $this->render();
+        $loop->addPeriodicTimer(0.1, function () use ($listener) {
+            $listener->once();
 
-                    if ($this->waitingTicks === 22 || $this->waitingTicks === 0) {
-                        $this->waitingDirection *= -1;
-                    }
+            $latestFromPhone = collect(File::files($this->phoneDir))
+                ->filter(fn($file) => ! $this->fromPhone->contains($file->getFilename()))
+                ->first();
 
-                    $this->waitingTicks += $this->waitingDirection;
-                }
-
-                usleep(100_000);
+            if ($latestFromPhone) {
+                $this->fromPhone->push($latestFromPhone->getFilename());
+                $this->analyzeImage($latestFromPhone->getPathname(), true);
+                $this->savePhonePhoto();
             }
-        } else {
-            // we are the child
-            // exec("ffmpeg -f avfoundation -framerate 30 -video_size 1920x1080 -i '1:none' -vf fps=15 {$this->dir}/image%d.jpg 2>/dev/null");
-            exec("ffmpeg -f avfoundation -framerate 30 -video_size 1760x1328 -i '0:none' -vf fps=15 {$this->dir}/image%d.jpg 2>/dev/null");
-        }
 
-        // Fork::new()->run(
-        //     function () use ($listener) {
-        //         while (true) {
-        //             $listener->once();
+            $latestImage = collect(File::files($this->dir))
+                ->sortBy(fn($file) => $file->getFilename(), SORT_NATURAL)
+                ->last();
 
-        //             $latestImage = collect(File::files($this->dir))
-        //                 ->sortBy(fn($file) => $file->getFilename(), SORT_NATURAL)
-        //                 ->last();
+            if ($this->latestFromPhoneCountdown > 0) {
+                $this->latestFromPhoneCountdown--;
+            }
 
-        //             if ($this->captureCountdown > 0) {
-        //                 $this->captureCountdown--;
-        //             } else {
-        //                 $this->recentlyCaptured = false;
-        //             }
+            if ($this->captureCountdown > 0) {
+                $this->captureCountdown--;
+            } else {
+                $this->recentlyCaptured = false;
+            }
 
-        //             if ($latestImage) {
-        //                 $this->currentImage = $latestImage;
-        //                 $this->analyzeImage($latestImage->getPathname());
+            if ($latestImage) {
+                $this->currentImage = $latestImage;
+                $this->analyzeImage($latestImage->getPathname());
 
-        //                 if ($this->recording) {
-        //                     $this->savePhoto();
-        //                 }
-        //             } else {
-        //                 $this->render();
+                if ($this->recording) {
+                    $this->savePhoto();
+                }
+            } else {
+                $this->render();
 
-        //                 if ($this->waitingTicks === 22 || $this->waitingTicks === 0) {
-        //                     $this->waitingDirection *= -1;
-        //                 }
+                if ($this->waitingTicks === 22 || $this->waitingTicks === 0) {
+                    $this->waitingDirection *= -1;
+                }
 
-        //                 $this->waitingTicks += $this->waitingDirection;
-        //             }
+                $this->waitingTicks += $this->waitingDirection;
+            }
+        });
 
-        //             usleep(100_000);
-        //         }
-        //     },
-        //     function () {
-        //         // exec("ffmpeg -f avfoundation -framerate 30 -video_size 1920x1080 -i '1:none' -vf fps=15 {$this->dir}/image%d.jpg 2>/dev/null");
-        //         exec("ffmpeg -f avfoundation -framerate 30 -video_size 1760x1328 -i '0:none' -vf fps=15 {$this->dir}/image%d.jpg 2>/dev/null");
-        //     },
-        // );
+        $this->childProcess->start();
+
+        $loop->run();
+    }
+
+    protected function getProcess(string $device)
+    {
+        $this->imageIdentifier = Str::slug(now()->toDateTimeString('microsecond'));
+        $this->currentDevice = $device;
+
+        $path = "{$this->dir}/{$this->imageIdentifier}-{$this->currentDevice}%d.jpg";
+
+        $deviceIndex = $this->getDeviceIndex($device);
+
+        $devices = [
+            'computer' => '1760x1328',
+            'phone' => '1920x1080',
+        ];
+
+        return new Process("ffmpeg -f avfoundation -framerate 30 -video_size {$devices[$device]} -i '{$deviceIndex}:none' -vf fps=15 {$path}");
+    }
+
+    protected function getDeviceIndex(string $device)
+    {
+        $result = FacadesProcess::run('ffmpeg -f avfoundation -list_devices true -i ""');
+
+        $lines = collect(explode(PHP_EOL, $result->errorOutput()))->filter(function ($line) {
+            return str_contains($line, 'Camo Camera') || str_contains($line, 'FaceTime HD Camera');
+        })->values();
+
+        return $lines->search(function ($line) use ($device) {
+            if ($device === 'computer') {
+                return str_contains($line, 'FaceTime HD Camera');
+            }
+
+            return str_contains($line, 'Camo Camera');
+        });
+    }
+
+    protected function toggleDevice()
+    {
+        return $this->getProcess($this->currentDevice === 'computer' ? 'phone' : 'computer');
     }
 
     protected function savePhoto()
@@ -278,7 +294,40 @@ class PhotoBooth extends Prompt
         }
     }
 
-    protected function analyzeImage(string $imagePath)
+    protected function savePhonePhoto()
+    {
+        $fontSize = 12;
+        $lineHeight = $fontSize * 1.5;
+
+        $width = strlen($this->artLines[0]) * 10;
+        $height = ($this->boothHeight * $lineHeight) + 5;
+
+        $image = imagecreatetruecolor($width, $height);
+        $white = imagecolorallocate($image, 255, 255, 255);
+        $black = imagecolorallocate($image, 0, 0, 0);
+
+        imagefill($image, 0, 0, $black);
+
+        $font = storage_path('fonts/FiraCode-Regular.ttf');
+
+        $y = 0;
+
+        $imageLines = array_slice($this->latestFromPhone, 0, $this->boothHeight);
+
+        foreach ($imageLines as $line) {
+            imagettftext($image, $fontSize, 0, 0, $y += $lineHeight, $white, $font, $line);
+        }
+
+        $photoPath = $this->recording ? "{$this->recordingDir}/{$this->recordingId}" : $this->asciiDir;
+
+        $asciiName = Str::slug(now()->toDateTimeString('microsecond')) . '.jpg';
+
+        $asciiFilename = "{$photoPath}/{$asciiName}";
+
+        imagejpeg($image, $asciiFilename, 100);
+    }
+
+    protected function analyzeImage(string $imagePath, bool $inBackground = false)
     {
         $image = imagecreatefromjpeg($imagePath);
 
@@ -310,7 +359,12 @@ class PhotoBooth extends Prompt
             $lines[] = $line;
         }
 
-        $this->artLines = $lines;
+        if ($inBackground) {
+            $this->latestFromPhone = $lines;
+            $this->latestFromPhoneCountdown = 50;
+        } else {
+            $this->artLines = $lines;
+        }
 
         $this->render();
     }

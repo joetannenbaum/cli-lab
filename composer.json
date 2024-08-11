@@ -19,6 +19,7 @@
         "laravel/tinker": "^2.8",
         "league/html-to-markdown": "^5.1",
         "nunomaduro/termwind": "^1.15",
+        "react/child-process": "^0.6.5",
         "saloonphp/laravel-plugin": "^3.0",
         "saloonphp/saloon": "^3.0",
         "sentry/sentry-laravel": "^4.1",
