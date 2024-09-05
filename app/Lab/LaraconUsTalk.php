@@ -62,7 +62,7 @@ class LaraconUsTalk extends Prompt
 
         $this->channelId = strtoupper(Str::random(10));
 
-        // $this->createAltScreen();
+        $this->createAltScreen();
 
         $this->height = $this->terminal()->lines() - 4;
         $this->width = $this->terminal()->cols() - 4;
