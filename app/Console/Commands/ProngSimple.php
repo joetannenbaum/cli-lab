@@ -17,7 +17,7 @@ class ProngSimple extends Command
         $this->runLab();
     }
 
-    public function runLab(): void
+    public function runLab($internal = false): void
     {
         (new LabProngSimple())->play();
     }

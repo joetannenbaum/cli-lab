@@ -17,7 +17,7 @@ class LaraconIndiaClosing extends Command
         $this->runLab();
     }
 
-    public function runLab(): void
+    public function runLab($internal = false): void
     {
         (new LabLaraconIndiaClosing())->prompt();
     }

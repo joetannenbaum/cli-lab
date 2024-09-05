@@ -27,7 +27,7 @@ class Auth extends Command
      */
     protected $description = 'Command description';
 
-    public function runLab(): void
+    public function runLab($internal = false): void
     {
         //
     }

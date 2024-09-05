@@ -18,7 +18,7 @@ class Termwind extends Command
         $this->runLab();
     }
 
-    public function runLab(): void
+    public function runLab($internal = false): void
     {
         (new LabTermwind())->prompt();
     }
