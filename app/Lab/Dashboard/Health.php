@@ -2,57 +2,25 @@
 
 namespace App\Lab\Dashboard;
 
-use App\Lab\Concerns\Ticks;
-use App\Lab\Contracts\Tickable;
-use App\Lab\Support\Animatable;
-use Illuminate\Support\Collection;
+use App\Lab\Support\Animation;
+use Chewie\Concerns\Ticks;
+use Chewie\Contracts\Loopable;
 
-class Health implements Tickable
+class Health implements Loopable
 {
     use Ticks;
 
-    public Animatable $value;
-
-    public int $lowerBound = 25;
-
-    public int $upperBound = 75;
-
-    public Collection $ascii;
+    public Animation $value;
 
     public function __construct()
     {
-        $this->loadAscii();
-        $this->value = Animatable::fromValue(50);
+        $this->value = Animation::fromValue(50)->lowerLimit(25)->upperLimit(75);
     }
 
     public function onTick(): void
     {
-        if ($this->value->isAnimating()) {
-            $this->value->animate();
-
-            return;
-        }
-
-        if ($this->isNthTick(10)) {
-            $this->value->to($this->generateNext());
-        }
-    }
-
-    protected function generateNext(): int
-    {
-        $next = rand($this->lowerBound, $this->upperBound);
-
-        while ($next === $this->value->current()) {
-            $next = rand($this->lowerBound, $this->upperBound);
-        }
-
-        return $next;
-    }
-
-    protected function loadAscii()
-    {
-        $data = file_get_contents(storage_path('ascii/health.txt'));
-
-        $this->ascii = collect(explode(PHP_EOL, $data))->chunk(3)->map(fn ($lines) => $lines->filter()->values());
+        $this->value->whenDoneAnimating(function () {
+            $this->onNthTick(10, fn () => $this->value->toRandom());
+        });
     }
 }

@@ -4,9 +4,9 @@ namespace App\Lab;
 
 use App\Http\Integrations\SpotifyApi\Requests\PauseTrack;
 use App\Http\Integrations\SpotifyApi\SpotifyApi;
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Input\KeyPressListener;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\RegistersThemes;
+use Chewie\Input\KeyPressListener;
 use App\Lab\Integrations\Spotify as IntegrationsSpotify;
 use App\Lab\iPod\DeviceScreen;
 use App\Lab\iPod\ImportedPhotos;
@@ -16,7 +16,6 @@ use App\Lab\iPod\PlayerScreen;
 use App\Lab\Renderers\iPodRenderer;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
 
 class iPod extends Prompt
@@ -79,16 +78,13 @@ class iPod extends Prompt
     {
         $counter = 0;
 
+        $listener = KeyPressListener::for($this)->listenForQuit();
+
         while (true) {
             // TODO: Hide cursor
             $this->render();
 
-            $key = KeyPressListener::once();
-
-            if ($key === 'q' || $key === Key::CTRL_C) {
-                $this->terminal()->exit();
-                break;
-            }
+            $listener->once();
 
             if ($this->spotifyHelper->connected()) {
                 $this->spotifyHelper->forgetKey();

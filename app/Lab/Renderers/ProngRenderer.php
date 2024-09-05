@@ -2,23 +2,24 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsAscii;
-use App\Lab\Concerns\DrawsBigNumbers;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\HasMinimumDimensions;
-use App\Lab\Output\Lines;
-use App\Lab\Output\Util;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsArt;
+use Chewie\Concerns\DrawsBigNumbers;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\HasMinimumDimensions;
+use Chewie\Output\Lines;
 use App\Lab\Prong;
 use App\Lab\Prong\Ball;
 use App\Lab\Prong\Title;
 use App\Lab\Support\SSH;
 use Laravel\Prompts\Themes\Default\Renderer;
 
+use function Chewie\stripEscapeSequences;
+
 class ProngRenderer extends Renderer
 {
     use Aligns;
-    use DrawsAscii;
+    use DrawsArt;
     use DrawsBigNumbers;
     use DrawsHotkeys;
     use HasMinimumDimensions;
@@ -58,18 +59,9 @@ class ProngRenderer extends Renderer
 
     protected function playGame(Prong $prompt): static
     {
-        /** @var Ball $ball */
-        $ball = $prompt->loopable(Ball::class);
-
-        /** @var Paddle $player1 */
-        $player1 = $prompt->loopable('player1');
-
-        /** @var Paddle $player2 */
-        $player2 = $prompt->loopable('player2');
-
-        $paddle1 = $this->paddle($prompt, $player1->value->current(), 'red');
-        $paddle2 = $this->paddle($prompt, $player2->value->current(), 'green');
-        $ball = $this->ball($prompt, $ball);
+        $paddle1 = $this->paddle($prompt, $prompt->player1->value->current(), 'red');
+        $paddle2 = $this->paddle($prompt, $prompt->player2->value->current(), 'green');
+        $ball = $this->ball($prompt, $prompt->ball);
 
         $cols = collect([$paddle1, $ball, $paddle2])->map(fn ($el) => explode(PHP_EOL, $el));
 
@@ -83,7 +75,7 @@ class ProngRenderer extends Renderer
             ->push($this->dim('└' . str_repeat('─', $this->width + 4) . '┘'));
 
         $this->center($cols, $this->fullWidth, $this->fullHeight - 2)->each(
-            fn ($line) => $this->line($line)
+            $this->line(...)
         );
 
         if ($prompt->game->observer) {
@@ -105,7 +97,7 @@ class ProngRenderer extends Renderer
             $hotkeys = $this->bold('You are watching    ') . $hotkeys;
         }
 
-        $this->centerHorizontally($hotkeys, $this->fullWidth)->each(fn ($line) => $this->line($line));
+        $this->centerHorizontally($hotkeys, $this->fullWidth)->each($this->line(...));
 
         return $this;
     }
@@ -114,7 +106,7 @@ class ProngRenderer extends Renderer
     {
         if ($prompt->game->everyoneReady) {
             $speed = $prompt->game->ballSpeedLevel;
-            $maxSpeed = $prompt->loopable(Ball::class)->maxSpeed;
+            $maxSpeed = $prompt->ball->maxSpeed;
 
             $color = match ($speed) {
                 1       => 'green',
@@ -134,36 +126,36 @@ class ProngRenderer extends Renderer
     {
         if ($prompt->game->winner === 1) {
             // Font: Crawford2
-            $title = $this->asciiLines('player-one-won');
+            $title = $this->artLines('player-one-won');
         } elseif ($prompt->game->againstComputer) {
-            $title = $this->asciiLines('computer-won');
+            $title = $this->artLines('computer-won');
         } else {
-            $title = $this->asciiLines('player-two-won');
+            $title = $this->artLines('player-two-won');
         }
 
         $title->push('');
         $title->push('Press ' . $this->bold($this->cyan('q')) . ' to quit or ' . $this->bold($this->cyan('r')) . ' to restart');
 
-        $this->center($title, $this->fullWidth, $this->fullHeight)->each(fn ($line) => $this->line($line));
+        $this->center($title, $this->fullWidth, $this->fullHeight)->each($this->line(...));
 
         return $this;
     }
 
     protected function titleScreen(Prong $prompt): static
     {
-        $title = $this->asciiLines('prong');
+        $title = $this->artLines('prong');
 
         $title->push('');
         $title->push('Press ' . $this->bold($this->cyan('ENTER')) . ' to start');
 
         $title = $title->map(
-            fn ($line, $index) => $index > $prompt->loopable(Title::class)->value->current()
+            fn ($line, $index) => $index > $prompt->title->value->current()
                 // Keep the line length so that nothing shifts if this is the longest line
-                ? str_repeat(' ', mb_strwidth(Util::stripEscapeSequences($line)))
+                ? str_repeat(' ', mb_strwidth(stripEscapeSequences($line)))
                 : $line
         );
 
-        $this->center($title, $this->fullWidth, $this->fullHeight)->each(fn ($line) => $this->line($line));
+        $this->center($title, $this->fullWidth, $this->fullHeight)->each($this->line(...));
 
         return $this;
     }

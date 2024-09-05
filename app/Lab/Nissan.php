@@ -2,11 +2,11 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\Loops;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Concerns\SetsUpAndResets;
-use App\Lab\Input\KeyPressListener;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\Loops;
+use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\SetsUpAndResets;
+use Chewie\Input\KeyPressListener;
 use App\Lab\Nissan\Battery;
 use App\Lab\Nissan\EngineTemp;
 use App\Lab\Nissan\Fuel;
@@ -29,15 +29,56 @@ class Nissan extends Prompt
 
     public bool $carStarted = false;
 
+    public Fuel $fuel;
+
+    public EngineTemp $engineTemp;
+
+    public OilLevel $oilLevel;
+
+    public Battery $battery;
+
+    public Rpm $rpm;
+
+    protected KeyPressListener $listener;
+
     public function __construct()
     {
         $this->registerTheme(NissanRenderer::class);
 
-        $this->registerLoopable(Fuel::class);
-        $this->registerLoopable(EngineTemp::class);
-        $this->registerLoopable(OilLevel::class);
-        $this->registerLoopable(Battery::class);
-        $this->registerLoopable(Rpm::class);
+        $this->fuel = new Fuel($this);
+        $this->engineTemp = new EngineTemp($this);
+        $this->oilLevel = new OilLevel($this);
+        $this->battery = new Battery($this);
+        $this->rpm = new Rpm($this);
+
+        $this->registerLoopables(
+            $this->fuel,
+            $this->engineTemp,
+            $this->oilLevel,
+            $this->battery,
+            $this->rpm,
+        );
+
+        $this->listener = KeyPressListener::for($this)
+            ->listenForQuit()
+            ->on(Key::ENTER, function () {
+                $this->carStarted = !$this->carStarted;
+
+                foreach ($this->loopables as $component) {
+                    if ($this->carStarted) {
+                        $component->startCar();
+                    } else {
+                        $component->stopCar();
+                    }
+                }
+            })
+            ->on(Key::SPACE, function () {
+                foreach ($this->loopables as $component) {
+                    $component->rev();
+                }
+            })
+            ->on('b', fn () => $this->rpm->brake());
+
 
         $this->createAltScreen();
     }
@@ -65,36 +106,10 @@ class Nissan extends Prompt
     {
         $this->render();
 
-        $key = KeyPressListener::once();
-
-        if ($key === Key::CTRL_C || $key === 'q') {
-            $this->terminal()->exit();
-        }
-
-        if ($key === Key::ENTER) {
-            $this->carStarted = !$this->carStarted;
-
-            foreach ($this->loopables as $component) {
-                if ($this->carStarted) {
-                    $component->startCar();
-                } else {
-                    $component->stopCar();
-                }
-            }
-        }
+        $this->listener->once();
 
         if (!$this->carStarted) {
             return;
-        }
-
-        if ($key === ' ') {
-            foreach ($this->loopables as $component) {
-                $component->rev();
-            }
-        }
-
-        if ($key === 'b') {
-            $this->loopables[Rpm::class]->brake();
         }
     }
 }

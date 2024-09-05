@@ -3,7 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Contracts\LabCommand;
-use App\Lab\Dashboard;
+use App\Lab\DashboardSimple as Dashboard;
 use Illuminate\Console\Command;
 
 class Hal extends Command implements LabCommand

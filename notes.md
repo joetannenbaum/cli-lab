@@ -1,0 +1,2 @@
+-   listen for quit no longer by default
+-   make sure everything works with chewie

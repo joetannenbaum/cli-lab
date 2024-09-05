@@ -1,0 +1,3 @@
+Joe Tannenbaum is an NYC-based web developer who loves working with Laravel, Vue, Inertia.js, Livewire, and React.
+
+He made the app you are currently playing with.

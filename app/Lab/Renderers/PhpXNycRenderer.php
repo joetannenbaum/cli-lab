@@ -38,7 +38,7 @@ class PhpXNycRenderer extends Renderer
             'Meet. Learn. Eat. Drink.',
         ];
 
-        collect($lines)->each(fn ($line) => $this->line($line));
+        collect($lines)->each($this->line(...));
 
         $this->newLine();
 
@@ -56,7 +56,7 @@ class PhpXNycRenderer extends Renderer
             'Fill out the form below if you\'d like to join.',
         ]);
 
-        $emailInput =  $this->boxInternal($prompt, 'Email');
+        $emailInput = $this->boxInternal($prompt, 'Email');
 
         ray($emailInput);
 
@@ -68,7 +68,7 @@ class PhpXNycRenderer extends Renderer
 
         $this->output = '';
 
-        $this->center($output, $prompt->terminal()->cols() - 2, $prompt->terminal()->lines() - 2)->each(fn ($line) => $this->line($line));
+        $this->center($output, $prompt->terminal()->cols() - 2, $prompt->terminal()->lines() - 2)->each($this->line(...));
 
         return $this;
     }

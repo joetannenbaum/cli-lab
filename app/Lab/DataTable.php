@@ -2,11 +2,10 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Input\KeyPressListener;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Input\KeyPressListener;
 use App\Lab\Renderers\DataTableRenderer;
-use Illuminate\Support\Collection;
+use Chewie\Concerns\RegistersRenderers;
 use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
 use Laravel\Prompts\Prompt;
@@ -14,7 +13,7 @@ use Laravel\Prompts\Prompt;
 class DataTable extends Prompt
 {
     use CreatesAnAltScreen;
-    use RegistersThemes;
+    use RegistersRenderers;
     use TypedValue;
 
     public array $headers;
@@ -33,11 +32,14 @@ class DataTable extends Prompt
 
     public string $jumpToPage = '';
 
-    public function __construct(array|Collection $headers = [], array|Collection $rows = [])
+    protected KeyPressListener $listener;
+
+    public function __construct()
     {
-        $this->registerTheme(DataTableRenderer::class);
+        $this->registerRenderer(DataTableRenderer::class);
 
         $this->headers = ['name' => 'Name', 'email' => 'Email', 'address' => 'Address'];
+
         $this->rows = collect(range(1, 100))->map(
             fn ($i) => [
                 'name'    => fake()->name(),
@@ -46,48 +48,53 @@ class DataTable extends Prompt
             ]
         )->all();
 
-        // $this->headers = $headers instanceof Collection ? $headers->all() : $headers;
-        // $this->rows = $rows instanceof Collection ? $rows->all() : $rows;
+        // file_put_contents(__DIR__ . '/datatable.json', json_encode($this->rows, JSON_PRETTY_PRINT));
 
-        $this->totalPages = (int) ceil(count($this->rows) / $this->perPage);
+        $this->totalPages = $this->getTotalPages($this->rows);
 
-        $this->listenForHotkeys();
+        $this->listener = KeyPressListener::for($this);
+
+        $this->browse();
 
         $this->createAltScreen();
     }
 
-    public function __destruct()
-    {
-        $this->exitAltScreen();
-    }
-
     public function visible(): array
     {
-        if ($this->query !== '') {
-            $filtered = array_filter($this->rows, function ($row) {
-                return str_contains(mb_strtolower(implode(' ', $row)), mb_strtolower($this->query));
-            });
+        if ($this->query === '') {
+            $this->totalPages = $this->getTotalPages($this->rows);
 
-            $this->totalPages = (int) ceil(count($filtered) / $this->perPage);
-
-            $result = array_slice($filtered, 0, $this->perPage);
-
-            if (count($result) === 0) {
-                return [
-                    [
-                        'name'    => 'No results',
-                        'email'   => '',
-                        'address' => '',
-                    ],
-                ];
-            }
-
-            return $result;
+            return array_slice($this->rows, ($this->page - 1) * $this->perPage, $this->perPage);
         }
 
-        $this->totalPages = (int) ceil(count($this->rows) / $this->perPage);
+        $filtered = array_filter(
+            $this->rows,
+            fn ($row)  => str_contains(
+                mb_strtolower(implode(' ', $row)),
+                mb_strtolower($this->query),
+            ),
+        );
 
-        return array_slice($this->rows, ($this->page - 1) * $this->perPage, $this->perPage);
+        $this->totalPages = $this->getTotalPages($filtered);
+
+        $results = array_slice($filtered, 0, $this->perPage);
+
+        if (count($results) > 0) {
+            return $results;
+        }
+
+        return [
+            [
+                'name'    => 'No results',
+                'email'   => '',
+                'address' => '',
+            ],
+        ];
+    }
+
+    protected function getTotalPages(array $records): int
+    {
+        return  (int) ceil(count($records) / $this->perPage);
     }
 
     public function value(): array
@@ -97,20 +104,21 @@ class DataTable extends Prompt
 
     public function valueWithCursor(int $maxWidth): string
     {
-        if ($this->query === '') {
-            return $this->dim($this->addCursor('', 0, $maxWidth));
-        }
-
-        return $this->addCursor($this->query, $this->cursorPosition, $maxWidth);
+        return $this->getValueWithCursor($this->query, $maxWidth);
     }
 
     public function jumpValueWithCursor(int $maxWidth): string
     {
-        if ($this->jumpToPage === '') {
+        return $this->getValueWithCursor($this->jumpToPage, $maxWidth);
+    }
+
+    protected function getValueWithCursor(string $value, int $maxWidth): string
+    {
+        if ($value === '') {
             return $this->dim($this->addCursor('', 0, $maxWidth));
         }
 
-        return $this->addCursor($this->jumpToPage, $this->cursorPosition, $maxWidth);
+        return $this->addCursor($value, $this->cursorPosition, $maxWidth);
     }
 
     protected function quit(): void
@@ -119,9 +127,13 @@ class DataTable extends Prompt
         exit;
     }
 
-    protected function listenForHotkeys(): void
+    protected function browse(): void
     {
-        KeyPressListener::for($this)
+        $this->state = 'browse';
+
+        $this->listener
+            ->clearExisting()
+            ->listenForQuit()
             ->on(
                 [Key::UP, Key::UP_ARROW],
                 fn () => $this->index = max(0, $this->index - 1),
@@ -144,8 +156,7 @@ class DataTable extends Prompt
                     $this->index = 0;
                 },
             )
-            // ->on(Key::ENTER, $this->submit(...))
-            ->on('q', $this->quit(...))
+            ->on(Key::ENTER, $this->submit(...))
             ->on('/', $this->search(...))
             ->on('j', $this->jump(...))
             ->listen();
@@ -157,7 +168,7 @@ class DataTable extends Prompt
         $this->index = 0;
         $this->page = 1;
 
-        KeyPressListener::for($this)
+        $this->listener
             ->clearExisting()
             ->listenToInput($this->query, $this->cursorPosition)
             ->on(
@@ -167,9 +178,7 @@ class DataTable extends Prompt
                         return;
                     }
 
-                    $this->clearListeners();
-                    $this->state = 'select';
-                    $this->listenForHotkeys();
+                    $this->browse();
                 },
             )
             ->listen();
@@ -180,17 +189,14 @@ class DataTable extends Prompt
         $this->state = 'jump';
         $this->index = 0;
 
-        KeyPressListener::for($this)
+        $this->listener
             ->clearExisting()
             ->listenToInput($this->jumpToPage, $this->cursorPosition)
             ->on(
                 Key::ENTER,
                 function () {
                     if ($this->jumpToPage === '') {
-                        $this->clearListeners();
-                        $this->state = 'select';
-                        $this->listenForHotkeys();
-
+                        $this->browse();
                         return;
                     }
 
@@ -202,11 +208,9 @@ class DataTable extends Prompt
                         return;
                     }
 
-                    $this->page = $this->jumpToPage;
+                    $this->page = (int) $this->jumpToPage;
                     $this->jumpToPage = '';
-                    $this->clearListeners();
-                    $this->state = 'select';
-                    $this->listenForHotkeys();
+                    $this->browse();
                 },
             )
             ->listen();

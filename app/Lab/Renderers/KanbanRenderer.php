@@ -2,7 +2,7 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\DrawsHotkeys;
+use Chewie\Concerns\DrawsHotkeys;
 use App\Lab\Kanban;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
@@ -66,7 +66,7 @@ class KanbanRenderer extends Renderer
             ->zip(...$columns)
             ->map(fn ($lines) => $lines->implode(''))
             // Render the lines
-            ->each(fn ($line) => $this->line($line));
+            ->each($this->line(...));
 
         $this->hotkey('Enter', 'Move item');
         $this->hotkey('↑', 'Previous card', $kanban->itemIndex > 0);

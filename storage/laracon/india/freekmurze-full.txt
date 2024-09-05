@@ -1,0 +1,6 @@
+I'm a PHP developer and Laravel enthusiast. Most of my time is spent at Spatie of which I'm the co-owner.
+At Spatie we use a lot of open source software: PHP, Ubuntu, Laravel, Composer, Yarn,… are a few of the things we use everyday.
+Whenever my colleagues and I stumble upon a problem that we can solve in a clean way, we extract our solution so other developers can use it. Together with my colleagues I regularly release PHP, Laravel and JavaScript packages. Those packages have been downloaded more than 500 million times.
+Outside of Spatie, my friend Mattias and I are running a Saas named Oh Dear! Our service can notify you via Mail, Slack,... when your site is down, when it contains broken links, when it finds mixed content, ... It aims to be very easy to use, we have great developer docs and APIs. Try it out!
+Together with my buddy Dries I organise the Full Stack Europe conference. We'll offer talks for developers who want to learn across a wide variety of skills. For more info head over to our website.
+Outside of programming, I'm also very passionate about music. Every now and then I spend some time in Ableton to record music of my own. I've released a couple of EPs. You can listen to them at Spotify or Apple Music.

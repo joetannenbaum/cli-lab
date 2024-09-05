@@ -43,6 +43,8 @@ Route::get('spotify/callback', function (Request $request, Spotify $spotify) {
 
     $authKey = session()->pull('spotify:generated_token');
 
+    file_put_contents(storage_path('spotify-auth'), $authenticator->serialize());
+
     (new IntegrationsSpotify($authKey))->storeAuthenticator($authenticator);
 
     return view('spotify-authed');
@@ -60,7 +62,7 @@ Route::get('shop/checkout/{cartKey}', function (string $cartKey) {
     $checkout = $stripe->checkout->sessions->create([
         'payment_method_types' => ['card'],
         'line_items'           => collect($cart)
-            ->map(fn ($item) => [
+            ->map(fn($item) => [
                 'price_data' => [
                     'currency'     => 'usd',
                     'product_data' => [
@@ -79,3 +81,20 @@ Route::get('shop/checkout/{cartKey}', function (string $cartKey) {
 
     return redirect($checkout->url);
 })->name('shop.checkout');
+
+Route::get('terminal/video', function () {
+    return view('terminal-video');
+});
+
+Route::post('terminal/video', function (Request $request) {
+    file_put_contents(
+        storage_path('terminal-video/' . now()->toDateTimeString('microseconds') . '.jpg'),
+        $request->getContent(),
+    );
+});
+
+Route::get('laracon-us/{channel_id}', function ($channel_id) {
+    return view('laracon-us', [
+        'channel_id' => $channel_id,
+    ]);
+});

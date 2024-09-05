@@ -1,0 +1,3 @@
+I'm a PHP developer and Laravel enthusiast. Most of my time is spent at Spatie of which I'm the co-owner.
+At Spatie we use a lot of open source software: PHP, Ubuntu, Laravel, Composer, Yarn,… are a few of the things we use everyday.
+Whenever my colleagues and I stumble upon a problem that we can solve in a clean way, we extract our solution so other developers can use it. Together with my colleagues I regularly release PHP, Laravel and JavaScript packages. Those packages have been downloaded more than 500 million times.

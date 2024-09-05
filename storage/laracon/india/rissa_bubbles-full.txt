@@ -1,0 +1,3 @@
+I am a Fullstack Software Engineer. I primarily work with Laravel (PHP) and Vue (JavaScript). As well as Laravel's related technologies. I'm grateful for all that programming has taught me about problem-solving, and love to share what I learn with others in the form of talks, pairing, and mentoring!
+Outside of Software Development I also helped found the 501c3 non-profit Austin Acro Advocates where I served as President for over 2 years. In a previous chapter, I lived in China for two years and taught English. I bring all the skills and strengths I've learned from my previous chapters into my work as a programmer.
+In my free time, you can generally find me doing handstands, partner acrobatics, or dancing.

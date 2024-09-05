@@ -2,24 +2,23 @@
 
 namespace App\Lab\Dashboard;
 
-use App\Lab\Concerns\Ticks;
-use App\Lab\Contracts\Tickable;
+use Chewie\Concerns\Ticks;
+use Chewie\Contracts\Loopable;
+use Chewie\Support\Frames;
 
-class HalPulse implements Tickable
+class HalPulse implements Loopable
 {
     use Ticks;
 
-    public $frames = ['●', '○'];
+    public Frames $frames;
 
-    public $current = 0;
-
-    public $dimmed = false;
+    public function __construct()
+    {
+        $this->frames = new Frames;
+    }
 
     public function onTick(): void
     {
-        if ($this->isNthTick(10)) {
-            $this->current = ($this->current + 1) % count($this->frames);
-            $this->dimmed = !$this->dimmed;
-        }
+        $this->onNthTick(10, fn () => $this->frames->next());
     }
 }

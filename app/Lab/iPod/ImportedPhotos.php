@@ -2,7 +2,7 @@
 
 namespace App\Lab\iPod;
 
-use App\Lab\Input\KeyPressListener;
+use Chewie\Input\KeyPressListener;
 use App\Lab\iPod;
 use Illuminate\Support\Collection;
 use Laravel\Prompts\Key;

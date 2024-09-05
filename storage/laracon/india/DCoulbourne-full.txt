@@ -1,0 +1,1 @@
+I'm a developer and founder of a small software consultancy. I mostly work in Laravel, Livewire, AlpineJS Rust is fun so far too.

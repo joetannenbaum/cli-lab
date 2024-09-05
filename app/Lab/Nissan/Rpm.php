@@ -2,20 +2,20 @@
 
 namespace App\Lab\Nissan;
 
-use App\Lab\Concerns\Ticks;
-use App\Lab\Contracts\Tickable;
+use Chewie\Concerns\Ticks;
+use Chewie\Contracts\Loopable;
 use App\Lab\Nissan;
-use App\Lab\Support\Animatable;
+use App\Lab\Support\Animation;
 
-class Rpm implements Tickable
+class Rpm implements Loopable
 {
     use Ticks;
 
-    public Animatable $value;
+    public Animation $value;
 
-    public Animatable $rpms;
+    public Animation $rpms;
 
-    public Animatable $multiplier;
+    public Animation $multiplier;
 
     public $factor = 2;
 
@@ -23,9 +23,9 @@ class Rpm implements Tickable
 
     public function __construct(protected Nissan $prompt)
     {
-        $this->value = Animatable::fromValue(0)->lowerLimit(0)->upperLimit(99);
-        $this->rpms = Animatable::fromValue(0)->lowerLimit(0)->upperLimit(99);
-        $this->multiplier = Animatable::fromValue($this->factor)->lowerLimit($this->factor)->upperLimit(38)->step($this->factor)->pauseAfter(10);
+        $this->value = Animation::fromValue(0)->lowerLimit(0)->upperLimit(99);
+        $this->rpms = Animation::fromValue(0)->lowerLimit(0)->upperLimit(99);
+        $this->multiplier = Animation::fromValue($this->factor)->lowerLimit($this->factor)->upperLimit(38)->step($this->factor)->pauseAfter(10);
     }
 
     public function onTick(): void

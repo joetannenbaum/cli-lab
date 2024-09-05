@@ -2,20 +2,20 @@
 
 namespace App\Lab\Prong;
 
-use App\Lab\Concerns\Ticks;
-use App\Lab\Contracts\Tickable;
+use Chewie\Concerns\Ticks;
+use Chewie\Contracts\Loopable;
 use App\Lab\Prong;
-use App\Lab\Support\Animatable;
+use App\Lab\Support\Animation;
 
-class Title implements Tickable
+class Title implements Loopable
 {
     use Ticks;
 
-    public Animatable $value;
+    public Animation $value;
 
     public function __construct(protected Prong $prompt)
     {
-        $this->value = Animatable::fromValue(8)->lowerLimit(0);
+        $this->value = Animation::fromValue(8)->lowerLimit(0);
     }
 
     public function onTick(): void

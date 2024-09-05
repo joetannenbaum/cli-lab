@@ -2,22 +2,22 @@
 
 namespace App\Lab\Nissan;
 
-use App\Lab\Concerns\Ticks;
-use App\Lab\Contracts\Tickable;
+use Chewie\Concerns\Ticks;
+use Chewie\Contracts\Loopable;
 use App\Lab\Nissan;
-use App\Lab\Support\Animatable;
+use App\Lab\Support\Animation;
 
-class Battery implements Tickable
+class Battery implements Loopable
 {
     use Ticks;
 
-    public Animatable $value;
+    public Animation $value;
 
     public $revCount = 0;
 
     public function __construct(protected Nissan $prompt)
     {
-        $this->value = Animatable::fromValue(0)->lowerLimit(0)->upperLimit(12)->pauseAfter(20);
+        $this->value = Animation::fromValue(0)->lowerLimit(0)->upperLimit(12)->pauseAfter(20);
     }
 
     public function onTick(): void
