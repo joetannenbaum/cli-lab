@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1ffdc7623125c59bbeb1d4921ff8c5e0",
+    "content-hash": "991dd467d7e12441a0601fa080de0ea8",
     "packages": [
         {
             "name": "amphp/amp",
@@ -2435,10 +2435,16 @@
         {
             "name": "joetannenbaum/chewie",
             "version": "0.1.2",
-            "dist": {
-                "type": "path",
-                "url": "../chewie",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/joetannenbaum/chewie.git",
                 "reference": "977ce825e93df31307c57ecc9562380d645b401b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/joetannenbaum/chewie/zipball/977ce825e93df31307c57ecc9562380d645b401b",
+                "reference": "977ce825e93df31307c57ecc9562380d645b401b",
+                "shasum": ""
             },
             "require": {
                 "laravel/prompts": "^0.1.15"
@@ -2449,16 +2455,19 @@
             },
             "type": "library",
             "autoload": {
-                "psr-4": {
-                    "Chewie\\": "src/"
-                },
                 "files": [
                     "src/helpers.php"
-                ]
+                ],
+                "psr-4": {
+                    "Chewie\\": "src/"
+                }
             },
-            "transport-options": {
-                "relative": true
-            }
+            "notification-url": "https://packagist.org/downloads/",
+            "support": {
+                "issues": "https://github.com/joetannenbaum/chewie/issues",
+                "source": "https://github.com/joetannenbaum/chewie/tree/0.1.2"
+            },
+            "time": "2024-04-21T12:09:46+00:00"
         },
         {
             "name": "kelunik/certificate",
