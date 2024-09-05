@@ -6,7 +6,7 @@ use App\Contracts\LabCommand;
 use App\Lab\LaraconIndiaSpeakers as LabLaraconIndiaSpeakers;
 use Illuminate\Console\Command;
 
-class LaraconIndiaSpeakers extends Command implements LabCommand
+class LaraconIndiaSpeakers extends Command
 {
     protected $signature = 'lab:laracon:india:speakers';
 

@@ -6,7 +6,7 @@ use App\Contracts\LabCommand;
 use App\Lab\ProngSimple as LabProngSimple;
 use Illuminate\Console\Command;
 
-class ProngSimple extends Command implements LabCommand
+class ProngSimple extends Command
 {
     protected $signature = 'lab:prong-simple';
 

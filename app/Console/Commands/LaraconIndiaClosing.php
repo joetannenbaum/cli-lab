@@ -6,7 +6,7 @@ use App\Contracts\LabCommand;
 use App\Lab\LaraconIndiaClosing as LabLaraconIndiaClosing;
 use Illuminate\Console\Command;
 
-class LaraconIndiaClosing extends Command implements LabCommand
+class LaraconIndiaClosing extends Command
 {
     protected $signature = 'lab:laracon:india:closing';
 

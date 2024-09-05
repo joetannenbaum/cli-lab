@@ -6,7 +6,7 @@ use App\Contracts\LabCommand;
 use App\Lab\PhpNycClosing as LabPhpNycClosing;
 use Illuminate\Console\Command;
 
-class PhpNycClosing extends Command implements LabCommand
+class PhpNycClosing extends Command
 {
     protected $signature = 'lab:php-x-nyc:closing';
 

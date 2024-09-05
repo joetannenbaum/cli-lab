@@ -11,7 +11,7 @@ use function Laravel\Prompts\password;
 use function Laravel\Prompts\text;
 use Illuminate\Support\Str;
 
-class Auth extends Command implements LabCommand
+class Auth extends Command
 {
     /**
      * The name and signature of the console command.

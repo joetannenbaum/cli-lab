@@ -6,7 +6,7 @@ use App\Contracts\LabCommand;
 use App\Lab\PhotoBooth as LabPhotoBooth;
 use Illuminate\Console\Command;
 
-class PhotoBooth extends Command implements LabCommand
+class PhotoBooth extends Command
 {
     protected $signature = 'lab:photobooth';
 

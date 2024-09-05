@@ -6,7 +6,7 @@ use App\Contracts\LabCommand;
 use App\Lab\GifViewer as LabGifViewer;
 use Illuminate\Console\Command;
 
-class GifViewer extends Command implements LabCommand
+class GifViewer extends Command
 {
     protected $signature = 'lab:gif-viewer';
 

@@ -7,7 +7,7 @@ use App\Lab\Blog as LabBlog;
 use App\Lab\Termwind as LabTermwind;
 use Illuminate\Console\Command;
 
-class Termwind extends Command implements LabCommand
+class Termwind extends Command
 {
     protected $signature = 'lab:termwind';
 

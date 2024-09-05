@@ -6,7 +6,7 @@ use App\Contracts\LabCommand;
 use App\Lab\LaraconUsClosing as LabLaraconUsClosing;
 use Illuminate\Console\Command;
 
-class LaraconUsClosing extends Command implements LabCommand
+class LaraconUsClosing extends Command
 {
     protected $signature = 'lab:laracon:us:closing';
 
