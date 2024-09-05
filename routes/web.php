@@ -47,3 +47,20 @@ Route::get('spotify/callback', function (Request $request, Spotify $spotify) {
 
     return view('spotify-authed');
 })->name('spotify.callback');
+
+Route::get('terminal/video', function () {
+    return view('terminal-video');
+});
+
+Route::post('terminal/video', function (Request $request) {
+    file_put_contents(
+        storage_path('terminal-video/' . now()->toDateTimeString('microseconds') . '.jpg'),
+        $request->getContent(),
+    );
+});
+
+Route::get('laracon-us/{channel_id}', function ($channel_id) {
+    return view('laracon-us', [
+        'channel_id' => $channel_id,
+    ]);
+});

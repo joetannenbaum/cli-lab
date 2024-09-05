@@ -29,6 +29,8 @@ class PhotoBooth extends Prompt
 
     protected array $characters;
 
+    protected array $editingCharacters;
+
     protected string $dir;
 
     protected SplFileInfo $currentImage;
@@ -46,6 +48,8 @@ class PhotoBooth extends Prompt
     protected int $captureCountdown = 0;
 
     protected int $brightness = 5;
+
+    protected int $editingBrightness = 5;
 
     public int $waitingTicks = 1;
 
@@ -75,22 +79,27 @@ class PhotoBooth extends Prompt
 
     public array $latestFromPhone = [];
 
-    public int $latestFromPhoneCountdown = 0;
+    public int $editingOffset = 0;
+
+    public int $previewingOffset = 0;
+
+    protected $baseCharacters = '`.-\':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@';
 
     public function __construct()
     {
         $this->registerRenderer(PhotoBoothRenderer::class);
 
         $this->setBrightness();
+        $this->setEditingBrightness();
 
         $this->createAltScreen();
 
         $dir = Str::slug(now()->toDateTimeString());
 
-        // $dir = '2024-08-10-132028';
+        // $dir = '2024-08-13-001011';
 
         $this->dir = storage_path('video/' . $dir);
-        $this->saveDir = storage_path('video/saved/' . $dir);
+        $this->saveDir = '/Users/joetannenbaum/Dropbox/Laracon-US/' . $dir;
         $this->recordingDir = storage_path('video/recording/' . $dir);
         $this->asciiDir = $this->saveDir . '/ascii';
 
@@ -102,9 +111,9 @@ class PhotoBooth extends Prompt
         $this->height = $this->terminal()->lines() - 4;
         $this->width = $this->terminal()->cols() - 4;
 
-        $this->boothHeight = floor($this->height * .75);
+        $this->boothHeight = $this->height - 4;
 
-        $this->fromPhone = collect(File::files($this->phoneDir))->map(fn($file) => $file->getFilename());
+        $this->fromPhone = collect(File::files($this->phoneDir));
 
         $this->setup($this->startBooth(...));
     }
@@ -112,8 +121,14 @@ class PhotoBooth extends Prompt
     protected function setBrightness()
     {
         $this->characters = str_split(
-            str_repeat(' ', $this->brightness * 10)
-                . '`.-\':_,^=;><+!rc*/z?sLTv)J7(|Fi{C}fI31tlu[neoZ5Yxjya]2ESwqkP6h9d4VpOGbUAKXHm8RD#$Bg0MNWQ%&@'
+            str_repeat(' ', $this->brightness * 10) . $this->baseCharacters
+        );
+    }
+
+    protected function setEditingBrightness()
+    {
+        $this->editingCharacters = str_split(
+            str_repeat(' ', $this->editingBrightness * 10) . $this->baseCharacters
         );
     }
 
@@ -122,31 +137,66 @@ class PhotoBooth extends Prompt
         $this->childProcess = $this->getProcess('computer');
 
         $listener = KeyPressListener::for($this)
+            ->wildcard(fn($key) => dd($key))
             ->on([Key::CTRL_C, 'q'], function () {
                 $this->childProcess->terminate();
                 $this->terminal()->exit();
             })
             ->on(Key::SPACE, fn() => $this->savePhoto())
-            ->onUp(function () {
-                $this->brightness = max($this->brightness - 1, 0);
-                $this->setBrightness();
+            ->onRight(function () {
+                if ($this->state === 'editing') {
+                    $this->editingBrightness = max($this->editingBrightness - 1, 0);
+                    $this->setEditingBrightness();
+                    $this->analyzeImage($this->fromPhone->last()->getPathname(), true);
+                } else {
+                    $this->brightness = max($this->brightness - 1, 0);
+                    $this->setBrightness();
+                }
+            })
+            ->onLeft(function () {
+                if ($this->state === 'editing') {
+                    $this->editingBrightness = $this->editingBrightness + 1;
+                    $this->setEditingBrightness();
+                    $this->analyzeImage($this->fromPhone->last()->getPathname(), true);
+                } else {
+                    $this->brightness = $this->brightness + 1;
+                    $this->setBrightness();
+                }
             })
             ->onDown(function () {
-                $this->brightness = $this->brightness + 1;
-                $this->setBrightness();
+                $this->editingOffset = min($this->editingOffset + 1, count($this->latestFromPhone) - $this->boothHeight - 1);
+            })
+            ->onUp(function () {
+                $this->editingOffset = max($this->editingOffset - 1, 0);
+            })
+            ->on(Key::ENTER, function () {
+                if ($this->state === 'editing') {
+                    $this->savePhonePhoto();
+                    $this->state = 'preview';
+                    $this->captureCountdown = 10;
+                    $this->recentlyCaptured = true;
+                }
             })
             ->on('o', function () {
                 exec("open {$this->asciiDir}");
             })
+            ->on('p', function () {
+                $this->childProcess->on('exit', function () {
+                    $this->childProcess = $this->toggleDevice();
+                    $this->childProcess->start();
+                });
+
+                $this->childProcess->terminate();
+            })
             ->on('r', function () {
-                $this->recording = ! $this->recording;
+                $this->recording = !$this->recording;
 
                 if ($this->recording) {
                     $this->recordingId = Str::slug(now()->toDateTimeString('microsecond'));
                     File::ensureDirectoryExists("{$this->recordingDir}/{$this->recordingId}");
                     $this->currentRecording = [];
                 } else if (count($this->currentRecording)) {
-                    $gifName = Str::slug(now()->toDateTimeString()) . '.gif';
+                    $gifName = Str::slug(now()->toDateTimeString('microseconds')) . '.gif';
                     $gifProcess = new Process("magick -delay 10 -loop 0 {$this->recordingDir}/{$this->recordingId}/*.jpg {$this->asciiDir}/{$gifName}");
 
                     $gifProcess->start();
@@ -159,22 +209,18 @@ class PhotoBooth extends Prompt
             $listener->once();
 
             $latestFromPhone = collect(File::files($this->phoneDir))
-                ->filter(fn($file) => ! $this->fromPhone->contains($file->getFilename()))
+                ->filter(fn($file) => !$this->fromPhone->first(fn($f) => $f->getFilename() === $file->getFilename()))
                 ->first();
 
             if ($latestFromPhone) {
-                $this->fromPhone->push($latestFromPhone->getFilename());
+                $this->fromPhone->push($latestFromPhone);
                 $this->analyzeImage($latestFromPhone->getPathname(), true);
-                $this->savePhonePhoto();
+                $this->state = 'editing';
             }
 
             $latestImage = collect(File::files($this->dir))
                 ->sortBy(fn($file) => $file->getFilename(), SORT_NATURAL)
                 ->last();
-
-            if ($this->latestFromPhoneCountdown > 0) {
-                $this->latestFromPhoneCountdown--;
-            }
 
             if ($this->captureCountdown > 0) {
                 $this->captureCountdown--;
@@ -190,14 +236,14 @@ class PhotoBooth extends Prompt
                     $this->savePhoto();
                 }
             } else {
-                $this->render();
-
                 if ($this->waitingTicks === 22 || $this->waitingTicks === 0) {
                     $this->waitingDirection *= -1;
                 }
 
                 $this->waitingTicks += $this->waitingDirection;
             }
+
+            $this->render();
         });
 
         $this->childProcess->start();
@@ -219,24 +265,31 @@ class PhotoBooth extends Prompt
             'phone' => '1920x1080',
         ];
 
-        return new Process("ffmpeg -f avfoundation -framerate 30 -video_size {$devices[$device]} -i '{$deviceIndex}:none' -vf fps=15 {$path}");
+        $framerate = $device === 'computer' ? 30 : 60;
+
+        info("ffmpeg -f avfoundation -framerate {$framerate} -video_size {$devices[$device]} -i '{$deviceIndex}:none' -vf fps=15 {$path}");
+
+        return new Process("ffmpeg -f avfoundation -framerate {$framerate} -video_size {$devices[$device]} -i '{$deviceIndex}:none' -vf fps=15 {$path}");
     }
 
     protected function getDeviceIndex(string $device)
     {
         $result = FacadesProcess::run('ffmpeg -f avfoundation -list_devices true -i ""');
 
-        $lines = collect(explode(PHP_EOL, $result->errorOutput()))->filter(function ($line) {
-            return str_contains($line, 'Camo Camera') || str_contains($line, 'FaceTime HD Camera');
-        })->values();
-
-        return $lines->search(function ($line) use ($device) {
+        $line = collect(explode(PHP_EOL, $result->errorOutput()))->first(function ($line) use ($device) {
             if ($device === 'computer') {
                 return str_contains($line, 'FaceTime HD Camera');
             }
 
-            return str_contains($line, 'Camo Camera');
+            return str_contains($line, 'Android Webcam');
         });
+
+        if ($line) {
+            info(preg_match('/\[\d\]/', $line, $matches) ? trim($matches[0], '[]') : null);
+            return preg_match('/\[\d\]/', $line, $matches) ? trim($matches[0], '[]') : null;
+        }
+
+        return null;
     }
 
     protected function toggleDevice()
@@ -260,7 +313,7 @@ class PhotoBooth extends Prompt
         $this->savedPhotos[] = $this->artLines;
 
         $fontSize = 12;
-        $lineHeight = $fontSize * 1.5;
+        $lineHeight = $fontSize * 2;
 
         $width = strlen($this->artLines[0]) * 10;
         $height = ($this->boothHeight * $lineHeight) + 5;
@@ -275,7 +328,9 @@ class PhotoBooth extends Prompt
 
         $y = 0;
 
-        $imageLines = array_slice($this->artLines, 0, $this->boothHeight);
+        $startAt = (int) floor((count($this->artLines) - $this->boothHeight) / 2);
+
+        $imageLines = array_slice($this->artLines, $startAt, $this->boothHeight);
 
         foreach ($imageLines as $line) {
             imagettftext($image, $fontSize, 0, 0, $y += $lineHeight, $white, $font, $line);
@@ -312,7 +367,7 @@ class PhotoBooth extends Prompt
 
         $y = 0;
 
-        $imageLines = array_slice($this->latestFromPhone, 0, $this->boothHeight);
+        $imageLines = array_slice($this->latestFromPhone, $this->editingOffset, $this->boothHeight);
 
         foreach ($imageLines as $line) {
             imagettftext($image, $fontSize, 0, 0, $y += $lineHeight, $white, $font, $line);
@@ -345,6 +400,7 @@ class PhotoBooth extends Prompt
 
         for ($y = 0; $y < $height; $y++) {
             $line = '';
+
             for ($x = 0; $x < $width; $x++) {
                 $rgb = imagecolorat($image, $x, $y);
                 $r = ($rgb >> 16) & 0xFF;
@@ -353,20 +409,22 @@ class PhotoBooth extends Prompt
 
                 $average = ($r + $g + $b) / 3;
                 $percentage = $average / 255;
-                $character = $this->characters[(int) max(($percentage * count($this->characters)) - 1, 0)];
+
+                $characters = $inBackground ? $this->editingCharacters : $this->characters;
+
+                $character = $characters[(int) max(($percentage * count($characters)) - 1, 0)];
+
                 $line .= $character;
             }
+
             $lines[] = $line;
         }
 
         if ($inBackground) {
             $this->latestFromPhone = $lines;
-            $this->latestFromPhoneCountdown = 50;
         } else {
             $this->artLines = $lines;
         }
-
-        $this->render();
     }
 
     public function value(): mixed

@@ -2,6 +2,7 @@
 
 namespace App\Lab\Renderers;
 
+use Chewie\Output\Lines;
 use App\Lab\PhotoBooth;
 use Chewie\Concerns\Aligns;
 use Chewie\Concerns\CapturesOutput;
@@ -39,25 +40,39 @@ class PhotoBoothRenderer extends Renderer
             return $this;
         }
 
-        $box = $this->captureOutput(function () use ($prompt) {
-            $lines = $prompt->latestFromPhoneCountdown > 0 ? $prompt->latestFromPhone : $prompt->artLines;
+        $boxColor = $this->getBoxColor($prompt);
+
+        $box = $this->captureOutput(function () use ($prompt, $boxColor) {
+            $lines = $prompt->state === 'editing'  ? $prompt->latestFromPhone : $prompt->artLines;
+
+            $offset = $prompt->state === 'editing' ? $prompt->editingOffset : (int) floor((count($prompt->artLines) - $prompt->boothHeight) / 2);
+
+
             $this->box(
                 title: '',
-                body: collect($lines)->slice(0, $prompt->boothHeight)->implode(PHP_EOL),
-                color: $this->getBoxColor($prompt),
+                body: collect($lines)->slice($offset, $prompt->boothHeight)->implode(PHP_EOL),
+                color: $boxColor,
             );
 
-            $this->newLine();
+            // $this->newLine();
 
-            $this->hotkey('↑ ↓', 'Adjust Contrast');
-            $this->hotkey('Space', 'Capture');
-            $this->hotkey('o', 'Open Gallery');
-            $this->hotkey('r', 'Record');
+            // $this->hotkey('↑ ↓', 'Adjust Contrast');
+            // $this->hotkey('Space', 'Capture');
+            // $this->hotkey('o', 'Open Gallery');
+            // $this->hotkey('r', 'Record');
 
-            $this->centerHorizontally($this->hotkeys(), $prompt->width)
-                ->each($this->line(...));
+            // $this->centerHorizontally($this->hotkeys(), $prompt->width)
+            //     ->each($this->line(...));
         });
+        $boxLines = collect(explode(PHP_EOL, $box));
 
+        $box = $boxLines->map(function ($line, $index) use ($boxColor, $boxLines) {
+            if ($boxColor === 'gray' || $index === 0 || $index > $boxLines->count() - 3) {
+                return ' ' . $line . '  ';
+            }
+
+            return strlen($line) ?  $this->{$boxColor}('█') . $line . ' ' . $this->{$boxColor}('█') : $line;
+        });
 
         $this->center($box, $prompt->width, $prompt->height)->each($this->line(...));
 
@@ -68,6 +83,10 @@ class PhotoBoothRenderer extends Renderer
     {
         if ($prompt->recording) {
             return 'red';
+        }
+
+        if ($prompt->state === 'editing') {
+            return 'yellow';
         }
 
         return $prompt->recentlyCaptured ? 'green' : 'gray';

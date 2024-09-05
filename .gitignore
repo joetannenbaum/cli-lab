@@ -19,3 +19,8 @@ yarn-error.log
 /.vscode
 rr
 .rr.yaml
+/storage/gif-viewer
+/storage/laracon-us-talk-ascii
+/storage/laracon-us-talk
+/storage/video
+/storage/terminal-video
