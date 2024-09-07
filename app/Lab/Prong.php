@@ -4,7 +4,7 @@ namespace App\Lab;
 
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\Loops;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Concerns\SetsUpAndResets;
 use Chewie\Input\KeyPressListener;
 use App\Lab\Prong\Ball;
@@ -22,7 +22,7 @@ class Prong extends Prompt
 {
     use CreatesAnAltScreen;
     use Loops;
-    use RegistersThemes;
+    use RegistersRenderers;
     use SetsUpAndResets;
 
     public int $height = 26;
@@ -45,7 +45,7 @@ class Prong extends Prompt
 
     public function __construct(public ?string $gameId = null)
     {
-        $this->registerTheme(ProngRenderer::class);
+        $this->registerRenderer(ProngRenderer::class);
 
         $this->loadGame();
 
@@ -265,7 +265,7 @@ class Prong extends Prompt
     {
         $this->registerLoopables($this->ball, $this->player1, $this->player2);
 
-        $this->listener->listenForQuit()->on('c', fn () => $this->game->againstComputer = true);
+        $this->listener->listenForQuit()->on('c', fn() => $this->game->againstComputer = true);
 
         while (!$this->game->playerOneReady || !$this->game->playerTwoReady) {
             $this->refreshGame();
@@ -288,8 +288,8 @@ class Prong extends Prompt
 
         $this->listener->clearExisting()
             ->listenForQuit()
-            ->onUp(fn () => $this->move(-1))
-            ->onDown(fn () => $this->move(1));
+            ->onUp(fn() => $this->move(-1))
+            ->onDown(fn() => $this->move(1));
 
         while ($this->countdown > 0) {
             $this->render();

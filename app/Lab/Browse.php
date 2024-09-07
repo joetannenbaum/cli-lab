@@ -2,9 +2,10 @@
 
 namespace App\Lab;
 
+use App\Lab\Renderers\BrowseRenderer;
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\Loops;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Concerns\SetsUpAndResets;
 use Chewie\Input\KeyPressListener;
 use Illuminate\Support\Facades\File;
@@ -16,7 +17,7 @@ class Browse extends Prompt
 {
     use CreatesAnAltScreen;
     use Loops;
-    use RegistersThemes;
+    use RegistersRenderers;
     use SetsUpAndResets;
     use TypedValue;
 
@@ -37,7 +38,7 @@ class Browse extends Prompt
             ->map(fn($p) => $p->values())
             ->toArray();
 
-        $this->registerTheme();
+        $this->registerRenderer(BrowseRenderer::class);
 
         $this->createAltScreen();
 

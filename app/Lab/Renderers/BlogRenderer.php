@@ -3,11 +3,11 @@
 namespace App\Lab\Renderers;
 
 use App\Lab\Blog;
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsAscii;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\DrawsTables;
-use App\Lab\Concerns\HasMinimumDimensions;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsArt;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\DrawsTables;
+use Chewie\Concerns\HasMinimumDimensions;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
@@ -19,7 +19,7 @@ use function Chewie\collectionOf;
 class BlogRenderer extends Renderer
 {
     use Aligns;
-    use DrawsAscii;
+    use DrawsArt;
     use DrawsBoxes;
     use DrawsHotkeys;
     use DrawsScrollbars;
@@ -34,7 +34,7 @@ class BlogRenderer extends Renderer
 
     public function __invoke(Blog $prompt): string
     {
-        return $this->minDimensions(fn () => $this->renderState($prompt), 100, 20);
+        return $this->minDimensions(fn() => $this->renderState($prompt), 100, 20);
     }
 
     protected function renderState(Blog $prompt): self
@@ -155,7 +155,7 @@ class BlogRenderer extends Renderer
 
         if (count($prompt->posts) > 1) {
             $dots = collectionOf(1, count($prompt->posts))
-                ->map(fn ($page) => $page === $prompt->browsePage + 1 ? $this->green('•') : $this->dim('•'))
+                ->map(fn($page) => $page === $prompt->browsePage + 1 ? $this->green('•') : $this->dim('•'))
                 ->join(' ');
 
             $this->line($dots);
@@ -190,7 +190,7 @@ class BlogRenderer extends Renderer
     protected function drawButtons(array $block): array
     {
         return collect($block['buttons'])->map(
-            fn ($button) => $this->green($button['button_label']) . ' (' . $this->cyan($button['button_url']) . ')'
+            fn($button) => $this->green($button['button_label']) . ' (' . $this->cyan($button['button_url']) . ')'
         )->toArray();
     }
 
@@ -212,7 +212,7 @@ class BlogRenderer extends Renderer
         $tweet = html_entity_decode($tweet);
 
         $tweet = collect(explode(PHP_EOL, $tweet))
-            ->map(fn ($line) => ltrim($line, '> '))
+            ->map(fn($line) => ltrim($line, '> '))
             ->join(PHP_EOL);
 
         $tweet = wordwrap($tweet, $this->maxLineLength - 6, PHP_EOL, true);
@@ -231,7 +231,7 @@ class BlogRenderer extends Renderer
         $content = html_entity_decode($content);
 
         $content = collect(explode(PHP_EOL, $content))
-            ->map(fn ($line) => ltrim($line, '> '))
+            ->map(fn($line) => ltrim($line, '> '))
             ->join(PHP_EOL);
 
         $content = wordwrap($content, $this->maxLineLength - 6, PHP_EOL, true);

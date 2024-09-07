@@ -5,7 +5,7 @@ namespace App\Lab;
 use App\Http\Integrations\SpotifyApi\Requests\PauseTrack;
 use App\Http\Integrations\SpotifyApi\SpotifyApi;
 use Chewie\Concerns\CreatesAnAltScreen;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Input\KeyPressListener;
 use App\Lab\Integrations\Spotify as IntegrationsSpotify;
 use App\Lab\iPod\DeviceScreen;
@@ -21,7 +21,7 @@ use Laravel\Prompts\Prompt;
 class iPod extends Prompt
 {
     use CreatesAnAltScreen;
-    use RegistersThemes;
+    use RegistersRenderers;
 
     public int $screenIndex = 0;
 
@@ -45,7 +45,7 @@ class iPod extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme(iPodRenderer::class);
+        $this->registerRenderer(iPodRenderer::class);
 
         $this->authKey = strtoupper(Str::random(10));
 
@@ -184,7 +184,7 @@ class iPod extends Prompt
             $this->screens[2]->items->push('Roll #1 (6)');
             $this->screens[2]->index = 1;
 
-            $this->screens = $this->screens->filter(fn ($screen) => !$screen instanceof ImportPhotosInfo)->values();
+            $this->screens = $this->screens->filter(fn($screen) => !$screen instanceof ImportPhotosInfo)->values();
 
             $this->screenIndex = $this->nextScreenIndex = $this->screens->keys()->last();
 

@@ -6,7 +6,7 @@ use App\Lab\Renderers\BigTextRenderer;
 use App\Lab\Renderers\TermwindRenderer;
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\RegistersRenderers;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Input\KeyPressListener;
 use Laravel\Prompts\Prompt;
 
@@ -38,8 +38,8 @@ class Termwind extends Prompt
         // $this->createAltScreen();
 
         KeyPressListener::for($this)
-            ->onRight(fn () => $this->selected = min($this->selected + 1, count($this->nav) - 1))
-            ->onLeft(fn () => $this->selected = max($this->selected - 1, 0))
+            ->onRight(fn() => $this->selected = min($this->selected + 1, count($this->nav) - 1))
+            ->onLeft(fn() => $this->selected = max($this->selected - 1, 0))
             ->listen();
     }
 

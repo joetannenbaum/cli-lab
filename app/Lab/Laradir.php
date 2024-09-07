@@ -2,11 +2,11 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\Loops;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Concerns\SetsUpAndResets;
-use App\Lab\Input\KeyPressListener;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\Loops;
+use Chewie\Concerns\RegistersRenderers;
+use Chewie\Concerns\SetsUpAndResets;
+use Chewie\Input\KeyPressListener;
 use App\Lab\Renderers\LaradirRenderer;
 use Carbon\CarbonInterval;
 use Illuminate\Http\Client\PendingRequest;
@@ -21,7 +21,7 @@ class Laradir extends Prompt
 {
     use CreatesAnAltScreen;
     use Loops;
-    use RegistersThemes;
+    use RegistersRenderers;
     use Scrolling;
     use SetsUpAndResets;
     use TypedValue;
@@ -62,7 +62,7 @@ class Laradir extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme(LaradirRenderer::class);
+        $this->registerRenderer(LaradirRenderer::class);
 
         $this->scroll = 20;
 
@@ -70,7 +70,7 @@ class Laradir extends Prompt
 
         $this->client = Http::baseUrl('https://laradir.com/api')->acceptJson()->asJson();
 
-        $filters = Cache::remember('laradir-filters', CarbonInterval::day(), fn () => $this->client->get('filters')->json());
+        $filters = Cache::remember('laradir-filters', CarbonInterval::day(), fn() => $this->client->get('filters')->json());
 
         foreach ($filters as $key => $subFilters) {
             $arr = [
@@ -147,7 +147,7 @@ class Laradir extends Prompt
             Cache::remember(
                 $cacheKey,
                 CarbonInterval::seconds(10),
-                fn () => $this->client->get('search', $params)->json(),
+                fn() => $this->client->get('search', $params)->json(),
             );
 
             exit(0);
@@ -187,8 +187,8 @@ class Laradir extends Prompt
         KeyPressListener::for($this)
             ->clearExisting()
             ->listenForQuit()
-            ->onUp(fn () => $this->index = max(0, $this->index - 1))
-            ->onDown(fn () => $this->index = min(count($this->items) - 1, $this->index + 1))
+            ->onUp(fn() => $this->index = max(0, $this->index - 1))
+            ->onDown(fn() => $this->index = min(count($this->items) - 1, $this->index + 1))
             ->onLeft(function () {
                 $newPage = max(1, $this->page - 1);
 
@@ -230,8 +230,8 @@ class Laradir extends Prompt
         KeyPressListener::for($this)
             ->clearExisting()
             ->listenForQuit()
-            ->onUp(fn () => $this->bioScrollPosition = max(0, $this->bioScrollPosition - 1))
-            ->onDown(fn () => $this->bioScrollPosition += 1)
+            ->onUp(fn() => $this->bioScrollPosition = max(0, $this->bioScrollPosition - 1))
+            ->onDown(fn() => $this->bioScrollPosition += 1)
             ->on('/', function () {
                 $this->state = 'search';
                 $this->listenForSearchKeys();
@@ -260,8 +260,8 @@ class Laradir extends Prompt
                     $this->highlightNext(count($this->filters[$this->currentFilter]['filters']));
                 }
             })
-            ->onLeft(fn () => $this->filterFocus = 'categories')
-            ->onRight(fn () => $this->filterFocus = 'filters')
+            ->onLeft(fn() => $this->filterFocus = 'categories')
+            ->onRight(fn() => $this->filterFocus = 'filters')
             ->on(Key::ENTER, function () {
                 $this->state = 'search';
                 $this->page = 1;

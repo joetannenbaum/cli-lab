@@ -2,10 +2,10 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\HasMinimumDimensions;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\HasMinimumDimensions;
 use App\Lab\Sticker;
-use App\Lab\Concerns\DrawsHotkeys;
+use Chewie\Concerns\DrawsHotkeys;
 use App\Lab\Sticker\Bar;
 use App\Lab\Sticker\Input;
 use Chewie\Concerns\DrawsArt;
@@ -24,7 +24,7 @@ class StickerRenderer extends Renderer
 
     public function __invoke(Sticker $prompt): string
     {
-        return $this->minDimensions(fn () => $this->renderForm($prompt), 70, 40);
+        return $this->minDimensions(fn() => $this->renderForm($prompt), 70, 40);
     }
 
     protected function renderForm(Sticker $prompt): self
@@ -38,7 +38,7 @@ class StickerRenderer extends Renderer
 
             $this->hotkey('Ctrl+C', 'Exit');
 
-            collect($this->hotkeys())->each(fn ($line) => $this->line('  ' . $line));
+            collect($this->hotkeys())->each(fn($line) => $this->line('  ' . $line));
 
             return $this;
         }
@@ -61,7 +61,7 @@ class StickerRenderer extends Renderer
         $prompt->inputs->each(function (Input $input) {
             $this->line($this->bold('  ' . $input->label));
             $wrapped = wordwrap($input->value(), 60);
-            collect(explode(PHP_EOL, $wrapped))->each(fn ($line) => $this->line('  ' . $line));
+            collect(explode(PHP_EOL, $wrapped))->each(fn($line) => $this->line('  ' . $line));
             $this->newLine();
         });
 
@@ -70,7 +70,7 @@ class StickerRenderer extends Renderer
         $this->hotkey('Enter', 'Submit');
         $this->hotkey('e', 'Edit');
 
-        collect($this->hotkeys())->each(fn ($line) => $this->line('  ' . $line));
+        collect($this->hotkeys())->each(fn($line) => $this->line('  ' . $line));
 
         return $this;
     }
@@ -93,10 +93,10 @@ class StickerRenderer extends Renderer
         );
 
         $lines = collect(explode("\n", $messageLines))
-            ->map(fn ($line) => mb_str_split($line))
+            ->map(fn($line) => mb_str_split($line))
             ->map(
-                fn ($letters) => collect($letters)
-                    ->map(fn ($letter) => match ($letter) {
+                fn($letters) => collect($letters)
+                    ->map(fn($letter) => match ($letter) {
                         ' '     => collect(array_fill(0, 7, str_repeat('+', 4))),
                         '.'     => $this->artLines('period'),
                         ','     => $this->artLines('comma'),
@@ -107,12 +107,12 @@ class StickerRenderer extends Renderer
                     })
             )
             ->map(
-                fn ($letterLines) => $letterLines->map(
-                    fn ($lines) => $lines->map(
+                fn($letterLines) => $letterLines->map(
+                    fn($lines) => $lines->map(
                         function ($line) {
                             $chars = collect(mb_str_split($line));
-                            $first = $chars->search(fn ($c) => $c !== ' ');
-                            $last = $chars->reverse()->search(fn ($c) => $c !== ' ');
+                            $first = $chars->search(fn($c) => $c !== ' ');
+                            $last = $chars->reverse()->search(fn($c) => $c !== ' ');
 
                             return $chars->map(function ($char, $index) use ($first, $last) {
                                 if ($index < $first) {
@@ -129,7 +129,7 @@ class StickerRenderer extends Renderer
                     ),
                 ),
             )
-            ->flatMap(fn ($letters) => Lines::fromColumns($letters)->lines());
+            ->flatMap(fn($letters) => Lines::fromColumns($letters)->lines());
 
         $textLines = $this->center($lines, $width, $height, '+');
 
@@ -157,9 +157,9 @@ class StickerRenderer extends Renderer
             return $arr;
         });
 
-        $textLines = $textLines->map(fn ($line) => mb_str_split($line))->all();
+        $textLines = $textLines->map(fn($line) => mb_str_split($line))->all();
 
-        $emptyLines = collect($textLines)->filter(fn ($line) => count($line) === 0)->keys();
+        $emptyLines = collect($textLines)->filter(fn($line) => count($line) === 0)->keys();
 
         foreach ($bars as $index => $bar) {
             foreach ($bar as $i => $line) {
@@ -174,7 +174,7 @@ class StickerRenderer extends Renderer
             }
         }
 
-        collect($textLines)->map(fn ($t) => str_replace('+', ' ', implode('', $t)))->each($this->line(...));
+        collect($textLines)->map(fn($t) => str_replace('+', ' ', implode('', $t)))->each($this->line(...));
 
         return $this;
     }
@@ -209,7 +209,7 @@ class StickerRenderer extends Renderer
 
         $wrapped = wordwrap(implode(PHP_EOL, $rules), 60);
 
-        collect(explode(PHP_EOL, $wrapped))->each(fn ($line) => $this->line('  ' . $line));
+        collect(explode(PHP_EOL, $wrapped))->each(fn($line) => $this->line('  ' . $line));
 
         $this->newLine();
 
@@ -227,11 +227,11 @@ class StickerRenderer extends Renderer
             width: 60,
         );
 
-        collect(explode(PHP_EOL, $wrapped))->each(fn ($line) => $this->line('  ' . $line));
+        collect(explode(PHP_EOL, $wrapped))->each(fn($line) => $this->line('  ' . $line));
 
         $this->newLine();
 
-        $prompt->inputs->each(fn (Input $input) => $this->renderInput($input));
+        $prompt->inputs->each(fn(Input $input) => $this->renderInput($input));
 
         $this->newLine(2);
 
@@ -239,7 +239,7 @@ class StickerRenderer extends Renderer
         $this->hotkey('Shift+Tab', 'Previous field');
         $this->hotkey('Enter', 'Submit');
 
-        collect($this->hotkeys())->each(fn ($line) => $this->line('  ' . $line));
+        collect($this->hotkeys())->each(fn($line) => $this->line('  ' . $line));
 
         return $this;
     }

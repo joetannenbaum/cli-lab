@@ -4,7 +4,7 @@ namespace App\Lab;
 
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\Loops;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Concerns\SetsUpAndResets;
 use Chewie\Input\KeyPressListener;
 use App\Lab\Nissan\Battery;
@@ -21,7 +21,7 @@ class Nissan extends Prompt
 {
     use CreatesAnAltScreen;
     use Loops;
-    use RegistersThemes;
+    use RegistersRenderers;
     use SetsUpAndResets;
     use TypedValue;
 
@@ -43,7 +43,7 @@ class Nissan extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme(NissanRenderer::class);
+        $this->registerRenderer(NissanRenderer::class);
 
         $this->fuel = new Fuel($this);
         $this->engineTemp = new EngineTemp($this);
@@ -77,7 +77,7 @@ class Nissan extends Prompt
                     $component->rev();
                 }
             })
-            ->on('b', fn () => $this->rpm->brake());
+            ->on('b', fn() => $this->rpm->brake());
 
 
         $this->createAltScreen();
@@ -93,9 +93,7 @@ class Nissan extends Prompt
         $this->setup($this->showDashboard(...));
     }
 
-    public function value(): mixed
-    {
-    }
+    public function value(): mixed {}
 
     protected function showDashboard()
     {

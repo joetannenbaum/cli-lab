@@ -12,7 +12,7 @@ use App\Lab\Renderers\DashboardRenderer;
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\Loops;
 use Chewie\Concerns\RegistersRenderers;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Concerns\SetsUpAndResets;
 use Chewie\Input\KeyPressListener;
 use Laravel\Prompts\Concerns\TypedValue;
@@ -88,11 +88,11 @@ class Dashboard extends Prompt
     public function run()
     {
         $listener = KeyPressListener::for($this)
-            ->onUp(fn () => $this->sleepBetweenLoops = max(50_000, $this->sleepBetweenLoops - 50_000))
-            ->onDown(fn () => $this->sleepBetweenLoops += 50_000)
+            ->onUp(fn() => $this->sleepBetweenLoops = max(50_000, $this->sleepBetweenLoops - 50_000))
+            ->onDown(fn() => $this->sleepBetweenLoops += 50_000)
             ->listenForQuit();
 
-        $this->setup(fn () => $this->loop(fn () => $this->showDashboard($listener), 100_000));
+        $this->setup(fn() => $this->loop(fn() => $this->showDashboard($listener), 100_000));
     }
 
     public function value(): mixed

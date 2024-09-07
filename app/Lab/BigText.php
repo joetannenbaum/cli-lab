@@ -5,7 +5,7 @@ namespace App\Lab;
 use App\Lab\Renderers\BigTextRenderer;
 use Chewie\Art;
 use Chewie\Concerns\CreatesAnAltScreen;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Input\KeyPressListener;
 use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
@@ -14,7 +14,7 @@ use Laravel\Prompts\Prompt;
 class BigText extends Prompt
 {
     use CreatesAnAltScreen;
-    use RegistersThemes;
+    use RegistersRenderers;
     use TypedValue;
 
     public string $message = "";
@@ -22,7 +22,7 @@ class BigText extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme(BigTextRenderer::class);
+        $this->registerRenderer(BigTextRenderer::class);
 
         $this->createAltScreen();
 
@@ -43,10 +43,10 @@ class BigText extends Prompt
         );
 
         KeyPressListener::for($this)
-            ->on($validCharacters, fn ($key) => $this->message .= $key)
-            ->on(Key::ENTER, fn () => $this->message = '')
-            ->on(Key::BACKSPACE, fn () => $this->message = substr($this->message, 0, -1))
-            ->on(Key::CTRL_C, fn () => $this->terminal()->exit())
+            ->on($validCharacters, fn($key) => $this->message .= $key)
+            ->on(Key::ENTER, fn() => $this->message = '')
+            ->on(Key::BACKSPACE, fn() => $this->message = substr($this->message, 0, -1))
+            ->on(Key::CTRL_C, fn() => $this->terminal()->exit())
             ->listen();
     }
 

@@ -2,9 +2,9 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\HasMinimumDimensions;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\HasMinimumDimensions;
 use App\Lab\PhpXNyc;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Renderer;
@@ -25,7 +25,7 @@ class PhpXNycRenderer extends Renderer
         return $this->minDimensions(
             width: $this->width,
             height: $this->height,
-            render: fn () => $this->render($prompt)
+            render: fn() => $this->render($prompt)
         );
     }
 

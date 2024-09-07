@@ -2,10 +2,10 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Concerns\SetsUpAndResets;
-use App\Lab\Input\KeyPressListener;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\RegistersRenderers;
+use Chewie\Concerns\SetsUpAndResets;
+use Chewie\Input\KeyPressListener;
 use App\Lab\Renderers\BlogRenderer;
 use Carbon\CarbonInterval;
 use Illuminate\Support\Facades\Cache;
@@ -17,7 +17,7 @@ use Laravel\Prompts\Prompt;
 class Blog extends Prompt
 {
     use CreatesAnAltScreen;
-    use RegistersThemes;
+    use RegistersRenderers;
     use SetsUpAndResets;
     use TypedValue;
 
@@ -43,7 +43,7 @@ class Blog extends Prompt
 
     public function __construct(?string $slug = null)
     {
-        $this->registerTheme(BlogRenderer::class);
+        $this->registerRenderer(BlogRenderer::class);
 
         $this->createAltScreen();
 
@@ -86,8 +86,8 @@ class Blog extends Prompt
         KeyPressListener::for($this)
             ->clearExisting()
             ->listenForQuit()
-            ->on([Key::DOWN_ARROW, Key::DOWN], fn () => $this->browseSelected = min($this->browseSelected + 1, count($this->posts[$this->browsePage]) - 1))
-            ->on([Key::UP_ARROW, Key::UP], fn () => $this->browseSelected = max($this->browseSelected - 1, 0))
+            ->on([Key::DOWN_ARROW, Key::DOWN], fn() => $this->browseSelected = min($this->browseSelected + 1, count($this->posts[$this->browsePage]) - 1))
+            ->on([Key::UP_ARROW, Key::UP], fn() => $this->browseSelected = max($this->browseSelected - 1, 0))
             ->on([Key::LEFT_ARROW, Key::LEFT], function () {
                 $this->browsePage = max($this->browsePage - 1, 0);
                 $this->browseSelected = 0;
@@ -131,7 +131,7 @@ class Blog extends Prompt
             Cache::remember(
                 $cacheKey,
                 CarbonInterval::day(),
-                fn () => Http::get(
+                fn() => Http::get(
                     config('services.blog.url') . '/cli-lab/posts',
                     [
                         'shh' => config('services.blog.secret'),
@@ -155,7 +155,7 @@ class Blog extends Prompt
 
         $height = self::terminal()->lines() - 12;
 
-        $this->posts = collect($posts)->chunk((int) floor($height / 3))->map(fn ($p) => $p->values())->toArray();
+        $this->posts = collect($posts)->chunk((int) floor($height / 3))->map(fn($p) => $p->values())->toArray();
 
         $this->fetching = false;
     }
@@ -178,7 +178,7 @@ class Blog extends Prompt
             Cache::remember(
                 $cacheKey,
                 CarbonInterval::day(),
-                fn () => Http::get(
+                fn() => Http::get(
                     config('services.blog.url') . '/cli-lab/posts/' . $slug,
                     [
                         'shh' => config('services.blog.secret'),

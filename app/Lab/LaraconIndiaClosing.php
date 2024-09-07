@@ -7,7 +7,7 @@ use App\Lab\Renderers\LaraconIndiaClosingRenderer;
 use Chewie\Art;
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\Loops;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Concerns\SetsUpAndResets;
 use Chewie\Input\KeyPressListener;
 use Illuminate\Support\Collection;
@@ -18,7 +18,7 @@ use Laravel\Prompts\Prompt;
 class LaraconIndiaClosing extends Prompt
 {
     use CreatesAnAltScreen;
-    use RegistersThemes;
+    use RegistersRenderers;
     use TypedValue;
     use Loops;
     use SetsUpAndResets;
@@ -37,7 +37,7 @@ class LaraconIndiaClosing extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme(LaraconIndiaClosingRenderer::class);
+        $this->registerRenderer(LaraconIndiaClosingRenderer::class);
 
         $this->createAltScreen();
 
@@ -56,9 +56,9 @@ class LaraconIndiaClosing extends Prompt
                 usleep(100_000);
             }
 
-            $this->bars = collect(range(1, $this->barCount))->map(fn () => new Bar($this->barHeight));
+            $this->bars = collect(range(1, $this->barCount))->map(fn() => new Bar($this->barHeight));
 
-            $this->bars->each(fn (Bar $bar) => $this->registerLoopable($bar));
+            $this->bars->each(fn(Bar $bar) => $this->registerLoopable($bar));
 
             $listener = KeyPressListener::for($this)->on(['q', Key::CTRL_C], function () {
                 $this->exitAltScreen();

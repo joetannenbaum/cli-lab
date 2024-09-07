@@ -3,7 +3,7 @@
 namespace App\Lab;
 
 use Chewie\Concerns\CreatesAnAltScreen;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Input\KeyPressListener;
 use App\Lab\Renderers\KanbanRenderer;
 use Laravel\Prompts\Key;
@@ -14,7 +14,7 @@ use function Laravel\Prompts\text;
 class Kanban extends Prompt
 {
     use CreatesAnAltScreen;
-    use RegistersThemes;
+    use RegistersRenderers;
 
     public array $columns = [
         [
@@ -64,7 +64,7 @@ class Kanban extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme(KanbanRenderer::class);
+        $this->registerRenderer(KanbanRenderer::class);
 
         $this->listenForInput();
 
@@ -79,11 +79,11 @@ class Kanban extends Prompt
     public function listenForInput(): void
     {
         KeyPressListener::for($this)
-            ->on(['q', Key::CTRL_C], fn () => $this->terminal()->exit())
+            ->on(['q', Key::CTRL_C], fn() => $this->terminal()->exit())
             // ->on('n', fn () => $this->addNewItem())
-            ->on(Key::ENTER, fn () => $this->moveCurrentItem())
-            ->on([Key::UP, Key::UP_ARROW], fn () => $this->itemIndex = max(0, $this->itemIndex - 1))
-            ->on([Key::DOWN, Key::DOWN_ARROW], fn () => $this->itemIndex = min(count($this->columns[$this->columnIndex]['items']) - 1, $this->itemIndex + 1))
+            ->on(Key::ENTER, fn() => $this->moveCurrentItem())
+            ->on([Key::UP, Key::UP_ARROW], fn() => $this->itemIndex = max(0, $this->itemIndex - 1))
+            ->on([Key::DOWN, Key::DOWN_ARROW], fn() => $this->itemIndex = min(count($this->columns[$this->columnIndex]['items']) - 1, $this->itemIndex + 1))
             ->on([Key::RIGHT, Key::RIGHT_ARROW], $this->nextColumn(...))
             ->on([Key::LEFT, Key::LEFT_ARROW], $this->previousColumn(...))
             ->listen();

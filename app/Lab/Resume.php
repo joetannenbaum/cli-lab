@@ -2,11 +2,11 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\Loops;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Concerns\SetsUpAndResets;
-use App\Lab\Input\KeyPressListener;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\Loops;
+use Chewie\Concerns\RegistersRenderers;
+use Chewie\Concerns\SetsUpAndResets;
+use Chewie\Input\KeyPressListener;
 use App\Lab\Renderers\ResumeRenderer;
 use Illuminate\Support\Facades\Log;
 use Laravel\Prompts\Concerns\TypedValue;
@@ -17,7 +17,7 @@ class Resume extends Prompt
 {
     use CreatesAnAltScreen;
     use Loops;
-    use RegistersThemes;
+    use RegistersRenderers;
     use SetsUpAndResets;
     use TypedValue;
 
@@ -58,14 +58,14 @@ class Resume extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme(ResumeRenderer::class);
+        $this->registerRenderer(ResumeRenderer::class);
 
         $this->createAltScreen();
 
         KeyPressListener::for($this)
-            ->on(['q', Key::CTRL_C], fn () => $this->terminal()->exit())
-            ->on([Key::UP, Key::UP_ARROW], fn () => $this->scrollPosition = max(0, $this->scrollPosition - 2))
-            ->on([Key::DOWN, Key::DOWN_ARROW], fn () => $this->scrollPosition += 2)
+            ->on(['q', Key::CTRL_C], fn() => $this->terminal()->exit())
+            ->on([Key::UP, Key::UP_ARROW], fn() => $this->scrollPosition = max(0, $this->scrollPosition - 2))
+            ->on([Key::DOWN, Key::DOWN_ARROW], fn() => $this->scrollPosition += 2)
             ->on([Key::RIGHT, Key::RIGHT_ARROW], function () {
                 $this->page = $this->selectedPage = min(count($this->navigation) - 1, $this->page + 1);
                 $this->scrollPosition = 0;

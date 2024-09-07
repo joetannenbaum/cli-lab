@@ -2,11 +2,11 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsAscii;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\DrawsTables;
-use App\Lab\Concerns\HasMinimumDimensions;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsArt;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\DrawsTables;
+use Chewie\Concerns\HasMinimumDimensions;
 use App\Lab\Resume;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
@@ -15,7 +15,7 @@ use Laravel\Prompts\Themes\Default\Renderer;
 class ResumeRenderer extends Renderer
 {
     use Aligns;
-    use DrawsAscii;
+    use DrawsArt;
     use DrawsBoxes;
     use DrawsHotkeys;
     use DrawsScrollbars;
@@ -36,7 +36,7 @@ class ResumeRenderer extends Renderer
         return $this->minDimensions(
             width: $this->resumeMinWidth,
             height: $this->resumeMinHeight,
-            render: fn () => $this->render($prompt)
+            render: fn() => $this->render($prompt)
         );
     }
 
@@ -48,7 +48,7 @@ class ResumeRenderer extends Renderer
             ],
         ]);
 
-        $this->asciiLines('resume-name')->map(fn ($line) => $this->line(' ' . $line));
+        $this->artLines('resume-name')->map(fn($line) => $this->line(' ' . $line));
 
         $this->newLine();
 
@@ -64,7 +64,7 @@ class ResumeRenderer extends Renderer
             }
 
             return $link;
-        })->map(fn ($line) => $this->{$prompt->color}($line))->implode($this->dim(' · '));
+        })->map(fn($line) => $this->{$prompt->color}($line))->implode($this->dim(' · '));
 
         $this->line(' ' . $links);
 
@@ -78,7 +78,7 @@ class ResumeRenderer extends Renderer
 
                 return $value;
             }
-        )->map(fn ($value, $key) => str_repeat(' ', $key === 0 ? 1 : 4) . $value . str_repeat(' ', 4))
+        )->map(fn($value, $key) => str_repeat(' ', $key === 0 ? 1 : 4) . $value . str_repeat(' ', 4))
             ->values()
             ->implode($this->dim('/'));
 
@@ -94,7 +94,7 @@ class ResumeRenderer extends Renderer
 
         $this->newLine();
 
-        collect($this->hotkeys())->each(fn ($line) => $this->line(' ' . $line));
+        collect($this->hotkeys())->each(fn($line) => $this->line(' ' . $line));
 
         return $this;
     }
@@ -116,7 +116,7 @@ class ResumeRenderer extends Renderer
             $lines->push('');
         }
 
-        $lines = $lines->map(fn ($line) => $this->pad($line, $width));
+        $lines = $lines->map(fn($line) => $this->pad($line, $width));
 
         $scrollPosition = min($prompt->scrollPosition, $lines->count() - $height);
 
@@ -158,7 +158,7 @@ class ResumeRenderer extends Renderer
             'https://github.com/joetannenbaum',
             'https://twitter.com/joetannenbaum',
             'https://www.linkedin.com/in/joe-tannenbaum-27724221',
-        ])->map(fn ($link, $i) => ($i === 0 ? '' : PHP_EOL) . $this->underline($this->{$prompt->color}($link)))->toArray();
+        ])->map(fn($link, $i) => ($i === 0 ? '' : PHP_EOL) . $this->underline($this->{$prompt->color}($link)))->toArray();
     }
 
     protected function renderExperience(Resume $prompt): array
@@ -320,9 +320,9 @@ class ResumeRenderer extends Renderer
         $bullet = ' · ';
 
         return collect($items)
-            ->map(fn ($item) => $this->wrapped($bullet . $item))
-            ->map(fn ($item) => collect(explode(PHP_EOL, $item))->map(fn ($line, $i) => $i === 0 ? $line : str_repeat(' ', mb_strwidth($bullet)) . $line)->implode(PHP_EOL))
-            ->map(fn ($item) => str_replace($bullet, $this->dim($bullet), $item))
+            ->map(fn($item) => $this->wrapped($bullet . $item))
+            ->map(fn($item) => collect(explode(PHP_EOL, $item))->map(fn($line, $i) => $i === 0 ? $line : str_repeat(' ', mb_strwidth($bullet)) . $line)->implode(PHP_EOL))
+            ->map(fn($item) => str_replace($bullet, $this->dim($bullet), $item))
             ->implode(PHP_EOL);
     }
 
@@ -338,7 +338,7 @@ class ResumeRenderer extends Renderer
             $this->{$this->prompt->color}('│  ') . $this->dim($duration),
             $this->{$this->prompt->color}('│'),
             collect(explode(PHP_EOL, implode(PHP_EOL, $description)))
-                ->map(fn ($line) => $this->{$this->prompt->color}('│  ') . $line)
+                ->map(fn($line) => $this->{$this->prompt->color}('│  ') . $line)
                 ->implode(PHP_EOL),
             $this->{$this->prompt->color}('│'),
             $this->{$this->prompt->color}($position === 'last' ? '└─' : '│'),

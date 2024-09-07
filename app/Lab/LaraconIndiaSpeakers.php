@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Lab;
 
 use App\Lab\Concerns\HasSpeakers;
+use App\Lab\Renderers\LaraconIndiaSpeakersRenderer;
 use Chewie\Concerns\CreatesAnAltScreen;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Input\KeyPressListener;
 use Illuminate\Support\Collection;
 use Laravel\Prompts\Key;
@@ -14,7 +15,7 @@ use Laravel\Prompts\Prompt;
 
 class LaraconIndiaSpeakers extends Prompt
 {
-    use RegistersThemes;
+    use RegistersRenderers;
     use CreatesAnAltScreen;
     use HasSpeakers;
 
@@ -30,7 +31,7 @@ class LaraconIndiaSpeakers extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme();
+        $this->registerRenderer(LaraconIndiaSpeakersRenderer::class);
 
         $this->speakers = $this->loadSpeakers(true);
 
@@ -39,8 +40,8 @@ class LaraconIndiaSpeakers extends Prompt
         KeyPressListener::for($this)
             ->onDown($this->onDown(...))
             ->onUp($this->onUp(...))
-            ->onLeft(fn () => $this->activeArea = 'list')
-            ->onRight(fn () => $this->activeArea = 'detail')
+            ->onLeft(fn() => $this->activeArea = 'list')
+            ->onRight(fn() => $this->activeArea = 'detail')
             ->on(Key::ENTER, $this->onEnter(...))
             ->listen();
     }

@@ -2,9 +2,9 @@
 
 namespace App\Lab;
 
-use App\Lab\Concerns\CreatesAnAltScreen;
-use App\Lab\Concerns\RegistersThemes;
-use App\Lab\Input\KeyPressListener;
+use Chewie\Concerns\CreatesAnAltScreen;
+use Chewie\Concerns\RegistersRenderers;
+use Chewie\Input\KeyPressListener;
 use App\Lab\Renderers\PhpXNycRenderer;
 use Laravel\Prompts\Concerns\TypedValue;
 use Laravel\Prompts\Key;
@@ -15,12 +15,12 @@ use function Laravel\Prompts\text;
 class PhpXNyc extends Prompt
 {
     use CreatesAnAltScreen;
-    use RegistersThemes;
+    use RegistersRenderers;
     use TypedValue;
 
     public function __construct()
     {
-        $this->registerTheme(PhpXNycRenderer::class);
+        $this->registerRenderer(PhpXNycRenderer::class);
 
         $this->createAltScreen();
 

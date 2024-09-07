@@ -2,11 +2,11 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsAscii;
-use App\Lab\Concerns\HasMinimumDimensions;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsArt;
+use Chewie\Concerns\HasMinimumDimensions;
 use App\Lab\Shop;
-use App\Lab\Concerns\DrawsHotkeys;
+use Chewie\Concerns\DrawsHotkeys;
 use App\Lab\Shop\Category;
 use Chewie\Concerns\CapturesOutput;
 use Chewie\Output\Lines;
@@ -16,7 +16,7 @@ use Laravel\Prompts\Themes\Default\Renderer;
 class ShopRenderer extends Renderer
 {
     use Aligns;
-    use DrawsAscii;
+    use DrawsArt;
     use HasMinimumDimensions;
     use DrawsHotkeys;
     use CapturesOutput;
@@ -30,7 +30,7 @@ class ShopRenderer extends Renderer
 
     public function __invoke(Shop $prompt): string
     {
-        return $this->minDimensions(fn () => $this->renderShop($prompt), 70, 30);
+        return $this->minDimensions(fn() => $this->renderShop($prompt), 70, 30);
     }
 
     protected function renderShop(Shop $prompt): self
@@ -56,9 +56,9 @@ class ShopRenderer extends Renderer
 
         $this->longestProductName = $prompt->categories
             ->map(
-                fn (Category $category) => $category->products
+                fn(Category $category) => $category->products
                     ->pluck('name')
-                    ->max(fn ($name) => mb_strwidth($name))
+                    ->max(fn($name) => mb_strwidth($name))
             )
             ->flatten()
             ->max() + 2;
@@ -109,7 +109,7 @@ class ShopRenderer extends Renderer
         $colSpacing = 4;
 
         $productsNav = $category->products
-            ->map(fn ($product) => mb_str_pad(' ' . $product->name . ' ', $this->longestProductName))
+            ->map(fn($product) => mb_str_pad(' ' . $product->name . ' ', $this->longestProductName))
             ->map(function ($name, $index) use ($category) {
                 $selected = $index === $category->selectedProduct;
 
@@ -143,7 +143,7 @@ class ShopRenderer extends Renderer
         });
 
         $box = collect(explode(PHP_EOL, $box))->map(
-            fn ($line) => str_replace(
+            fn($line) => str_replace(
                 [' │', ' ┌', ' └'],
                 ['│', '┌', '└'],
                 $line,

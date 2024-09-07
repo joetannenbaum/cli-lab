@@ -2434,16 +2434,16 @@
         },
         {
             "name": "joetannenbaum/chewie",
-            "version": "0.1.2",
+            "version": "0.1.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/joetannenbaum/chewie.git",
-                "reference": "977ce825e93df31307c57ecc9562380d645b401b"
+                "reference": "c20edd1d7fef5244b22b32d26adec2e6af42f9ab"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/joetannenbaum/chewie/zipball/977ce825e93df31307c57ecc9562380d645b401b",
-                "reference": "977ce825e93df31307c57ecc9562380d645b401b",
+                "url": "https://api.github.com/repos/joetannenbaum/chewie/zipball/c20edd1d7fef5244b22b32d26adec2e6af42f9ab",
+                "reference": "c20edd1d7fef5244b22b32d26adec2e6af42f9ab",
                 "shasum": ""
             },
             "require": {
@@ -2465,9 +2465,9 @@
             "notification-url": "https://packagist.org/downloads/",
             "support": {
                 "issues": "https://github.com/joetannenbaum/chewie/issues",
-                "source": "https://github.com/joetannenbaum/chewie/tree/0.1.2"
+                "source": "https://github.com/joetannenbaum/chewie/tree/0.1.4"
             },
-            "time": "2024-04-21T12:09:46+00:00"
+            "time": "2024-09-07T17:03:00+00:00"
         },
         {
             "name": "kelunik/certificate",
@@ -11293,16 +11293,16 @@
         },
         {
             "name": "phpstan/phpstan",
-            "version": "1.12.1",
+            "version": "1.12.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpstan.git",
-                "reference": "d8ed7fffa66de1db0d2972267d8ed1d8fa0fe5a2"
+                "reference": "0ca1c7bb55fca8fe6448f16fff0f311ccec960a1"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/d8ed7fffa66de1db0d2972267d8ed1d8fa0fe5a2",
-                "reference": "d8ed7fffa66de1db0d2972267d8ed1d8fa0fe5a2",
+                "url": "https://api.github.com/repos/phpstan/phpstan/zipball/0ca1c7bb55fca8fe6448f16fff0f311ccec960a1",
+                "reference": "0ca1c7bb55fca8fe6448f16fff0f311ccec960a1",
                 "shasum": ""
             },
             "require": {
@@ -11347,7 +11347,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2024-09-03T19:55:22+00:00"
+            "time": "2024-09-05T16:09:28+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",

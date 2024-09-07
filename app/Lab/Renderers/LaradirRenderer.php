@@ -2,11 +2,11 @@
 
 namespace App\Lab\Renderers;
 
-use App\Lab\Concerns\Aligns;
-use App\Lab\Concerns\DrawsAscii;
-use App\Lab\Concerns\DrawsHotkeys;
-use App\Lab\Concerns\DrawsTables;
-use App\Lab\Concerns\HasMinimumDimensions;
+use Chewie\Concerns\Aligns;
+use Chewie\Concerns\DrawsArt;
+use Chewie\Concerns\DrawsHotkeys;
+use Chewie\Concerns\DrawsTables;
+use Chewie\Concerns\HasMinimumDimensions;
 use App\Lab\Laradir;
 use App\Lab\Output\Lines;
 use Exception;
@@ -20,7 +20,7 @@ use function Chewie\collectionOf;
 class LaradirRenderer extends Renderer
 {
     use Aligns;
-    use DrawsAscii;
+    use DrawsArt;
     use DrawsBoxes;
     use DrawsHotkeys;
     use DrawsScrollbars;
@@ -37,7 +37,7 @@ class LaradirRenderer extends Renderer
 
     public function __invoke(Laradir $prompt): string
     {
-        return $this->minDimensions(fn () => $this->renderLaradir($prompt), 110, 30);
+        return $this->minDimensions(fn() => $this->renderLaradir($prompt), 110, 30);
     }
 
     public function getResultMeta($result): string
@@ -52,7 +52,7 @@ class LaradirRenderer extends Renderer
 
         if (count($result['levels'])) {
             $meta[] = collect($result['levels'])->map(
-                fn ($l) => $this->prompt->filtersFromApi['roles'][$l],
+                fn($l) => $this->prompt->filtersFromApi['roles'][$l],
             )->join(', ');
         }
 
@@ -101,7 +101,7 @@ class LaradirRenderer extends Renderer
     {
         $firstCol = [];
 
-        $longest = collect($prompt->filters)->map(fn ($k) => strlen($k['key']))->max();
+        $longest = collect($prompt->filters)->map(fn($k) => strlen($k['key']))->max();
 
         foreach ($prompt->filters as $i => $filter) {
             $label = Str::of($filter['key'])->ucfirst()->singular()->padRight($longest)->padBoth($longest + 2)->toString();
@@ -210,10 +210,10 @@ class LaradirRenderer extends Renderer
 
         $row = [
             collect($prompt->detail['levels'])->map(
-                fn ($l) => $prompt->filtersFromApi['roles'][$l],
+                fn($l) => $prompt->filtersFromApi['roles'][$l],
             )->join(PHP_EOL),
             collect($prompt->detail['types'])->map(
-                fn ($l) => $prompt->filtersFromApi['types'][$l],
+                fn($l) => $prompt->filtersFromApi['types'][$l],
             )->join(PHP_EOL),
         ];
 
@@ -228,7 +228,7 @@ class LaradirRenderer extends Renderer
             );
         }
 
-        $this->table([$row], $headers)->each(fn ($l) => $this->line($l));
+        $this->table([$row], $headers)->each(fn($l) => $this->line($l));
 
         $this->newLine();
 
@@ -285,7 +285,7 @@ class LaradirRenderer extends Renderer
         if (count($prompt->selectedFilters)) {
             $filters = collect($prompt->selectedFilters)->map(function ($filters, $key) use ($prompt) {
                 return collect($filters)->map(
-                    fn ($f) => $this->green('✔︎ ') . $prompt->filtersFromApi[$key][$f],
+                    fn($f) => $this->green('✔︎ ') . $prompt->filtersFromApi[$key][$f],
                 );
             })->flatten()->join('  ');
 
@@ -357,7 +357,7 @@ class LaradirRenderer extends Renderer
 
         if ($total > 0) {
             $dots = collectionOf(min($prompt->results['meta']['last_page'] ?? 0, 30))
-                ->map(fn ($page) => $page === $prompt->page ? $this->green('⏺︎') : $this->dim('⏺︎'))
+                ->map(fn($page) => $page === $prompt->page ? $this->green('⏺︎') : $this->dim('⏺︎'))
                 ->join(' ');
         } else {
             $dots = '';

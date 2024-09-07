@@ -10,7 +10,7 @@ use App\Lab\Renderers\LaraconUsClosingRenderer;
 use Chewie\Art;
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\Loops;
-use Chewie\Concerns\RegistersThemes;
+use Chewie\Concerns\RegistersRenderers;
 use Chewie\Concerns\SetsUpAndResets;
 use Chewie\Input\KeyPressListener;
 use Illuminate\Support\Collection;
@@ -21,7 +21,7 @@ use Laravel\Prompts\Prompt;
 class LaraconUsClosingWild extends Prompt
 {
     use CreatesAnAltScreen;
-    use RegistersThemes;
+    use RegistersRenderers;
     use TypedValue;
     use Loops;
     use SetsUpAndResets;
@@ -62,7 +62,7 @@ class LaraconUsClosingWild extends Prompt
 
     public function __construct()
     {
-        $this->registerTheme(LaraconUsClosingRenderer::class);
+        $this->registerRenderer(LaraconUsClosingRenderer::class);
         Art::setDirectory(storage_path('ascii/alphabet'));
 
         $this->createAltScreen();
