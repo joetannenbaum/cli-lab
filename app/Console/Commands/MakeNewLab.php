@@ -10,7 +10,7 @@ use function Laravel\Prompts\text;
 
 class MakeNewLab extends Command
 {
-    protected $signature = 'app:make-new-lab';
+    protected $signature = 'lab:new';
 
     protected $description = 'Command description';
 
