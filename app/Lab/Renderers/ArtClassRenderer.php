@@ -17,7 +17,7 @@ class ArtClassRenderer extends Renderer
 
     public function __invoke(ArtClass $prompt): string
     {
-        return $this->minDimensions(fn() => $this->renderMessage($prompt), 20, 20);
+        return $this->minDimensions(fn() => $this->renderMessage($prompt), 104, 20);
     }
 
     protected function renderMessage(ArtClass $prompt): self

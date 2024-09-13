@@ -55,6 +55,7 @@ class ArtClass extends Prompt
         $this->cursorPosition = [(int) floor($this->width / 2), (int) floor($this->height / 2)];
 
         $listener = KeyPressListener::for($this)
+            ->listenForQuit()
             ->on(Key::SPACE, function () {
                 $this->active = !$this->active;
                 $this->addToArt();
