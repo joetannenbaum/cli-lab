@@ -31,12 +31,20 @@ class ArtClassRenderer extends Renderer
             while ($j < $prompt->width) {
                 if ($prompt->cursorPosition[0] === $j && $prompt->cursorPosition[1] === $i) {
                     if ($prompt->active) {
-                        $line .= $this->{$prompt->currentColor}('●');
+                        if ($prompt->erasing) {
+                            $line .= $this->inverse('x');
+                        } else {
+                            $line .= $this->{$prompt->currentColor}('●');
+                        }
                     } else {
-                        $line .= $this->{$prompt->currentColor}('○');
+                        if ($prompt->erasing) {
+                            $line .= 'x';
+                        } else {
+                            $line .= $this->{$prompt->currentColor}('○');
+                        }
                     }
                 } else if (isset($prompt->art[$i][$j])) {
-                    $line .= $this->{$prompt->art[$i][$j]}('■');
+                    $line .= $this->{$prompt->art[$i][$j]}('█');
                 } else {
                     $line .= ' ';
                 }
