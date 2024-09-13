@@ -98,3 +98,42 @@ Route::get('laracon-us/{channel_id}', function ($channel_id) {
         'channel_id' => $channel_id,
     ]);
 });
+
+
+Route::get('art-class/{id}', function ($id) {
+    $id = collect(explode('/', $id))->last();
+
+    $artClass = json_decode(file_get_contents(storage_path('art-class/' . $id . '.json')));
+
+    $im = imagecreatetruecolor($artClass->width * 20, $artClass->height * 20);
+
+    $colors = [
+        'black' => imagecolorallocate($im, 0, 0, 0),
+        'red' => imagecolorallocate($im, 255, 0, 0),
+        'green' => imagecolorallocate($im, 0, 255, 0),
+        'yellow' => imagecolorallocate($im, 255, 255, 0),
+        'blue' => imagecolorallocate($im, 0, 0, 255),
+        'magenta' => imagecolorallocate($im, 255, 0, 255),
+        'cyan' => imagecolorallocate($im, 0, 255, 255),
+        'white' => imagecolorallocate($im, 255, 255, 255),
+    ];
+
+    foreach ($artClass->art as $y => $row) {
+        foreach ($row as $x => $color) {
+            imagefilledrectangle($im, $x * 20, $y * 20, ($x + 1) * 20, ($y + 1) * 20, $colors[$color]);
+        }
+    }
+
+    $text = 'created at ssh cli.lab.joe.codes -t art-class';
+
+    $font = 24;
+    $textWidth = imagefontwidth($font) * strlen($text);
+    $textHeight = imagefontheight($font);
+    $textX = 10;
+    $textY = $artClass->height * 20 - $textHeight - 10;
+    imagettftext($im, $font, 0, $textX, $textY, $colors['white'], storage_path('fonts/FiraCode-Regular.ttf'), $text);
+
+    imagepng($im, storage_path('art-class/' . $id . '.png'));
+
+    return response()->download(storage_path('art-class/' . $id . '.png'), $id . '.png');
+});
