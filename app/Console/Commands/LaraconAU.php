@@ -6,7 +6,7 @@ use App\Contracts\LabCommand;
 use App\Lab\LaraconAU as LabLaraconAU;
 use Illuminate\Console\Command;
 
-class LaraconAU extends Command implements LabCommand
+class LaraconAU extends Command
 {
     protected $signature = 'lab:laracon-au';
 
