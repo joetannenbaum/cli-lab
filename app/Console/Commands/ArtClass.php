@@ -10,7 +10,7 @@ class ArtClass extends Command implements LabCommand
 {
     protected $signature = 'lab:art-class';
 
-    protected $description = 'Type a message! But big!';
+    protected $description = 'Draw something, save it to your computer';
 
     public function handle()
     {

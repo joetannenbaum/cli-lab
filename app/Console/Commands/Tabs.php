@@ -6,7 +6,7 @@ use App\Contracts\LabCommand;
 use App\Lab\Tabs as LabTabs;
 use Illuminate\Console\Command;
 
-class Tabs extends Command implements LabCommand
+class Tabs extends Command
 {
     protected $signature = 'lab:tabs';
 
