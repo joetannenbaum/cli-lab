@@ -22,7 +22,7 @@ class MakeNewLab extends Command
         $stubs = [
             'LabCommand' => 'Console/Commands/' . $name,
             'LabApplicationState' => 'Lab/' . $name,
-            'LabRenderer' => 'Lab/Renderers/' . $name,
+            'LabRenderer' => 'Lab/Renderers/' . $name . 'Renderer',
         ];
 
         foreach ($stubs as $stub => $path) {
