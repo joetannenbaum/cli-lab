@@ -5,6 +5,7 @@ namespace App\Lab;
 use App\Lab\Renderers\ArtClassRenderer;
 use Chewie\Concerns\CreatesAnAltScreen;
 use Chewie\Concerns\RegistersRenderers;
+use Chewie\Concerns\SetsUpAndResets;
 use Chewie\Input\KeyPressListener;
 use Illuminate\Support\Facades\File;
 use Laravel\Prompts\Concerns\TypedValue;
@@ -16,6 +17,7 @@ class ArtClass extends Prompt
 {
     use CreatesAnAltScreen;
     use RegistersRenderers;
+    use SetsUpAndResets;
 
     public array $cursorPosition = [0, 0];
 
@@ -55,7 +57,10 @@ class ArtClass extends Prompt
         $this->cursorPosition = [(int) floor($this->width / 2), (int) floor($this->height / 2)];
 
         $listener = KeyPressListener::for($this)
-            ->listenForQuit()
+            ->on(['q', Key::CTRL_C], function () {
+                echo "\e[?1003l";
+                $this->terminal()->exit();
+            })
             ->on(Key::SPACE, function () {
                 $this->active = !$this->active;
                 $this->addToArt();
@@ -79,6 +84,9 @@ class ArtClass extends Prompt
             ->on('e', function () {
                 $this->erasing = !$this->erasing;
             })
+            ->onMouseMove(fn($x, $y) => $this->onMouse($x, $y, false))
+            ->onMouseClick(fn($x, $y) => $this->onMouse($x, $y, true))
+            ->onMouseDrag(fn($x, $y) => $this->onMouse($x, $y, true))
             ->on(Key::ENTER, function () {
                 File::ensureDirectoryExists(storage_path('art-class'));
 
@@ -91,6 +99,8 @@ class ArtClass extends Prompt
                 ]));
             });
 
+        echo "\e[?1003h";
+
         foreach ($this->colors as $key => $color) {
             $listener->on($key, function () use ($color) {
                 $this->currentColor = $color;
@@ -100,6 +110,13 @@ class ArtClass extends Prompt
         $listener->listen();
 
         $this->createAltScreen();
+    }
+
+    public function onMouse($x, $y, $active = false)
+    {
+        $this->active = $active;
+        $this->cursorPosition = [$x, $y];
+        $this->addToArt();
     }
 
     protected function addToArt()

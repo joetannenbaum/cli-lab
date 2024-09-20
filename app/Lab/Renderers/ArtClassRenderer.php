@@ -34,7 +34,7 @@ class ArtClassRenderer extends Renderer
                         if ($prompt->erasing) {
                             $line .= $this->inverse('x');
                         } else {
-                            $line .= $this->{$prompt->currentColor}('●');
+                            $line .= $this->{'bg' . ucwords($prompt->currentColor)}('●');
                         }
                     } else {
                         if ($prompt->erasing) {
