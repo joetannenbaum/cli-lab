@@ -8,6 +8,7 @@ use Chewie\Concerns\DrawsArt;
 use Chewie\Concerns\DrawsHotkeys;
 use Chewie\Concerns\DrawsTables;
 use Chewie\Concerns\HasMinimumDimensions;
+use Chewie\Output\Util;
 use Illuminate\Support\Str;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsBoxes;
 use Laravel\Prompts\Themes\Default\Concerns\DrawsScrollbars;
